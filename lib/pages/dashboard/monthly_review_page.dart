@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
+import 'package:intl/intl.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/services/monthly_data_service.dart';
 import 'package:personal_fin/core/widgets/dashboard/monthly_review.dart';
 import 'package:personal_fin/core/widgets/theme/app_theme.dart';
 import 'package:personal_fin/core/widgets/shared/currency_display.dart';
 import 'package:personal_fin/models/monthly_data.dart';
+import 'package:provider/provider.dart';
 
 class MonthlyReviewPage extends StatefulWidget {
   final DateTime? month;
@@ -47,12 +50,13 @@ class _MonthlyReviewPageState extends State<MonthlyReviewPage> {
     final colorScheme = theme.colorScheme;
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final lang = context.watch<LanguageProvider>();
     
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLow,
       appBar: AppBar(
-        title: Text('Monthly Review', 
+        title: Text(lang.translate('monthly_review_title'), 
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: colors.onPrimary,
@@ -84,7 +88,7 @@ class _MonthlyReviewPageState extends State<MonthlyReviewPage> {
                       Icon(Icons.error_outline, size: 64, color: colorScheme.error),
                       const SizedBox(height: 16),
                       Text(
-                        'Unable to load monthly data',
+                        lang.translate('err_load_monthly'),
                         style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
@@ -98,7 +102,7 @@ class _MonthlyReviewPageState extends State<MonthlyReviewPage> {
                       const SizedBox(height: 24),
                       ElevatedButton(
                         onPressed: _loadData,
-                        child: const Text('Try Again'),
+                        child: Text(lang.translate('try_again')),
                       ),
                     ],
                   ),
@@ -136,6 +140,7 @@ class _MonthlyReviewPageState extends State<MonthlyReviewPage> {
   Widget _buildAdditionalInsights(BuildContext context, MonthlyData data) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final lang = context.watch<LanguageProvider>();
 
     // Calculate Savings Rate: (Net / Income) * 100
     final savingsRate = data.income > 0 ? (data.net / data.income).clamp(0.0, 1.0) : 0.0;
@@ -146,7 +151,7 @@ class _MonthlyReviewPageState extends State<MonthlyReviewPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Visual Breakdown',
+              lang.translate('visual_breakdown'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.5,
@@ -192,7 +197,7 @@ class _MonthlyReviewPageState extends State<MonthlyReviewPage> {
                           children: [
                             Text('${(savingsRate * 100).toInt()}%', 
                               style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
-                            Text('Saved', style: theme.textTheme.labelSmall),
+                            Text(lang.translate('saved_label'), style: theme.textTheme.labelSmall),
                           ],
                         )
                       ],
@@ -216,7 +221,7 @@ class _MonthlyReviewPageState extends State<MonthlyReviewPage> {
                         const SizedBox(height: 8),
                         Text('${data.transactionCount}', 
                           style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
-                        Text('Items', style: theme.textTheme.labelSmall),
+                        Text(lang.translate('items_label'), style: theme.textTheme.labelSmall),
                       ],
                     ),
                   ),
@@ -245,11 +250,11 @@ class _MonthlyReviewPageState extends State<MonthlyReviewPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('TOP SPENDING', style: theme.textTheme.labelMedium?.copyWith(
+                  Text(lang.translate('top_spending'), style: theme.textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.bold, letterSpacing: 1.1, color: colors.onSurfaceVariant)),
                   const SizedBox(height: 16),
                   if (data.categoryBreakdown.isEmpty)
-                    const Text('No spending data recorded.')
+                    Text(lang.translate('no_spending_data'))
                   else
                     ...data.categoryBreakdown.entries
                         .toList()
@@ -261,7 +266,8 @@ class _MonthlyReviewPageState extends State<MonthlyReviewPage> {
                               e.value, 
                               data.expenses, 
                               colors.primary, 
-                              theme
+                              theme,
+                              lang,
                             )),
                 ],
               ),
@@ -271,7 +277,7 @@ class _MonthlyReviewPageState extends State<MonthlyReviewPage> {
     );
   }
 
-  Widget _buildSpendingBar(String category, double amount, double total, Color color, ThemeData theme) {
+  Widget _buildSpendingBar(String category, double amount, double total, Color color, ThemeData theme, LanguageProvider lang) {
     final percentage = total > 0 ? amount / total : 0.0;
     final colors = theme.colorScheme;
     final text = theme.textTheme;
@@ -283,8 +289,8 @@ class _MonthlyReviewPageState extends State<MonthlyReviewPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(category, style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
-              CurrencyDisplay(amount: amount, style: text.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: colors.onSurface)),
+              Text(lang.translate(category), style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+              CurrencyDisplay(amount: amount, isExpense: true, style: text.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: colors.onSurface)),
             ],
           ),
           const SizedBox(height: 6),
@@ -303,24 +309,26 @@ class _MonthlyReviewPageState extends State<MonthlyReviewPage> {
   void _showMonthlyDetails(BuildContext context, MonthlyData data) {
     final theme = Theme.of(context);
     final financialColors = theme.extension<FinancialColors>()!;
+    final lang = context.read<LanguageProvider>();
+    final monthName = DateFormat('MMMM', lang.localeCode).format(data.month);
     
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('${data.formattedMonth} Summary'),
+        title: Text('$monthName ${lang.translate('summary_title')}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildDetailRow('Income', '\$${data.income.toStringAsFixed(2)}', financialColors.income),
-            _buildDetailRow('Expenses', '\$${data.expenses.toStringAsFixed(2)}', financialColors.expense),
+            _buildDetailRow(lang.translate('income_label'), '\$${data.income.toStringAsFixed(2)}', financialColors.income),
+            _buildDetailRow(lang.translate('expenses_label'), '\$${data.expenses.toStringAsFixed(2)}', financialColors.expense),
             const Divider(),
-            _buildDetailRow('Net Profit', '\$${data.net.toStringAsFixed(2)}', theme.colorScheme.primary),
+            _buildDetailRow(lang.translate('net_profit'), '\$${data.net.toStringAsFixed(2)}', theme.colorScheme.primary),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(lang.translate('close_btn')),
           ),
         ],
       ),

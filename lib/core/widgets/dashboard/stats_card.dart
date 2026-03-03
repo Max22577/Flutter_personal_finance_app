@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/widgets/shared/currency_display.dart';
 import 'package:personal_fin/core/widgets/theme/app_theme.dart'; 
 import 'package:personal_fin/models/monthly_data.dart';
+import 'package:provider/provider.dart';
 
 class StatCard extends StatelessWidget {
   final String title;
@@ -25,6 +27,7 @@ class StatCard extends StatelessWidget {
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
     final financialColors = theme.extension<FinancialColors>()!;
+    final lang = context.watch<LanguageProvider>();
 
     return Container(
       decoration: BoxDecoration(
@@ -67,12 +70,12 @@ class StatCard extends StatelessWidget {
                 children: [
                   _buildHeader(textTheme, colors),
                   const Spacer(),
-                  _buildMainBalance(textTheme, colors),
+                  _buildMainBalance(textTheme, colors, lang),
                   const SizedBox(height: 16),
-                  _buildAnimatedStats(context),
+                  _buildAnimatedStats(context, lang),
                   if (previousMonthData != null) ...[
                     const SizedBox(height: 12),
-                    _buildComparisonTile(context),
+                    _buildComparisonTile(context, lang),
                   ],
                 ],
               ),
@@ -100,12 +103,12 @@ class StatCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMainBalance(TextTheme textTheme, ColorScheme colors) {
+  Widget _buildMainBalance(TextTheme textTheme, ColorScheme colors, LanguageProvider lang) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Net Balance',
+          lang.translate('net_balance'),
           style: textTheme.bodyMedium?.copyWith(color: colors.onSurface.withValues(alpha: 0.6)),
         ),
         const SizedBox(height: 4),
@@ -159,20 +162,21 @@ class StatCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAnimatedStats(BuildContext context) {
+  Widget _buildAnimatedStats(BuildContext context, LanguageProvider lang) {
     final theme = Theme.of(context);
     final financialColors = theme.extension<FinancialColors>()!;
+    
 
     return Row(
       children: [
-        _buildStatItem('Income', income, financialColors.income, Icons.arrow_upward, false),
+        _buildStatItem(lang.translate('income'), income, financialColors.income, Icons.arrow_upward, false),
         const SizedBox(width: 16),
-        _buildStatItem('Expenses', expenses, financialColors.expense, Icons.arrow_downward, true),
+        _buildStatItem(lang.translate('expense'), expenses, financialColors.expense, Icons.arrow_downward, true),
       ],
     );
   }
 
-  Widget _buildComparisonTile(BuildContext context) {
+  Widget _buildComparisonTile(BuildContext context, LanguageProvider lang) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final financialColors = theme.extension<FinancialColors>()!;
@@ -196,7 +200,7 @@ class StatCard extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            '${isImproved ? 'Improved' : 'Declined'} by ',
+            '${isImproved ? lang.translate('improved') : lang.translate('declined')} ${lang.translate('by')} ',
             style: TextStyle(
               color: colors.onSurface.withValues(alpha: 0.7),
               fontWeight: FontWeight.w600,

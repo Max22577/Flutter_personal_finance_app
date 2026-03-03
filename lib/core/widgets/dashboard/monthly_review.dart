@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/widgets/shared/currency_display.dart';
 import 'package:personal_fin/core/widgets/theme/app_theme.dart';
 import 'package:personal_fin/models/monthly_data.dart';
@@ -112,6 +113,7 @@ class MonthlyReview extends StatelessWidget {
   Widget _buildAnimatedStats(BuildContext context) {
     final theme = Theme.of(context);
     final financialColors = theme.extension<FinancialColors>()!;
+    final lang = context.read<LanguageProvider>();
 
     return Column(
       children: [
@@ -119,14 +121,14 @@ class MonthlyReview extends StatelessWidget {
         Row(
           children: [
             _buildAnimatedStatItem(
-              label: 'Income',
+              label: lang.translate('income'),
               value: monthlyData.income,
               color: financialColors.income,
               icon: Icons.add_circle_outline_rounded, context: context, isExpense: false
             ),
             const SizedBox(width: 12),
             _buildAnimatedStatItem(
-              label: 'Expenses',
+              label: lang.translate('expense'),
               value: monthlyData.expenses,
               color: financialColors.expense,
               icon: Icons.remove_circle_outline_rounded, context: context, isExpense: true,
@@ -136,7 +138,7 @@ class MonthlyReview extends StatelessWidget {
         const SizedBox(height: 12),
         // Bottom Row: Net (Full Width)
         _buildAnimatedStatItem(
-          label: 'Net Balance',
+          label: lang.translate('net_balance'),
           value: monthlyData.net,
           color: monthlyData.net >= 0 ? financialColors.income : financialColors.expense,
           icon: Icons.account_balance_wallet_outlined,
@@ -213,13 +215,14 @@ class MonthlyReview extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final savingsRatio = (monthlyData.income - monthlyData.expenses) / monthlyData.income;
     final clampedRatio = savingsRatio.clamp(0.0, 1.0);
+    final lang = context.read<LanguageProvider>();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const Text('Savings Efficiency', style: TextStyle(fontWeight: FontWeight.w500)),
+            Text(lang.translate('savings_efficiency'), style: TextStyle(fontWeight: FontWeight.w500)),
             const Spacer(),
             Text(
               '${(clampedRatio * 100).toStringAsFixed(1)}%',
@@ -267,6 +270,7 @@ class MonthlyReview extends StatelessWidget {
     final textTheme = theme.textTheme;
     final financialColors = theme.extension<FinancialColors>()!;
     final cf = context.watch<CurrencyProvider>().formatter;
+    final lang = context.read<LanguageProvider>();
 
     final percentChange = monthlyData.percentageChangeFrom(previousMonthData!);
     final isPositive = percentChange >= 0;
@@ -291,7 +295,7 @@ class MonthlyReview extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isPositive ? 'Performance Up' : 'Performance Down',
+                  isPositive ? lang.translate('perf_up') : lang.translate('perf_down'),
                   style: textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colors.onSurface,
@@ -300,7 +304,7 @@ class MonthlyReview extends StatelessWidget {
                 const SizedBox(height: 2),
                 // Main comparison text
                 Text(
-                  '${percentChange.abs().toStringAsFixed(1)}% ${isPositive ? 'better' : 'lower'} than last month',
+                  '${percentChange.abs().toStringAsFixed(1)}% ${isPositive ? lang.translate('better') : lang.translate('lower')} ${lang.translate('than_last_month')}',
                   style: textTheme.bodySmall?.copyWith(
                     color: colors.onSurface.withValues(alpha: 0.6),
                   ),
@@ -310,14 +314,14 @@ class MonthlyReview extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      'Previous: ',
+                      '${lang.translate('previous')}: ',
                       style: textTheme.labelSmall?.copyWith(
                         color: colors.onSurface.withValues(alpha: 0.4),
                         fontSize: 10,
                       ),
                     ),
                     Text(
-                      cf.format(previousMonthData!.net),
+                      cf.format(previousMonthData!.net, lang.localeCode),
                       style: textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colors.onSurface.withValues(alpha: 0.5),

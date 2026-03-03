@@ -4,11 +4,12 @@ class NavigationProvider extends ChangeNotifier {
   int _selectedIndex = 0;
   List<Widget> _currentActions = [];
   
-  final List<String> _pageTitles = ["Dashboard", "Transactions", "Budgeting", "Profile"];
+  
+  final List<String> _pageTitlesKeys = ["dashboard", "transactions", "budgeting", "profile"];
 
   int get selectedIndex => _selectedIndex;
   List<Widget> get currentActions => _currentActions;
-  String get currentTitle => _pageTitles[_selectedIndex];
+  String get currentTitle => _pageTitlesKeys[_selectedIndex];
 
   void setPage(int index) {
     _selectedIndex = index;

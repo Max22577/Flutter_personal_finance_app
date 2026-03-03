@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:provider/provider.dart';
 import '../../../models/category.dart';
 import '../shared/currency_display.dart';
 
@@ -35,6 +37,7 @@ class BudgetCategoryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isBudgetSet = currentBudget > 0;
     final remaining = isBudgetSet ? (currentBudget - currentSpending) : 0.0;
+    final lang = context.watch<LanguageProvider>();
 
     return Card(
       elevation: 2,
@@ -65,7 +68,7 @@ class BudgetCategoryCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      category.name,
+                      lang.translate(category.name),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -93,7 +96,7 @@ class BudgetCategoryCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildAmountColumn(
-                    title: 'Budget',
+                    title: lang.translate('budget'),
                     amount: currentBudget,
                     theme: theme,
                     isPrimary: true,
@@ -104,7 +107,7 @@ class BudgetCategoryCard extends StatelessWidget {
                     color: colors.outline.withValues(alpha: 0.3),
                   ),
                   _buildAmountColumn(
-                    title: 'Spent',
+                    title: lang.translate('spent'),
                     amount: currentSpending,
                     theme: theme,
                   ),
@@ -114,7 +117,7 @@ class BudgetCategoryCard extends StatelessWidget {
                     color: colors.outline.withValues(alpha: 0.3),
                   ),
                   _buildAmountColumn(
-                    title: 'Remaining',
+                    title: lang.translate('remaining'),
                     amount: remaining,
                     theme: theme,
                     isPositive: isBudgetSet ? remaining >= 0 : null,
@@ -174,7 +177,7 @@ class BudgetCategoryCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'No budget set',
+                        lang.translate('no_budget_set'),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: colors.primary,
                         ),

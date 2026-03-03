@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/widgets/theme/app_theme.dart';
 
 class EmptyState extends StatefulWidget {
   final String title;
@@ -63,6 +64,7 @@ class _EmptyStateState extends State<EmptyState> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final illustrationTheme = theme.extension<IllustrationTheme>();
     
     return Center(
       child: AnimatedBuilder(
@@ -78,7 +80,19 @@ class _EmptyStateState extends State<EmptyState> with SingleTickerProviderStateM
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [           
+          children: [
+            ColorFiltered(
+              colorFilter: ColorFilter.mode(
+                illustrationTheme?.tintColor ?? Colors.transparent,
+                illustrationTheme?.blendMode ?? BlendMode.srcIn,
+              ),
+              child: Image.asset(
+                widget.imagePath,
+                width: 250, // Adjust size as needed
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 24),           
             Text(
               widget.title,
               style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),

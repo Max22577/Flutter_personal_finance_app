@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/pages/transactions.dart';
+import 'package:provider/provider.dart';
 
 class ErrorState extends StatelessWidget {
   final String message;
@@ -8,6 +10,8 @@ class ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final langProvider = context.watch<LanguageProvider>();
+    
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -20,8 +24,8 @@ class ErrorState extends StatelessWidget {
               color: Colors.red,
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Failed to load transactions',
+            Text(
+              langProvider.translate('failed_to_load_transactions'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -45,7 +49,7 @@ class ErrorState extends StatelessWidget {
                   ),
                 );
               },
-              child: const Text('Try Again'),
+              child: Text(langProvider.translate('try_again')),
             ),
           ],
         ),

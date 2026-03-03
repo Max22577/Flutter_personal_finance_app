@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/utils/currency_formatter.dart';
 import 'package:personal_fin/core/widgets/theme/app_theme.dart';
 import 'package:personal_fin/models/transaction.dart';
@@ -91,13 +92,13 @@ class _IncomeExpensesGraphState extends State<IncomeExpensesGraph> {
   }
 
   // Synchronous formatting helper using cached currency
-  String _formatCurrencyValue(double value, CurrencyFormatter formatter, {bool compact = false}) {
+  String _formatCurrencyValue(double value, CurrencyFormatter formatter, LanguageProvider lang, {bool compact = false}) {
     // Use the built-in logic from your new CurrencyFormatter class
     if (compact) {
-      return formatter.formatCompact(value);
+      return formatter.formatCompact(value, lang.localeCode);
     }
     
-    return formatter.format(value);
+    return formatter.format(value, lang.localeCode);
   }
 
   LineChartData _buildChartData(ThemeData theme) {
@@ -105,6 +106,7 @@ class _IncomeExpensesGraphState extends State<IncomeExpensesGraph> {
     final financialColors = theme.extension<FinancialColors>()!;
     final maxY = _calculateMaxValue();
     final cf = context.watch<CurrencyProvider>().formatter;
+    final lang = context.watch<LanguageProvider>();
 
     return LineChartData(
       minY: 0,
@@ -155,7 +157,7 @@ class _IncomeExpensesGraphState extends State<IncomeExpensesGraph> {
               return Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                  DateFormat(widget.daysToShow <= 7 ? 'E' : 'MMM d').format(date),
+                  DateFormat(widget.daysToShow <= 7 ? 'E' : 'MMM d', lang.localeCode).format(date),
                   style: theme.textTheme.labelSmall?.copyWith(color: colors.outline),
                 ),
               );
@@ -169,14 +171,14 @@ class _IncomeExpensesGraphState extends State<IncomeExpensesGraph> {
             return touchedSpots.map((spot) {
               final isIncome = spot.barIndex == 0;
               return LineTooltipItem(
-                '${isIncome ? "Income" : "Expense"}\n',
+                '${isIncome ? lang.translate('income') : lang.translate('expense')}\n',
                 theme.textTheme.bodyMedium!.copyWith(
                   color: isIncome ? financialColors.income : financialColors.expense,
                   fontWeight: FontWeight.bold,
                 ),
                 children: [
                   TextSpan(
-                    text: _formatCurrencyValue(spot.y, cf, compact: true),
+                    text: _formatCurrencyValue(spot.y, cf, compact: true, lang),
                     style: theme.textTheme.labelMedium,
                   ),
                 ],
@@ -239,7 +241,7 @@ class _IncomeExpensesGraphState extends State<IncomeExpensesGraph> {
     );
   }
 
-  Widget _buildErrorState() {
+  Widget _buildErrorState(LanguageProvider lang) {
     return Container(
       height: widget.height,
       alignment: Alignment.center,
@@ -249,21 +251,21 @@ class _IncomeExpensesGraphState extends State<IncomeExpensesGraph> {
           const Icon(Icons.error_outline, color: Colors.red, size: 40),
           const SizedBox(height: 8),
           Text(
-            _errorMessage ?? 'Error loading graph',
+            _errorMessage ?? lang.translate('error_loading_graph'),
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 8),
           ElevatedButton(
             onPressed: _loadData,
-            child: const Text('Retry'),
+            child: Text(lang.translate('retry')),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(LanguageProvider lang) {
     return Container(
       height: widget.height,
       alignment: Alignment.center,
@@ -276,13 +278,13 @@ class _IncomeExpensesGraphState extends State<IncomeExpensesGraph> {
             color: Colors.grey.shade300,
           ),
           const SizedBox(height: 16),
-          const Text(
-            'No transaction data yet',
+          Text(
+            lang.translate('no_transaction_data_yet'),
             style: TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Add transactions to see income vs expenses',
+          Text(
+            lang.translate('add_transactions_to_see_income_vs_expenses'),
             style: TextStyle(fontSize: 12, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
@@ -299,12 +301,14 @@ class _IncomeExpensesGraphState extends State<IncomeExpensesGraph> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
+
     if (_isLoading) return _buildLoadingState();
-    if (_errorMessage != null) return _buildErrorState();
-    if (_dailyData.isEmpty) return _buildEmptyState();
+    if (_errorMessage != null) return _buildErrorState(lang);
+    if (_dailyData.isEmpty) return _buildEmptyState(lang);
 
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final colors = theme.colorScheme;   
     final symbol = _currentCurrency?.symbol ?? '\$';
 
     return Column(
@@ -317,7 +321,7 @@ class _IncomeExpensesGraphState extends State<IncomeExpensesGraph> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Income vs Expenses (${widget.daysToShow} Days)',
+                '${lang.translate('income_vs_expenses')} (${widget.daysToShow} ${lang.translate('days')})',
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colors.onSurface,
@@ -338,7 +342,7 @@ class _IncomeExpensesGraphState extends State<IncomeExpensesGraph> {
                 RotatedBox(
                   quarterTurns: 3,
                   child: Text(
-                    'Amount ($symbol)',
+                    '${lang.translate('amount')} ($symbol)',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: colors.outline,
                       fontWeight: FontWeight.bold,

@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:provider/provider.dart';
 
 class MonthPickerSheet extends StatefulWidget {
   final DateTime initialDate;
@@ -38,6 +40,7 @@ class _MonthPickerSheetState extends State<MonthPickerSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final lang = context.watch<LanguageProvider>();
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -73,7 +76,7 @@ class _MonthPickerSheetState extends State<MonthPickerSheet> {
                     onPressed: () => setState(() => _displayedDate = DateTime(_displayedDate.year - 1)),
                   ),
                   Text(
-                    DateFormat('yyyy').format(_displayedDate),
+                    DateFormat('MMMM yyyy', lang.localeCode).format(_displayedDate),
                     style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   IconButton(
@@ -108,7 +111,7 @@ class _MonthPickerSheetState extends State<MonthPickerSheet> {
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        DateFormat('MMM').format(monthDate),
+                        DateFormat('MMM', lang.localeCode).format(monthDate),
                         style: TextStyle(
                           color: isSelected ? colors.onPrimaryContainer : colors.onSurface,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

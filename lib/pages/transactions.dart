@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:personal_fin/core/widgets/shared/raised_floating_action_button.dart';
 import 'package:personal_fin/models/transaction.dart';
@@ -96,6 +97,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
 
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
       body: TransactionHistory(user: user, isActive: widget.isActive),
@@ -104,7 +106,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
         heroTag: 'transaction_add',
         onPressed: () => _showTransactionForm(context),
         icon:  Icon(Icons.add, key: const ValueKey('add_transaction'), color: colors.onSurface),
-        label: Text('New Transaction', style: theme.textTheme.labelLarge),
+        label: Text(lang.translate('new_transaction'), style: theme.textTheme.labelLarge),
         elevation: 4, 
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),

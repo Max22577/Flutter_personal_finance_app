@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:provider/provider.dart';
 
 class StatBox extends StatelessWidget {
@@ -25,6 +26,7 @@ class StatBox extends StatelessWidget {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final cf = context.watch<CurrencyProvider>().formatter;
+    final lang = context.watch<LanguageProvider>();
 
   // 2. Determine the sign logic
   final sign = showSign && value != 0 
@@ -33,8 +35,8 @@ class StatBox extends StatelessWidget {
 
   // 3. Format the value immediately using your new methods
   final formattedValue = compact 
-      ? cf.formatCompact(value.abs()) 
-      : cf.formatDisplay(value.abs());
+      ? cf.formatCompact(value.abs(), lang.localeCode) 
+      : cf.formatDisplay(value.abs(), lang.localeCode);
     
     return Container(
       padding: compact ? const EdgeInsets.all(8) : const EdgeInsets.all(12),

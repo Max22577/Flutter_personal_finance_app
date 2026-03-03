@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
+import 'package:provider/provider.dart';
 import '../../../models/category.dart';
 import '../../../models/transaction.dart';
 import 'transaction_history/state/empty_state.dart';
@@ -135,21 +137,22 @@ class _TransactionHistoryState extends State<TransactionHistory> {
   void _showDeleteDialog(BuildContext context, Transaction transaction) async {
     final messenger = ScaffoldMessenger.of(context);
     final theme = Theme.of(context);
+    final lang = context.read<LanguageProvider>();
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Transaction'),
+        title: Text(lang.translate('delete_transaction')),
         content: Text('Delete "${transaction.title}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child:Text(lang.translate('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(lang.translate('delete')),
           ),
         ],
       ),
@@ -161,7 +164,7 @@ class _TransactionHistoryState extends State<TransactionHistory> {
         await _firestoreService.deleteTransaction(transaction.id!);
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Deleted "${transaction.title}"',
+            content: Text('${lang.translate('deleted')} "${transaction.title}"',
               style: TextStyle(color: theme.colorScheme.onPrimaryContainer)
             ),
             behavior: SnackBarBehavior.floating,
@@ -173,7 +176,7 @@ class _TransactionHistoryState extends State<TransactionHistory> {
       } catch (e) {
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Delete failed: $e',
+            content: Text('${lang.translate('delete_failed')}: $e',
               style: TextStyle(color: theme.colorScheme.onErrorContainer)
             ),
             behavior: SnackBarBehavior.floating,

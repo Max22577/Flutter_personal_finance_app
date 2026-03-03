@@ -1,6 +1,8 @@
 // lib/features/savings/widgets/add_to_savings_button.dart
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/services/savings_service.dart';
+import 'package:provider/provider.dart';
 
 import '../../../models/savings.dart';
 
@@ -25,40 +27,41 @@ class _AddToSavingsButtonState extends State<AddToSavingsButton> {
   bool _isProcessing = false;
 
   Future<void> _showAddToSavingsDialog() async {
+    final lang = context.read<LanguageProvider>();
     await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Add to Savings'),
+          title: Text(lang.translate('add_to_savings')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Adding to: ${widget.goal.name}',
+                  '${lang.translate('adding_to')}: ${widget.goal.name}',
                   style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _amountController,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: 'Amount',
+                  decoration:  InputDecoration(
+                    labelText: lang.translate('amount'),
                     prefixText: '\$',
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Required';
+                    if (value == null || value.isEmpty) return lang.translate('required');
                     final amount = double.tryParse(value);
-                    if (amount == null || amount <= 0) return 'Invalid amount';
+                    if (amount == null || amount <= 0) return lang.translate('err_invalid_amount');
                     return null;
                   },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _noteController,
-                  decoration: const InputDecoration(
-                    labelText: 'Note (optional)',
+                  decoration: InputDecoration(
+                    labelText: lang.translate('note_optional'),
                     border: OutlineInputBorder(),
                   ),
                   maxLength: 50,
@@ -69,7 +72,7 @@ class _AddToSavingsButtonState extends State<AddToSavingsButton> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(lang.translate('cancel')),
             ),
             ElevatedButton(
               onPressed: _isProcessing ? null : _addToSavings,
@@ -79,7 +82,7 @@ class _AddToSavingsButtonState extends State<AddToSavingsButton> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Add'),
+                  :  Text(lang.translate('add')),
             ),
           ],
         );
@@ -88,6 +91,7 @@ class _AddToSavingsButtonState extends State<AddToSavingsButton> {
   }
 
   Future<void> _addToSavings() async {
+    final lang = context.read<LanguageProvider>();
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) return;
 
@@ -99,14 +103,14 @@ class _AddToSavingsButtonState extends State<AddToSavingsButton> {
         amount: amount,
         transactionNote: _noteController.text.isNotEmpty
             ? _noteController.text
-            : 'Added to ${widget.goal.name}',
+            : '${lang.translate('added_to')} ${widget.goal.name}',
       );
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('\$${amount.toStringAsFixed(2)} added to savings',
+            content: Text('\$${amount.toStringAsFixed(2)} ${lang.translate('added_to')} ${widget.goal.name}',
               style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer),
             ),
             backgroundColor: Theme.of(context).colorScheme.primaryContainer,
@@ -122,7 +126,7 @@ class _AddToSavingsButtonState extends State<AddToSavingsButton> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e',
+            content: Text('${lang.translate('error')}: $e',
               style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer),
             ),
             backgroundColor: Theme.of(context).colorScheme.errorContainer,
@@ -144,10 +148,12 @@ class _AddToSavingsButtonState extends State<AddToSavingsButton> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final lang = context.watch<LanguageProvider>();
+    
     return FloatingActionButton.extended(
       heroTag: 'add_to_savings_${widget.goal.id}',
       icon: const Icon(Icons.add, size: 18,),
-      label: Text('Add to savings', 
+      label: Text(lang.translate('add_to_savings'), 
         style: theme.textTheme.labelLarge?.copyWith(
           letterSpacing: -0.05,
           fontWeight: FontWeight.bold,

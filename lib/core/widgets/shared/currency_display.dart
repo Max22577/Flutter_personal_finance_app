@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/widgets/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/currency_provider.dart';
@@ -30,6 +31,7 @@ class CurrencyDisplay extends StatelessWidget {
     final financialColors = theme.extension<FinancialColors>();
 
     // 1. Get the synchronous formatter from your Provider
+    final lang = context.watch<LanguageProvider>();
     final cf = context.watch<CurrencyProvider>().formatter;
 
     // 2. Logic to determine if it's visually negative/positive
@@ -38,8 +40,8 @@ class CurrencyDisplay extends StatelessWidget {
 
     // 3. Format the amount immediately (no FutureBuilder needed!)
     String displayText = compact 
-        ? cf.formatCompact(amount.abs()) 
-        : cf.formatDisplay(amount.abs());
+        ? cf.formatCompact(amount.abs(), lang.localeCode)
+        : cf.formatDisplay(amount.abs(), lang.localeCode);
 
     // 4. Handle signs manually based on your parameters
     if (showSign) {

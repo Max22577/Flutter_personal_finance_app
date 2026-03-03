@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -28,6 +29,7 @@ class TopNavbar extends StatelessWidget implements PreferredSizeWidget {
     final navigationProvider = Provider.of<NavigationProvider>(context);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final lang = context.watch<LanguageProvider>();
   
 
     List<Widget> actionsToShow;
@@ -51,7 +53,7 @@ class TopNavbar extends StatelessWidget implements PreferredSizeWidget {
         title: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           child: Text(
-            navigationProvider.currentTitle,
+            lang.translate(navigationProvider.currentTitle),
             key: ValueKey(navigationProvider.currentTitle), 
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,

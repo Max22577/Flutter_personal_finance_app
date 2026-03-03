@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/core/widgets/theme/app_theme.dart';
+import 'package:provider/provider.dart';
 
 import '../shared/currency_display.dart';
 
@@ -64,6 +66,7 @@ class _TransactionItemState extends State<TransactionItem> {
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
     final financialColors = theme.extension<FinancialColors>()!;
+    final lang = context.watch<LanguageProvider>();
     
     final isIncome = widget.transaction.type == 'Income';
     final iconColor = isIncome ? financialColors.income : financialColors.expense;
@@ -138,7 +141,7 @@ class _TransactionItemState extends State<TransactionItem> {
                         // Details row
                         SizedBox(
                           height: 20, // Fixed height for details
-                          child: _buildDetails(context),
+                          child: _buildDetails(context, lang),
                         ),
                       ],
                     ),
@@ -201,7 +204,7 @@ class _TransactionItemState extends State<TransactionItem> {
     );
   }
 
-  Widget _buildDetails(BuildContext context) {
+  Widget _buildDetails(BuildContext context, LanguageProvider lang) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
@@ -221,7 +224,7 @@ class _TransactionItemState extends State<TransactionItem> {
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
-            _categoryName,
+            lang.translate(_categoryName),
             style: textTheme.labelSmall?.copyWith(
               color: colors.onSurfaceVariant,
             ),

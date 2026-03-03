@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:personal_fin/models/category.dart';
+import 'package:provider/provider.dart';
 import '../transaction_form.dart';
 import 'transaction_tile.dart';
 
@@ -22,28 +24,28 @@ class TransactionGroupWidget extends StatelessWidget {
     super.key,
   });
 
-  String _getCategoryName(String categoryId) {
+  String _getCategoryName(String categoryId, LanguageProvider lang) {
     for (final category in categories) {
       if (category.id == categoryId) return category.name;
     }
-    return 'Uncategorized';
+    return lang.translate('uncategorized');
   }
 
-  String _formatDateHeader() {
+  String _formatDateHeader(LanguageProvider lang) {
     final today = DateTime.now();
     final yesterday = today.subtract(const Duration(days: 1));
     
-    if (_isSameDay(date, today)) return 'Today';
-    if (_isSameDay(date, yesterday)) return 'Yesterday';
+    if (_isSameDay(date, today)) return lang.translate('today');
+    if (_isSameDay(date, yesterday)) return lang.translate('yesterday');
     
-    return DateFormat('EEEE, MMMM d').format(date);
+    return DateFormat('EEEE, MMMM d', lang.localeCode).format(date);
   }
 
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  void _showEditForm(BuildContext context, Transaction transaction) {
+  void _showEditForm(BuildContext context, Transaction transaction, LanguageProvider lang) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -65,6 +67,7 @@ class TransactionGroupWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.read<LanguageProvider>();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -72,7 +75,7 @@ class TransactionGroupWidget extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
-            _formatDateHeader(),
+            _formatDateHeader(lang),
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
@@ -83,8 +86,8 @@ class TransactionGroupWidget extends StatelessWidget {
         // Transaction Tiles
         ...transactions.map((transaction) => TransactionTile(
               transaction: transaction,
-              categoryName: _getCategoryName(transaction.categoryId),
-              onEdit: () => _showEditForm(context, transaction),
+              categoryName: _getCategoryName(transaction.categoryId, lang),
+              onEdit: () => _showEditForm(context, transaction, lang),
               onDelete: () => onDelete(transaction),
             )),
       ],

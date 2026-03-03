@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../models/category.dart';
 import 'package:flutter/services.dart';
@@ -72,13 +73,14 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
 
   void _showSuccessToast({required ScaffoldMessengerState messenger}) {
     final theme = Theme.of(context);
+    final lang = context.read<LanguageProvider>();
      messenger.showSnackBar(
       SnackBar(
         content: Row(
           children: [
             Icon(Icons.check_circle, color: theme.colorScheme.onPrimaryContainer, size: 20),
             const SizedBox(width: 12),
-            Text('${widget.category.name} budget updated', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onPrimaryContainer),),
+            Text('${widget.category.name} ${lang.translate('budget_updated')}', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onPrimaryContainer),),
           ],
         ),
         behavior: SnackBarBehavior.floating,
@@ -93,6 +95,7 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final lang = context.watch<LanguageProvider>();
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -145,7 +148,7 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Edit Budget', style: theme.textTheme.titleLarge?.copyWith(fontSize: 20, letterSpacing: -1)),
+                                Text(lang.translate('edit_budget'), style: theme.textTheme.titleLarge?.copyWith(fontSize: 20, letterSpacing: -1)),
                                 Text(widget.category.name, style: theme.textTheme.titleMedium?.copyWith(color: colors.outline, letterSpacing: -1)),
                               ],
                             ),
@@ -197,12 +200,12 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
                               borderSide: BorderSide(color: colors.primary, width: 2),
                             ),
                           ),
-                          validator: (value) => (value == null || double.tryParse(value) == null) ? 'Enter a valid amount' : null,
+                          validator: (value) => (value == null || double.tryParse(value) == null) ? lang.translate('enter_valid_positive_amount') : null,
                         ),
                       ),
                       
                       const SizedBox(height: 25),
-                      if (widget.currentBudget > 0) _buildPreviousBadge(colors, theme),
+                      if (widget.currentBudget > 0) _buildPreviousBadge(colors, theme, lang),
                       const SizedBox(height: 32),
 
                       // --- Action Buttons ---
@@ -219,9 +222,9 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
                                 foregroundColor: colors.onSurfaceVariant,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                              child: const Text(
-                                'Cancel', 
-                                style: TextStyle(fontWeight: FontWeight.w600),
+                              child: Text(
+                                lang.translate('cancel'),
+                                style: const TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
@@ -239,7 +242,7 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
                               ),
                               child: _isSaving 
                                 ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                : const Text('Update Budget', style: TextStyle(fontWeight: FontWeight.bold)),
+                                :  Text(lang.translate('update_budget'), style: TextStyle(fontWeight: FontWeight.bold)),
                             ),
                           ),
                         ],
@@ -255,7 +258,7 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
     );
   }
 
-  Widget _buildPreviousBadge(ColorScheme colors, ThemeData theme) {
+  Widget _buildPreviousBadge(ColorScheme colors, ThemeData theme, LanguageProvider lang) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: ShapeDecoration(
@@ -271,7 +274,7 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
             Icon(Icons.history, size: 14, color: colors.onSecondaryContainer),
             const SizedBox(width: 6),
             Text(
-              'Previous: $_currencySymbol${widget.currentBudget.toStringAsFixed(0)}',
+              '${lang.translate('previous')}: $_currencySymbol${widget.currentBudget.toStringAsFixed(0)}',
               style: theme.textTheme.labelMedium?.copyWith(color: colors.onSecondaryContainer),
             ),
           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:personal_fin/core/widgets/budgeting/budget_category_card.dart';
 import 'package:personal_fin/core/widgets/budgeting/budget_edit_dialog.dart';
@@ -16,7 +17,6 @@ import '../models/category.dart';
 import '../models/budget.dart';
 import '../models/transaction.dart';
 
-
 class BudgetingPage extends StatefulWidget {
   const BudgetingPage({super.key});
 
@@ -28,8 +28,9 @@ class _BudgetingPageState extends State<BudgetingPage> {
   final _scrollController = ScrollController();
   DateTime _selectedDate = DateTime.now();
   late NavigationProvider _navigationProvider;
- 
-  String get _monthYearString => DateFormat('MMMM yyyy').format(_selectedDate);
+
+  String getMonthYearString(String localeCode) =>
+      DateFormat('MMMM yyyy', localeCode).format(_selectedDate);
 
   void _handleMonthSelection() async {
     final date = await MonthPickerSheet.show(context, _selectedDate);
@@ -45,7 +46,7 @@ class _BudgetingPageState extends State<BudgetingPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _updateAppBar(context);
     });
-    super.initState(); 
+    super.initState();
   }
 
   @override
@@ -58,25 +59,25 @@ class _BudgetingPageState extends State<BudgetingPage> {
   void _onNavChanged() {
     if (!mounted) return;
     final nav = context.read<NavigationProvider>();
-    
+
     if (nav.selectedIndex == 2 && nav.currentActions.isEmpty) {
       _updateAppBar(context);
-    } 
+    }
   }
 
   void _updateAppBar(BuildContext context) {
-      if (!mounted) return;
-      final nav = context.read<NavigationProvider>();
-      
-      if (nav.selectedIndex == 2) {
-        nav.setActions([
-          IconButton(
-            key: const ValueKey('budget_cat_add'), 
-            icon: const Icon(Icons.category),
-            onPressed: () => _addCategory(context),
-          ),
-        ]);
-      }
+    if (!mounted) return;
+    final nav = context.read<NavigationProvider>();
+
+    if (nav.selectedIndex == 2) {
+      nav.setActions([
+        IconButton(
+          key: const ValueKey('budget_cat_add'),
+          icon: const Icon(Icons.category),
+          onPressed: () => _addCategory(context),
+        ),
+      ]);
+    }
   }
 
   void _addCategory(BuildContext context) async {
@@ -85,11 +86,9 @@ class _BudgetingPageState extends State<BudgetingPage> {
       MaterialPageRoute(builder: (context) => const CategoryManagementPage()),
     );
     if (!mounted) return;
-    setState(() {}); // Refresh to show new category 
-    
+    setState(() {}); // Refresh to show new category
   }
 
-  
   @override
   void dispose() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -108,6 +107,7 @@ class _BudgetingPageState extends State<BudgetingPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
       body: RefreshIndicator(
@@ -137,20 +137,26 @@ class _BudgetingPageState extends State<BudgetingPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Budget Categories',
+                            lang.translate('budget_categories'),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           Chip(
                             label: StreamBuilder<List<Category>>(
-                              stream: FirestoreService.instance.streamCategories(),
+                              stream: FirestoreService.instance
+                                  .streamCategories(),
                               builder: (context, snapshot) {
-                                final count = snapshot.data
-                                    ?.where((c) => !_isIncomeCategory(c.name))
-                                    .length ??
+                                final count =
+                                    snapshot.data
+                                        ?.where(
+                                          (c) => !_isIncomeCategory(c.name),
+                                        )
+                                        .length ??
                                     0;
-                                return Text('$count categories');
+                                return Text(
+                                  '$count ${lang.translate('categories_count')}',
+                                );
                               },
                             ),
                             backgroundColor: colors.surface,
@@ -164,9 +170,7 @@ class _BudgetingPageState extends State<BudgetingPage> {
               ),
             ),
             _buildBudgetList(context),
-            SliverToBoxAdapter(
-              child: const SizedBox(height: 140), 
-            ),
+            SliverToBoxAdapter(child: const SizedBox(height: 140)),
           ],
         ),
       ),
@@ -183,10 +187,13 @@ class _BudgetingPageState extends State<BudgetingPage> {
   Widget _buildStatsOverview(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final activeMonthYear = _monthYearString;
+    final lang = context.watch<LanguageProvider>();
+    final activeMonthYear = getMonthYearString(lang.localeCode);
 
     return StreamBuilder<List<Budget>>(
-      stream: FirestoreService.instance.streamBudgets(monthYear: activeMonthYear),
+      stream: FirestoreService.instance.streamBudgets(
+        monthYear: activeMonthYear,
+      ),
       builder: (context, budgetSnapshot) {
         if (!budgetSnapshot.hasData) {
           return Container(
@@ -197,7 +204,10 @@ class _BudgetingPageState extends State<BudgetingPage> {
         }
 
         final budgets = budgetSnapshot.data ?? [];
-        final totalBudget = budgets.fold(0.0, (sum, budget) => sum + budget.amount);
+        final totalBudget = budgets.fold(
+          0.0,
+          (sum, budget) => sum + budget.amount,
+        );
         final activeBudgets = budgets.where((b) => b.amount > 0).length;
 
         return Container(
@@ -207,10 +217,7 @@ class _BudgetingPageState extends State<BudgetingPage> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                colors.surface,
-                colors.surfaceContainerHigh,
-              ],
+              colors: [colors.surface, colors.surfaceContainerHigh],
             ),
             borderRadius: BorderRadius.circular(22),
             boxShadow: [
@@ -226,15 +233,15 @@ class _BudgetingPageState extends State<BudgetingPage> {
             children: [
               _buildStatItem(
                 imagePath: 'assets/images/undraw_wallet_diag.png',
-                label: 'Total Budget',
+                label: lang.translate('total_budget'),
                 value: totalBudget,
                 color: colors.primaryContainer,
                 theme: theme,
                 index: 0, // Add index
-              ),        
+              ),
               _buildStatItem(
                 imagePath: 'assets/images/check.png',
-                label: 'Active',
+                label: lang.translate('active'),
                 value: activeBudgets.toDouble(),
                 color: colors.primaryContainer,
                 theme: theme,
@@ -243,7 +250,7 @@ class _BudgetingPageState extends State<BudgetingPage> {
               ),
               _buildStatItem(
                 imagePath: 'assets/images/choice.png',
-                label: 'Categories',
+                label: lang.translate('categories_count'),
                 value: budgets.length.toDouble(),
                 color: colors.primaryContainer,
                 theme: theme,
@@ -251,70 +258,61 @@ class _BudgetingPageState extends State<BudgetingPage> {
                 index: 2, // Add index
               ),
             ],
-          ),   
+          ),
         );
       },
     );
   }
 
   Widget _buildStatItem({
-    required String imagePath, 
+    required String imagePath,
     required String label,
     required double value,
     required Color color,
     required ThemeData theme,
     required int index,
     bool isCurrency = true,
-    
   }) {
     final illustrationTheme = Theme.of(context).extension<IllustrationTheme>();
-    
+
     return TweenAnimationBuilder<double>(
       key: ValueKey('stat_item_$index'),
       // Start at -0.2 to give it a little "extra" bounce room
       tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 600 + (index * 50)), 
+      duration: Duration(milliseconds: 600 + (index * 50)),
       curve: Curves.easeOutBack,
       builder: (context, animValue, child) {
         // Calculate a local value that respects the delay
         // This ensures the widget stays invisible until its turn
-        final staggeredValue = ((animValue - (index * 0.15)) / (1 - (index * 0.15))).clamp(0.0, 1.0);
+        final staggeredValue =
+            ((animValue - (index * 0.15)) / (1 - (index * 0.15))).clamp(
+              0.0,
+              1.0,
+            );
 
         return Opacity(
           opacity: staggeredValue,
-          child: Transform.scale(
-            scale: staggeredValue,
-            child: child,
-          ),
+          child: Transform.scale(scale: staggeredValue, child: child),
         );
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+          ColorFiltered(
+            colorFilter: ColorFilter.mode(
+              illustrationTheme?.tintColor ?? Colors.transparent,
+              illustrationTheme?.blendMode ?? BlendMode.srcIn,
             ),
             child: Image.asset(
               imagePath,
               width: 50,
               height: 50,
-              color: illustrationTheme?.tintColor,
-              colorBlendMode: illustrationTheme?.blendMode, 
+              fit: BoxFit.contain,
             ),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Value Text
           isCurrency
               ? CurrencyDisplay(
@@ -332,7 +330,7 @@ class _BudgetingPageState extends State<BudgetingPage> {
                   ),
                 ),
           const SizedBox(height: 2),
-          
+
           // Label
           Text(
             label.toUpperCase(),
@@ -350,7 +348,8 @@ class _BudgetingPageState extends State<BudgetingPage> {
 
   Widget _buildBudgetList(BuildContext context) {
     final firestoreService = FirestoreService.instance;
-    final currentMonthYear = _monthYearString;
+    final lang = context.watch<LanguageProvider>();
+    final currentMonthYear = getMonthYearString(lang.localeCode);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -365,9 +364,9 @@ class _BudgetingPageState extends State<BudgetingPage> {
           return SliverFillRemaining(
             child: EmptyState(
               icon: Icons.error_outline,
-              title: 'Error Loading Budgets',
-              message: 'Please try again later',
-              actionText: 'Retry',
+              title: lang.translate('error_loading_budgets'),
+              message: lang.translate('please_try_again'),
+              actionText: lang.translate('retry'),
               onAction: () => setState(() {}),
             ),
           );
@@ -384,9 +383,9 @@ class _BudgetingPageState extends State<BudgetingPage> {
               return SliverFillRemaining(
                 child: EmptyState(
                   icon: Icons.error_outline,
-                  title: 'Error Loading Categories',
-                  message: 'Please try again later',
-                  actionText: 'Retry',
+                  title: lang.translate('error_loading_categories'),
+                  message: lang.translate('please_try_again'),
+                  actionText: lang.translate('retry'),
                   onAction: () => setState(() {}),
                 ),
               );
@@ -398,9 +397,9 @@ class _BudgetingPageState extends State<BudgetingPage> {
               return SliverFillRemaining(
                 child: EmptyState(
                   icon: Icons.category,
-                  title: 'No Categories',
-                  message: 'Add categories to start budgeting',
-                  actionText: 'Add Category',
+                  title: lang.translate('no_categories'),
+                  message: lang.translate('add_categories_to_start'),
+                  actionText: lang.translate('add_category_action'),
                   onAction: () {
                     // Navigate to category management
                   },
@@ -409,7 +408,9 @@ class _BudgetingPageState extends State<BudgetingPage> {
             }
 
             return StreamBuilder<List<Transaction>>(
-              stream: firestoreService.streamMonthlyTransactions(monthYear: currentMonthYear),
+              stream: firestoreService.streamMonthlyTransactions(
+                monthYear: currentMonthYear,
+              ),
               builder: (context, transactionSnapshot) {
                 final budgets = budgetSnapshot.data ?? [];
                 final categories = categorySnapshot.data ?? [];
@@ -430,9 +431,9 @@ class _BudgetingPageState extends State<BudgetingPage> {
                   return SliverFillRemaining(
                     child: EmptyState(
                       icon: Icons.category,
-                      title: 'No Categories',
-                      message: 'Add categories to start budgeting',
-                      actionText: 'Add Category',
+                      title: lang.translate('no_categories'),
+                      message: lang.translate('add_categories_to_start'),
+                      actionText: lang.translate('add_category_action'),
                       onAction: () {
                         // Navigate to category management
                       },
@@ -440,50 +441,53 @@ class _BudgetingPageState extends State<BudgetingPage> {
                   );
                 }
 
-                final budgetMap = {for (var b in budgets) b.categoryId: b.amount};
+                final budgetMap = {
+                  for (var b in budgets) b.categoryId: b.amount,
+                };
 
                 return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final category = filteredCategories[index];
-                      final currentBudget = budgetMap[category.id] ?? 0.0;
-                      
-                      // 3. Calculate spending only for 'Expense' types 
-                      // (prevents accidental income subtraction if a category has both)
-                      final categorySpending = transactions
-                          .where((t) => t.categoryId == category.id && t.type == 'Expense')
-                          .fold(0.0, (sum, t) => sum + t.amount);
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final category = filteredCategories[index];
+                    final currentBudget = budgetMap[category.id] ?? 0.0;
 
-                      return Padding(
-                        padding: const EdgeInsets.all(15),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(30),
-                            boxShadow: [
-                              BoxShadow(
-                                color: colors.shadow.withValues(alpha: 0.04),
-                                blurRadius: 14,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: BudgetCategoryCard(
-                            category: category,
-                            currentBudget: currentBudget,
-                            currentSpending: categorySpending,
-                            colors: Theme.of(context).colorScheme,
-                            onEditPressed: () => _showEditBudgetDialog(
-                              context,
-                              category,
-                              currentBudget,
-                              currentMonthYear,
-                            ),
-                          ),
+                    // 3. Calculate spending only for 'Expense' types
+                    // (prevents accidental income subtraction if a category has both)
+                    final categorySpending = transactions
+                        .where(
+                          (t) =>
+                              t.categoryId == category.id &&
+                              t.type == 'Expense',
                         )
-                      );
-                    },
-                    childCount: filteredCategories.length,
-                  ),
+                        .fold(0.0, (sum, t) => sum + t.amount);
+
+                    return Padding(
+                      padding: const EdgeInsets.all(15),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: colors.shadow.withValues(alpha: 0.04),
+                              blurRadius: 14,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: BudgetCategoryCard(
+                          category: category,
+                          currentBudget: currentBudget,
+                          currentSpending: categorySpending,
+                          colors: Theme.of(context).colorScheme,
+                          onEditPressed: () => _showEditBudgetDialog(
+                            context,
+                            category,
+                            currentBudget,
+                            currentMonthYear,
+                          ),
+                        ),
+                      ),
+                    );
+                  }, childCount: filteredCategories.length),
                 );
               },
             );
@@ -492,8 +496,6 @@ class _BudgetingPageState extends State<BudgetingPage> {
       },
     );
   }
-
- 
 
   void _showEditBudgetDialog(
     BuildContext context,
@@ -509,10 +511,10 @@ class _BudgetingPageState extends State<BudgetingPage> {
         monthYear: monthYear,
         onSave: (categoryId, amount, monthYear) =>
             FirestoreService.instance.setBudget(
-          categoryId: categoryId,
-          amount: amount,
-          monthYear: monthYear,
-        ),
+              categoryId: categoryId,
+              amount: amount,
+              monthYear: monthYear,
+            ),
       ),
     );
   }

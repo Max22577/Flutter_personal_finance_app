@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:personal_fin/core/widgets/theme/app_theme.dart';
+import 'package:provider/provider.dart';
 
 import '../../shared/currency_display.dart';
 
@@ -29,12 +31,15 @@ class TransactionTile extends StatelessWidget {
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
     final financialColors = theme.extension<FinancialColors>()!;
-    
+    final lang = context.watch<LanguageProvider>();
+
     final isIncome = transaction.type == 'Income';
-    final iconColor = isIncome ? financialColors.income : financialColors.expense;
-    final bgColor = isIncome ? 
-        financialColors.income.withValues(alpha: 0.1) : 
-        financialColors.expense.withValues(alpha: 0.1);
+    final iconColor = isIncome
+        ? financialColors.income
+        : financialColors.expense;
+    final bgColor = isIncome
+        ? financialColors.income.withValues(alpha: 0.1)
+        : financialColors.expense.withValues(alpha: 0.1);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -73,12 +78,14 @@ class TransactionTile extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        isIncome ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                        isIncome
+                            ? Icons.arrow_upward_rounded
+                            : Icons.arrow_downward_rounded,
                         color: iconColor,
                         size: 16,
                       ),
                     ),
-                    
+
                     // Title - Takes full width
                     Expanded(
                       child: Column(
@@ -94,7 +101,7 @@ class TransactionTile extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
-                          
+
                           // Category and Time inline
                           Row(
                             children: [
@@ -102,7 +109,7 @@ class TransactionTile extends StatelessWidget {
                               if (categoryName.isNotEmpty) ...[
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
+                                    horizontal: 2,
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
@@ -110,7 +117,7 @@ class TransactionTile extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
-                                    categoryName,
+                                    lang.translate(categoryName),
                                     style: textTheme.labelSmall?.copyWith(
                                       color: colors.onSurfaceVariant,
                                     ),
@@ -120,12 +127,14 @@ class TransactionTile extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                               ],
-                              
+
                               // Time
                               Text(
                                 DateFormat('h:mm a').format(transaction.date),
                                 style: textTheme.bodySmall?.copyWith(
-                                  color: colors.onSurface.withValues(alpha: 0.6),
+                                  color: colors.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                 ),
                               ),
                             ],
@@ -133,7 +142,7 @@ class TransactionTile extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
+
                     // Amount and date column
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -152,21 +161,13 @@ class TransactionTile extends StatelessWidget {
                           negativeColor: financialColors.expense,
                         ),
                         const SizedBox(height: 4),
-                        
-                        // Date
-                        Text(
-                          DateFormat('MMM d').format(transaction.date),
-                          style: textTheme.labelSmall?.copyWith(
-                            color: colors.onSurface.withValues(alpha: 0.6),
-                          ),
-                        ),
                       ],
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Action buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -174,7 +175,7 @@ class TransactionTile extends StatelessWidget {
                     _buildActionButton(
                       context: context,
                       icon: Icons.edit_outlined,
-                      label: 'Edit',
+                      label: lang.translate('edit'),
                       color: colors.primary,
                       onPressed: onEdit,
                     ),
@@ -182,7 +183,7 @@ class TransactionTile extends StatelessWidget {
                     _buildActionButton(
                       context: context,
                       icon: Icons.delete_outline,
-                      label: 'Delete',
+                      label: lang.translate('delete'),
                       color: colors.error,
                       onPressed: onDelete,
                     ),
@@ -204,23 +205,19 @@ class TransactionTile extends StatelessWidget {
     required VoidCallback onPressed,
   }) {
     final theme = Theme.of(context);
-    
+
     return OutlinedButton.icon(
       onPressed: onPressed,
-      icon: Icon(icon, size: 14, color: color,),
+      icon: Icon(icon, size: 14, color: color),
       label: Text(
         label,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: color,
-        ),
+        style: theme.textTheme.labelSmall?.copyWith(color: color),
       ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         minimumSize: Size.zero,
         side: BorderSide(color: color.withValues(alpha: 0.3)),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       ),
     );
   }

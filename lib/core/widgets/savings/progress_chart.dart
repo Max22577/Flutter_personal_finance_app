@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/widgets/savings/add_to_savings_button.dart';
 import 'package:personal_fin/core/widgets/shared/currency_display.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +17,7 @@ class ProgressChartWidget extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final currency = context.watch<CurrencyProvider>().currency;
+    final lang = context.watch<LanguageProvider>();
     
     return Container(
           padding: const EdgeInsets.all(24),
@@ -33,7 +35,7 @@ class ProgressChartWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(theme, colors),
+              _buildHeader(theme, colors, lang),
               const SizedBox(height: 24),
               Row(
                 children: [
@@ -77,7 +79,7 @@ class ProgressChartWidget extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  'SAVED',
+                                  lang.translate('saved'),
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     letterSpacing: 1.0,
                                     fontWeight: FontWeight.bold,
@@ -115,14 +117,14 @@ class ProgressChartWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 15),
                         _buildLegend(
-                          label: 'TARGET', 
+                          label: lang.translate('target'), 
                           value: goal.targetAmount, 
                           color: colors.outlineVariant, 
                           theme: theme
                         ),
                         const SizedBox(height: 16),
                         _buildLegend(
-                          label: 'REMAINING', 
+                          label: lang.translate('remaining'), 
                           value: goal.targetAmount - goal.currentAmount, 
                           color: colors.primaryContainer, 
                           theme: theme
@@ -140,13 +142,13 @@ class ProgressChartWidget extends StatelessWidget {
         );
   }
 
-  Widget _buildHeader(ThemeData theme, ColorScheme colors) {
+  Widget _buildHeader(ThemeData theme, ColorScheme colors, LanguageProvider lang) {
     return Row(
       children: [
         Icon(Icons.auto_graph_rounded, color: colors.primary, size: 20),
         const SizedBox(width: 12),
         Text(
-          'Goal Progress',
+          lang.translate('goal_progress'),
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],

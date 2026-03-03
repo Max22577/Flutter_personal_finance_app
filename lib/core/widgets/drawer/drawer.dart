@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
@@ -23,6 +24,7 @@ class AppDrawer extends StatelessWidget {
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
     final isDark = theme.brightness == Brightness.dark;
+    final lang = context.watch<LanguageProvider>();
     
     return Drawer(
       backgroundColor: colors.surface,
@@ -69,7 +71,7 @@ class AppDrawer extends StatelessWidget {
                 _buildDrawerItem(
                   context: context,
                   icon: Icons.dashboard_rounded,
-                  title: 'Dashboard',
+                  title: lang.translate('dashboard'),
                   onTap: () => onNavigate('/dashboard'),
                 ),
                 
@@ -77,19 +79,19 @@ class AppDrawer extends StatelessWidget {
                 _buildExpansionTile(
                   context: context,
                   icon: Icons.person_outline,
-                  title: 'Profile',
+                  title: lang.translate('profile'),
                   children: [
                     _buildSubMenuItem(
                       context: context,
                       icon: Icons.account_circle,
-                      title: 'User Profile',
+                      title: lang.translate('user_profile'),
                       color: colors.primary,
                       onTap: () => onNavigate('/profile'),
                     ),
                     _buildSubMenuItem(
                       context: context,
                       icon: Icons.logout,
-                      title: 'Logout',
+                      title: lang.translate('logout'),
                       color: colors.error,
                       onTap: onLogout,
                     ),
@@ -123,7 +125,7 @@ class AppDrawer extends StatelessWidget {
                 _buildDrawerItem(
                   context: context,
                   icon: Icons.settings,
-                  title: 'Settings',
+                  title: lang.translate('settings'),
                   onTap: () => onNavigate('/settings'),
                 ),
 
@@ -132,19 +134,19 @@ class AppDrawer extends StatelessWidget {
                 _buildExpansionTile(
                   context: context,
                   icon: Icons.category_rounded,
-                  title: 'Transactions',
+                  title: lang.translate('transactions'),
                   children: [
                     _buildSubMenuItem(
                       context: context,
                       icon: Icons.label_important_outline,
-                      title: 'Manage Categories',
+                      title: lang.translate('manage_categories'),
                       color: colors.primary,
                       onTap: () => onNavigate('/categories'),
                     ),
                     _buildSubMenuItem(
                       context: context,
                       icon: Icons.attach_money,
-                      title: 'View Transactions',
+                      title: lang.translate('view_transactions'),
                       color: colors.primary,
                       onTap: () => onNavigate('/transactions'),
                     ),                    
@@ -154,12 +156,13 @@ class AppDrawer extends StatelessWidget {
                 _buildExpansionTile(
                   context: context,
                   icon: Icons.attach_money,
-                  title: 'Budget',
+                  title: lang.translate('budget'),
+
                   children: [
                     _buildSubMenuItem(
                       context: context,
                       icon: Icons.attach_money,
-                      title: 'Set Budgets',
+                      title: lang.translate('set_budgets'),
                       color: colors.primary,
                       onTap: () => onNavigate('/budgeting'),
                     ),
@@ -169,19 +172,19 @@ class AppDrawer extends StatelessWidget {
                 _buildExpansionTile(
                   context: context,
                   icon: Icons.wallet_travel,
-                  title: 'Savings',
+                  title: lang.translate('savings'),
                   children: [
                     _buildSubMenuItem(
                       context: context,
                       icon: Icons.attach_money,
-                      title: 'Savings Progress',
+                      title: lang.translate('savings_progress'),
                       color: AppColors.lightPrimary, 
                       onTap: () => onNavigate('/savings'),
                     ),
                     _buildSubMenuItem(
                       context: context,
                       icon: Icons.wallet_travel,
-                      title: 'Set Savings Goal',
+                      title: lang.translate('set_savings_goal'),
                       color: AppColors.lightPrimary,
                       onTap: () => onNavigate('/savings/goal'),
                     ),

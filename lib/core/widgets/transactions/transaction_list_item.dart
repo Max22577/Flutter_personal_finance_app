@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:provider/provider.dart';
 import '../../../models/transaction.dart';
 import '../shared/currency_display.dart';
 import '../theme/app_theme.dart';
@@ -25,6 +27,7 @@ class TransactionListItem extends StatelessWidget {
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
     final financialColors = theme.extension<FinancialColors>()!;
+    final lang = context.watch<LanguageProvider>();
     
     final isIncome = transaction.type == 'Income';
     final amount = transaction.amount;
@@ -71,7 +74,7 @@ class TransactionListItem extends StatelessWidget {
             
             // Date
             Text(
-              DateFormat('MMM d').format(transaction.date),
+              DateFormat.yMMMMd(lang.localeCode).format(transaction.date),
               style: textTheme.labelSmall?.copyWith(
                 color: colors.onSurface.withValues(alpha: 0.6),
               ),

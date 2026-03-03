@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/models/transaction.dart';
+import 'package:provider/provider.dart';
 import 'transaction_item.dart';
 
 final FirestoreService _firestoreService = FirestoreService.instance;
@@ -63,6 +65,7 @@ class _RecentTransactionsState extends State<RecentTransactions> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final lang = context.watch<LanguageProvider>();
     
     return Card(
       elevation: 2, 
@@ -80,7 +83,7 @@ class _RecentTransactionsState extends State<RecentTransactions> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Recent Transactions',
+                  lang.translate('recent_transactions'),
                   style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -94,7 +97,7 @@ class _RecentTransactionsState extends State<RecentTransactions> {
                       foregroundColor: colors.primary, // Use theme primary color
                     ),
                     child: Text(
-                      'View All',
+                      lang.translate('view_all'),
                       style: textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
@@ -113,7 +116,7 @@ class _RecentTransactionsState extends State<RecentTransactions> {
                 ),
               )
             else if (_transactions.isEmpty)
-              _buildEmptyState(theme, colors, textTheme)
+              _buildEmptyState(theme, colors, textTheme, lang)
             else
               Column(
                 children: _transactions
@@ -133,7 +136,7 @@ class _RecentTransactionsState extends State<RecentTransactions> {
     );
   }
 
-  Widget _buildEmptyState(ThemeData theme, ColorScheme colors, TextTheme textTheme) {
+  Widget _buildEmptyState(ThemeData theme, ColorScheme colors, TextTheme textTheme, LanguageProvider lang) {
     return SizedBox(
       height: 100,
       child: Center(
@@ -147,7 +150,7 @@ class _RecentTransactionsState extends State<RecentTransactions> {
             ),
             const SizedBox(height: 8),
             Text(
-              'No recent transactions',
+              lang.translate('no_recent_transactions'),
               style: textTheme.bodyMedium?.copyWith(
                 color: colors.onSurface.withValues(alpha: 0.6), 
               ),

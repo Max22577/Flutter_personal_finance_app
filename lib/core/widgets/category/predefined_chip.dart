@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/models/category.dart';
+import 'package:provider/provider.dart';
 
 class PredefinedCategoryChip extends StatelessWidget {
   final Category category;
@@ -14,6 +16,7 @@ class PredefinedCategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final lang = context.watch<LanguageProvider>();
 
     return TweenAnimationBuilder<double>(
       duration: Duration(milliseconds: 400 + (index * 100)), 
@@ -42,7 +45,7 @@ class PredefinedCategoryChip extends StatelessWidget {
             Icon(_getIconForId(category.id), size: 18, color: colors.primary),
             const SizedBox(width: 8),
             Text(
-              category.name,
+              lang.translate(category.name),
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 color: colors.onPrimaryContainer,

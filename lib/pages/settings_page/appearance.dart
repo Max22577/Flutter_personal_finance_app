@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/widgets/shared/currency_display.dart';
 import 'package:provider/provider.dart';
 import '../../core/widgets/theme/app_theme.dart';
@@ -12,10 +13,11 @@ class AppearancePage extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final text = theme.textTheme;
+    final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
       appBar: AppBar(
-        title:  Text('Appearance',
+        title:  Text(lang.translate('appearance'),
           style: text.titleLarge?.copyWith(
             color: colors.onPrimary,
             fontWeight: FontWeight.bold,
@@ -33,35 +35,35 @@ class AppearancePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionHeader(context, 'Theme Mode'),
+                _buildSectionHeader(context, lang.translate('theme_mode')),
                 const SizedBox(height: 12),
                 _buildModeCard(
                   context: context,
                   icon: Icons.brightness_auto,
-                  title: 'System Default',
-                  subtitle: 'Sync with device settings',
+                  title: lang.translate('system_default'),
+                  subtitle: lang.translate('system_default_sub'),
                   isSelected: themeProvider.themeMode == ThemeMode.system,
                   onTap: () => themeProvider.setThemeMode(ThemeMode.system),
                 ),
                 _buildModeCard(
                   context: context,
                   icon: Icons.light_mode,
-                  title: 'Light Mode',
-                  subtitle: 'Clean and bright appearance',
+                  title: lang.translate('light_mode'),
+                  subtitle: lang.translate('light_mode_sub'),
                   isSelected: themeProvider.themeMode == ThemeMode.light,
                   onTap: () => themeProvider.setThemeMode(ThemeMode.light),
                 ),
                 _buildModeCard(
                   context: context,
                   icon: Icons.dark_mode,
-                  title: 'Dark Mode',
-                  subtitle: 'Easier on the eyes at night',
+                  title: lang.translate('dark_mode'),
+                  subtitle: lang.translate('dark_mode_sub'),
                   isSelected: themeProvider.themeMode == ThemeMode.dark,
                   onTap: () => themeProvider.setThemeMode(ThemeMode.dark),
                 ),
 
                 const SizedBox(height: 32),
-                _buildSectionHeader(context, 'Accent Colors'),
+                _buildSectionHeader(context, lang.translate('accent_colors')),
                 const SizedBox(height: 16),
                 
                 // Color Selection Grid
@@ -71,16 +73,16 @@ class AppearancePage extends StatelessWidget {
                   crossAxisCount: 4,
                   mainAxisSpacing: 16,
                   children: [
-                    _buildColorCircle(context, 'Light', AppColors.lightPrimary, themeProvider),
-                    _buildColorCircle(context, 'Dark', AppColors.darkPrimary, themeProvider),
-                    _buildColorCircle(context, 'Blue', Colors.blue, themeProvider),
-                    _buildColorCircle(context, 'Green', Colors.green, themeProvider),
-                    _buildColorCircle(context, 'Orange', Colors.orange, themeProvider),
+                    _buildColorCircle(context, lang.translate('color_light'), AppColors.lightPrimary, themeProvider),
+                    _buildColorCircle(context, lang.translate('color_dark'), AppColors.darkPrimary, themeProvider),
+                    _buildColorCircle(context, lang.translate('color_blue'), Colors.blue, themeProvider),
+                    _buildColorCircle(context, lang.translate('color_green'), Colors.green, themeProvider),
+                    _buildColorCircle(context, lang.translate('color_orange'), Colors.orange, themeProvider),
                   ],
                 ),
 
                 const SizedBox(height: 32),
-                _buildSectionHeader(context, 'Preview'),
+                _buildSectionHeader(context, lang.translate('preview')),
                 const SizedBox(height: 12),
                 _buildPreviewCard(context),
 
@@ -89,7 +91,7 @@ class AppearancePage extends StatelessWidget {
                   child: TextButton.icon(
                     onPressed: () => themeProvider.resetToDefaults(),
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Reset to Defaults'),
+                    label: Text(lang.translate('reset_defaults')),
                   ),
                 ),
               ],
@@ -168,6 +170,7 @@ class AppearancePage extends StatelessWidget {
   }
 
   Widget _buildPreviewCard(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
     final theme = Theme.of(context);
     return Card(
       child: Padding(
@@ -179,14 +182,14 @@ class AppearancePage extends StatelessWidget {
                 backgroundColor: theme.colorScheme.primary,
                 child: Icon(Icons.shopping_cart, color: theme.colorScheme.onPrimary),
               ),
-              title: Text('Groceries', style: theme.textTheme.titleMedium),
-              subtitle: const Text('Today, 4:30 PM'),
+              title: Text(lang.translate('groceries'), style: theme.textTheme.titleMedium),
+              subtitle: Text("${lang.translate('today')} - 3:45 PM", style: theme.textTheme.bodyMedium),
               trailing: CurrencyDisplay(amount: 45.69, isExpense: true,)
             ),
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: () {},
-              child: const Text('Add Transaction'),
+              child: Text(lang.translate('add_transaction')),
             ),
           ],
         ),

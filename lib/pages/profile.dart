@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -185,6 +186,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
       body: _isLoading
@@ -200,21 +202,21 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildSectionHeader(theme, 'Account Security'),
-                      _buildInfoTile(Icons.alternate_email_rounded, 'Email', _authEmail, colors),
+                      _buildSectionHeader(theme, lang.translate('account_security')),
+                      _buildInfoTile(Icons.alternate_email_rounded, lang.translate('email'), _authEmail, colors),
                       const SizedBox(height: 24),
                       
-                      _buildSectionHeader(theme, 'Public Details'),
+                      _buildSectionHeader(theme, lang.translate('public_details')),
                       _buildTextField(
                         controller: _fullNameController,
-                        label: 'Display Name',
+                        label: lang.translate('display_name'),
                         icon: Icons.badge_outlined,
                         theme: theme,
                       ),
                       const SizedBox(height: 20),
                       _buildTextField(
                         controller: _bioController,
-                        label: 'Short Bio',
+                        label: lang.translate('short_bio'),
                         icon: Icons.auto_awesome_outlined,
                         theme: theme,
                         isBio: true,
@@ -405,6 +407,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
   Widget _buildSaveButton(ThemeData theme) {
     final colors = theme.colorScheme;
+    final lang = context.read<LanguageProvider>();
     
     return ElevatedButton(
       onPressed: _isLoading ? null : _saveProfileData,
@@ -423,13 +426,13 @@ class _ProfilePageState extends State<ProfilePage> {
             width: 24,
             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
           )
-        : const Row(
+        : Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.check_circle_outline),
             SizedBox(width: 10),
             Text(
-              'SAVE CHANGES',
+              lang.translate('save_changes'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

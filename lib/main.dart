@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:personal_fin/core/providers/theme_provider.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
@@ -25,6 +27,8 @@ void main() async {
   
   await FirestoreService.initialize();
   await GoogleSignIn.instance.initialize();
+
+  await initializeDateFormatting();
   
   final themeProvider = ThemeProvider();
   await themeProvider.initialize(); 
@@ -33,6 +37,9 @@ void main() async {
 
   final currencyProvider = CurrencyProvider();
   await currencyProvider.init();
+
+  final languageProvider = LanguageProvider();
+  await languageProvider.init();
   
   runApp(
     MultiProvider(
@@ -46,6 +53,9 @@ void main() async {
         ChangeNotifierProvider.value(
           value: currencyProvider, 
         ),
+        ChangeNotifierProvider.value(
+          value: languageProvider, 
+        ),
       ],
       child: const MyApp(),
     ),
@@ -57,6 +67,8 @@ class MyApp extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
+    final langProvider = context.watch<LanguageProvider>();
+
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
@@ -66,6 +78,7 @@ class MyApp extends StatelessWidget {
           themeAnimationCurve: Curves.easeInOut, 
           darkTheme: AppThemes.darkTheme,    
           themeMode: themeProvider.themeMode,
+          locale: Locale(langProvider.localeCode),
           routes: {
             '/login': (context) => const SignInPage(),
             '/signup': (context) => const SignInPage(),

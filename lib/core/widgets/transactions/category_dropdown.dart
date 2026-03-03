@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:provider/provider.dart';
 import 'transaction_form.dart';
 
 class CategoryDropdown extends StatelessWidget {
@@ -16,11 +18,12 @@ class CategoryDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final lang = context.watch<LanguageProvider>();
 
     return DropdownButtonFormField<DropdownItem>(
       initialValue: selectedCategory, 
-      decoration: const InputDecoration(
-        labelText: 'Category',
+      decoration: InputDecoration(
+        labelText: lang.translate('category'),
         prefixIcon: Icon(Icons.category),
         border: OutlineInputBorder(),
       ),
@@ -28,7 +31,7 @@ class CategoryDropdown extends StatelessWidget {
         ...categories.map((DropdownItem item) {
           return DropdownMenuItem<DropdownItem>(
             value: item,
-            child: Text(item.name),
+            child: Text(lang.translate(item.name)),
           );
         }),
         
@@ -39,7 +42,7 @@ class CategoryDropdown extends StatelessWidget {
               Icon(Icons.add_circle_outline, size: 20, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
               Text(
-                'Add new category',
+                lang.translate('add_category_action'),
                 style: TextStyle(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.bold,
@@ -58,10 +61,10 @@ class CategoryDropdown extends StatelessWidget {
       },
       validator: (value) {
         if (value == null && categories.isEmpty) {
-          return 'Please add a category first';
+          return lang.translate('please_add_category_first');
         }
         if (value == null) {
-          return 'Select a category';
+          return lang.translate('select_category');
         }
         return null;
       },

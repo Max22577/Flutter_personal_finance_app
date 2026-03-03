@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:personal_fin/core/widgets/theme/app_theme.dart'; 
+import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/widgets/theme/app_theme.dart';
+import 'package:provider/provider.dart'; 
 
 class TypeSelector extends StatelessWidget {
   final String selectedType;
@@ -18,6 +20,7 @@ class TypeSelector extends StatelessWidget {
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
     final financialColors = theme.extension<FinancialColors>()!;
+    final lang = context.watch<LanguageProvider>();
     
     final isIncome = selectedType == 'Income';
     final isExpense = selectedType == 'Expense';
@@ -58,7 +61,7 @@ class TypeSelector extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Income',
+                  lang.translate('income'),
                   style: textTheme.bodyLarge?.copyWith(
                     fontWeight: isIncome ? FontWeight.bold : FontWeight.normal,
                     color: isIncome ? financialColors.income : colors.onSurfaceVariant,
@@ -105,7 +108,7 @@ class TypeSelector extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Expense',
+                  lang.translate('expense'),
                   style: textTheme.bodyLarge?.copyWith(
                     fontWeight: isExpense ? FontWeight.bold : FontWeight.normal,
                     color: isExpense ? financialColors.expense : colors.onSurfaceVariant,

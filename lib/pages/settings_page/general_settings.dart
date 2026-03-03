@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/models/setting_item.dart';
 import 'package:provider/provider.dart';
 import '../../core/services/preferences.dart';
@@ -56,10 +57,10 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
     }
   }
 
-  List<SettingItem> get _settings => [
+  List<SettingItem>  _getsettings(LanguageProvider lang) => [
     SettingItem(
       id: 'currency',
-      title: 'Currency',
+      title: lang.translate('currency'),
       subtitle: _currency,
       icon: Icons.attach_money,
       type: SettingType.selection,
@@ -67,7 +68,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
     ),
     SettingItem(
       id: 'language',
-      title: 'Language',
+      title: lang.translate('language'),
       subtitle: _language,
       icon: Icons.language,
       type: SettingType.selection,
@@ -75,7 +76,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
     ),
     SettingItem(
       id: 'date_format',
-      title: 'Date Format',
+      title: lang.translate('date_format'),
       subtitle: _dateFormat,
       icon: Icons.calendar_today,
       type: SettingType.selection,
@@ -83,7 +84,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
     ),
     SettingItem(
       id: 'number_format',
-      title: 'Number Format',
+      title: lang.translate('number_format'),
       subtitle: _numberFormat,
       icon: Icons.numbers,
       type: SettingType.selection,
@@ -111,7 +112,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
   void _handleItemChanged(String id, dynamic value) async {
     if (id == 'currency') {
       // Talk to the global provider instead of just local state
-      Provider.of<CurrencyProvider>(context, listen: false).updateCurrency(value);
+      await context.read<CurrencyProvider>().updateCurrency(value);
       
       setState(() {
         _currency = value; 
@@ -155,7 +156,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
   Future<void> _showCurrencyPicker() async {
     final currentCurrency = Currency.getCurrency(_currency);
     final messenger = ScaffoldMessenger.of(context);
-    final cf = context.read<CurrencyProvider>().formatter;
+    final lang = context.read<LanguageProvider>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     
@@ -167,9 +168,16 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
     
     if (selectedCurrency != null) {
       _handleItemChanged('currency', selectedCurrency.code);
+      if (!mounted) return;
+
+      setState(() {
+        _currency = selectedCurrency.code;
+      });
       
       // Show confirmation with example
-      final exampleAmount = cf.format(1234.56);
+      final newCf = context.read<CurrencyProvider>().formatter;
+      final exampleAmount = newCf.format(1234.56, lang.localeCode);
+      
       messenger.showSnackBar(
         SnackBar(
           content: Column(
@@ -196,11 +204,67 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
     }
   }
 
+  Future<void> _showLanguagePicker() async {
+    final languages = ['English', 'Swahili', 'French', 'Spanish'];
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final messenger = ScaffoldMessenger.of(context);
+    final lang = context.read<LanguageProvider>();
+
+    final String? selected = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(lang.translate('select_language')),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: languages.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(languages[index]),
+                trailing: _language == languages[index] 
+                  ? Icon(Icons.check, color: theme.colorScheme.primary) 
+                  : null,
+                onTap: () => Navigator.pop(context, languages[index]),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    if (selected != null && selected != _language && mounted) {
+      // 1. Update the Provider
+      await context.read<LanguageProvider>().updateLanguage(selected);
+
+      // 3. Update local UI
+      setState(() {
+        _language = selected;
+      });
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('${lang.translate('lang_changed')} $selected',
+            style: TextStyle(color: colors.onPrimaryContainer)
+          ),
+          backgroundColor: theme.colorScheme.primaryContainer,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(20),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final text = theme.textTheme;
+    final lang = context.watch<LanguageProvider>();
 
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -209,7 +273,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow, 
       appBar: AppBar(
-        title: Text('General Settings', 
+        title: Text(lang.translate('general_settings'), 
           style: text.titleLarge?.copyWith(
             color: colors.onPrimary,
             fontWeight: FontWeight.bold,
@@ -230,7 +294,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
-                'REGIONAL & FORMAT',
+                lang.translate('regional_format'),
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: colors.primary,
                   letterSpacing: 1.2,
@@ -249,8 +313,8 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                 border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.3)),
               ),
               child: Column(
-                children: _settings.asMap().entries.map((entry) {
-                  final isLast = entry.key == _settings.length - 1;
+                children: _getsettings(lang).asMap().entries.map((entry) {
+                  final isLast = entry.key == _getsettings(lang).length - 1;
                   return _buildCustomSettingsTile(entry.value, isLast);
                 }).toList(),
               ),
@@ -267,13 +331,14 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
 
   Widget _buildHeroHeader(ThemeData theme) {
     final cf = context.watch<CurrencyProvider>().formatter;
+    final lang = context.watch<LanguageProvider>();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
           Text(
-            cf.format(1234.56),
+            cf.format(1234.56, lang.localeCode),
             style: theme.textTheme.displaySmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
@@ -281,7 +346,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Format Preview',
+            lang.translate('format_preview'),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -297,14 +362,13 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
 
     return InkWell(
       onTap: () => _handleItemTap(item.id),
-      borderRadius: BorderRadius.circular(20), // Matches container
+      borderRadius: BorderRadius.circular(20), 
       child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Row(
               children: [
-                // Icon with soft circular background
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -341,13 +405,14 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
   }
 
   Widget _buildDangerZone(ThemeData theme) {
+    final lang = context.watch<LanguageProvider>();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'DANGER ZONE',
+            lang.translate('danger_zone'),
             style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.error),
           ),
           const SizedBox(height: 8),
@@ -359,7 +424,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
               side: BorderSide(color: theme.colorScheme.error.withValues(alpha: 0.5)),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Reset All Preferences'),
+            child: Text(lang.translate('reset_all')),
           ),
         ],
       ),
@@ -368,19 +433,21 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
 
   Future<void> _resetToDefaults() async {
     final messenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
+    final lang = context.read<LanguageProvider>();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reset Settings'),
-        content: const Text('Reset all general settings to defaults?'),
+        title: Text(lang.translate('reset_settings_title')),
+        content: Text(lang.translate('reset_settings_confirm')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(lang.translate('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reset'),
+            child: Text(lang.translate('reset')),
           ),
         ],
       ),
@@ -391,15 +458,20 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
       await _loadPreferences();
       
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Settings reset to defaults'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(lang.translate('reset_done'),         
+            style: TextStyle(color: theme.colorScheme.onPrimaryContainer)
+          ),
+          duration: const Duration(seconds: 3),
+          backgroundColor: theme.colorScheme.primaryContainer,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(20),             
         ),
       );
     }
   }
 
-  void _showLanguagePicker() => debugPrint('Show language picker');
   void _showDateFormatPicker() => debugPrint('Show date format picker');
   void _showNumberFormatPicker() => debugPrint('Show number format picker');
 }

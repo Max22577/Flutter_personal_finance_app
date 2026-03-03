@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/core/widgets/transactions/category_dropdown.dart';
 import 'package:provider/provider.dart';
@@ -16,7 +17,6 @@ class DropdownItem {
   final String name;
   DropdownItem({required this.id, required this.name});
 }
-
 
 final FirestoreService _firestoreService = FirestoreService.instance; 
 
@@ -138,11 +138,21 @@ class _TransactionFormState extends State<TransactionForm> {
     }
   }
 
-  Future<void> _saveTransaction() async {
+  Future<void> _saveTransaction(LanguageProvider lang) async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category')),
+        SnackBar(
+          content: Text(lang.translate('please_select_category'),
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer)
+          ),
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(20),
+          duration: const Duration(seconds: 3),
+        
+        ),
       );
       return;
     }
@@ -169,6 +179,7 @@ class _TransactionFormState extends State<TransactionForm> {
     final theme = Theme.of(context);
     final uid = _firestoreService.currentUid;
     final cf = context.read<CurrencyProvider>().formatter;
+    final lang = context.read<LanguageProvider>();
     final messenger = ScaffoldMessenger.of(context);
     if (amount == null || amount <= 0) {
       messenger.showSnackBar(
@@ -190,7 +201,7 @@ class _TransactionFormState extends State<TransactionForm> {
     await _firestoreService.addTransaction(newTransaction);
     
     if (mounted) {
-      final formattedAmount = cf.format(amount);
+      final formattedAmount = cf.format(amount, lang.localeCode);
       messenger.showSnackBar(
         SnackBar(
           content: Text('"${newTransaction.title}" of $formattedAmount added successfully', 
@@ -212,6 +223,7 @@ class _TransactionFormState extends State<TransactionForm> {
     if (widget.transactionToEdit == null) return;
     final theme = Theme.of(context);
     final cf = context.read<CurrencyProvider>().formatter;
+    final lang = context.read<LanguageProvider>();
     final messenger = ScaffoldMessenger.of(context);
 
     final amount = _parseAmount(_amountController.text);
@@ -234,7 +246,7 @@ class _TransactionFormState extends State<TransactionForm> {
     await _firestoreService.updateTransaction(updatedTransaction);
     
     if (mounted) {
-      final formattedAmount = cf.format(amount);
+      final formattedAmount = cf.format(amount, lang.localeCode);
       messenger.showSnackBar(
         SnackBar(
           content: Text('"${updatedTransaction.title}" updated to $formattedAmount successfully'),
@@ -252,12 +264,13 @@ class _TransactionFormState extends State<TransactionForm> {
 
   void _handleError(dynamic error) {
     debugPrint('Transaction save error: $error');
+    final lang = context.read<LanguageProvider>();
     
     if (mounted) {
-      String errorMessage = 'An error occurred';
+      String errorMessage = lang.translate('an_error_occurred');
       
       if (error is FirebaseException) {
-        errorMessage = _getFirebaseErrorMessage(error);
+        errorMessage = _getFirebaseErrorMessage(error, lang);
       } else if (error is Exception) {
         errorMessage = error.toString();
       }
@@ -275,14 +288,14 @@ class _TransactionFormState extends State<TransactionForm> {
     }
   }
 
-  String _getFirebaseErrorMessage(FirebaseException error) {
+  String _getFirebaseErrorMessage(FirebaseException error, LanguageProvider lang) {
     switch (error.code) {
       case 'permission-denied':
-        return 'You don\'t have permission to update this transaction';
+        return lang.translate('permission_denied_error');
       case 'not-found':
-        return 'Transaction not found. It may have been deleted';
+        return lang.translate('transaction_not_found_error');
       case 'unavailable':
-        return 'Network unavailable. Please check your connection';
+        return lang.translate('network_unavailable_error');
       default:
         return error.message ?? 'Unknown error occurred';
     }
@@ -302,6 +315,7 @@ class _TransactionFormState extends State<TransactionForm> {
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
     final financialColors = theme.extension<FinancialColors>()!;
+    final lang = context.watch<LanguageProvider>();
     final cf = context.watch<CurrencyProvider>().formatter;
     
     final isIncome = _selectedType == 'Income';
@@ -330,7 +344,7 @@ class _TransactionFormState extends State<TransactionForm> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Text(
-                    isEditing ? 'Edit Transaction' : 'New Transaction',
+                    isEditing ? lang.translate('edit_transaction') : lang.translate('new_transaction'),
                     style: textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colors.primary,
@@ -355,8 +369,7 @@ class _TransactionFormState extends State<TransactionForm> {
                     controller: _amountController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
-                      labelText: 'Amount',
-                      hintText: 'Enter amount',
+                      labelText: lang.translate('amount'),
                       prefixIcon: Icon(Icons.money, color: typeColor),
                       prefixText: _currencySymbol != null ? '$_currencySymbol ' : null,
                       border: OutlineInputBorder(
@@ -373,15 +386,15 @@ class _TransactionFormState extends State<TransactionForm> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter an amount';
+                        return lang.translate('err_amount_empty');
                       }
                       
                       final amount = _parseAmount(value);
                       if (amount == null) {
-                        return 'Please enter a valid number';
+                        return lang.translate('err_amount_invalid');
                       }
                       if (amount <= 0) {
-                        return 'Amount must be greater than zero';
+                        return lang.translate('err_amount_zero');
                       }
                       return null;
                     },
@@ -395,8 +408,8 @@ class _TransactionFormState extends State<TransactionForm> {
                   TextFormField(
                     controller: _titleController,
                     decoration: InputDecoration(
-                      labelText: 'Title / Description',
-                      hintText: 'e.g., Groceries, Salary, etc.',
+                      labelText: lang.translate('title_desc'),
+                      hintText: lang.translate('title_hint'),
                       prefixIcon: Icon(Icons.description, color: colors.primary),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -409,7 +422,7 @@ class _TransactionFormState extends State<TransactionForm> {
                     style: textTheme.bodyLarge?.copyWith(
                       color: colors.onSurface,
                     ),
-                    validator: (value) => value == null || value.isEmpty ? 'Title cannot be empty' : null,
+                    validator: (value) => value == null || value.isEmpty ? lang.translate('err_title_empty') : null,
                     maxLength: 100,
                   ),
                   const SizedBox(height: 20),
@@ -431,7 +444,7 @@ class _TransactionFormState extends State<TransactionForm> {
                     onTap: () => _selectDate(context),
                     child: InputDecorator(
                       decoration: InputDecoration(
-                        labelText: 'Date',
+                        labelText: lang.translate('date'),
                         prefixIcon: Icon(Icons.calendar_today, color: colors.primary),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -444,7 +457,7 @@ class _TransactionFormState extends State<TransactionForm> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Text(
-                            DateFormat('MMMM d, yyyy').format(_selectedDate),
+                            DateFormat('MMMM d, yyyy', lang.localeCode).format(_selectedDate),
                             style: textTheme.bodyLarge?.copyWith(
                               color: colors.onSurface,
                             ),
@@ -458,7 +471,7 @@ class _TransactionFormState extends State<TransactionForm> {
 
                   // --- Save Button ---
                   ElevatedButton(
-                    onPressed: _isSaving ? null : _saveTransaction,
+                    onPressed: _isSaving ? null : () => _saveTransaction(lang),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isIncome ? financialColors.income : financialColors.expense,
                       foregroundColor: Colors.white,
@@ -479,13 +492,15 @@ class _TransactionFormState extends State<TransactionForm> {
                             ),
                           )
                         : Text(
-                            isEditing ? 'UPDATE TRANSACTION' : 'SAVE TRANSACTION',
+                            isEditing ? lang.translate('update_transaction') : lang.translate('save_transaction'),
                             style: textTheme.labelLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                           ),
                   ),
+
+                  const SizedBox(height: 50),
                   
                   // Example preview (optional)
                   if (_amountController.text.isNotEmpty)
@@ -493,7 +508,7 @@ class _TransactionFormState extends State<TransactionForm> {
                       future: () async {
                         final amount = _parseAmount(_amountController.text);
                         if (amount == null || amount <= 0) return '';
-                        return cf.format(amount);
+                        return cf.format(amount, lang.localeCode);
                       }(),
                       builder: (context, snapshot) {
                         if (snapshot.hasData && snapshot.data!.isNotEmpty) {
@@ -518,7 +533,7 @@ class _TransactionFormState extends State<TransactionForm> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Preview: ${isIncome ? '+' : '-'}${snapshot.data}',
+                                    '${lang.translate('preview')}: ${isIncome ? '+' : '-'}${snapshot.data}',
                                     style: textTheme.bodyMedium?.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color: typeColor,

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/core/widgets/shared/currency_display.dart';
 import 'package:personal_fin/core/widgets/theme/app_theme.dart';
+import 'package:provider/provider.dart';
 import '../../core/widgets/savings/progress_chart.dart';
 import '../../models/savings.dart';
 import 'set_savings_goal.dart';
@@ -30,6 +32,7 @@ class _SavingsPageState extends State<SavingsPage> {
   }
 
   void _loadGoals() {
+    final lang = context.read<LanguageProvider>();
     _goalsSubscription = _firestoreService.streamSavingsGoals().listen(
       (goals) {
         if (mounted) {
@@ -43,7 +46,7 @@ class _SavingsPageState extends State<SavingsPage> {
       onError: (e) {
         if (mounted) {
           setState(() {
-            _errorMessage = 'Failed to load goals: $e';
+            _errorMessage = '${lang.translate('failed_to_load_goals')} $e';
             _isLoading = false;
           });
         }
@@ -84,6 +87,7 @@ class _SavingsPageState extends State<SavingsPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final lang = context.watch<LanguageProvider>();
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
@@ -116,7 +120,7 @@ class _SavingsPageState extends State<SavingsPage> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'SAVINGS OVERVIEW',
+                  lang.translate('savings_overview'),
                   style: textTheme.labelMedium?.copyWith( 
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.2,
@@ -134,9 +138,9 @@ class _SavingsPageState extends State<SavingsPage> {
               children: [
                 Row(
                   children: [
-                    _buildStatItem('GOALS', Text(_goals.length.toString(), style: _valueStyle(textTheme))),
+                    _buildStatItem(lang.translate('goals'), Text(_goals.length.toString(), style: _valueStyle(textTheme))),
                     _buildVerticalDivider(colors), // Custom vertical divider
-                    _buildStatItem('PROGRESS', Text('${(_overallProgress * 100).toStringAsFixed(0)}%', 
+                    _buildStatItem(lang.translate('progress'), Text('${(_overallProgress * 100).toStringAsFixed(0)}%', 
                         style: _valueStyle(textTheme).copyWith(color: colors.primary))),
                   ],
                 ),
@@ -146,9 +150,9 @@ class _SavingsPageState extends State<SavingsPage> {
                 ),
                 Row(
                   children: [
-                    _buildStatItem('TARGET', CurrencyDisplay(amount: _totalTarget, compact: true, style: _valueStyle(textTheme))),
+                    _buildStatItem(lang.translate('target'), CurrencyDisplay(amount: _totalTarget, compact: true, style: _valueStyle(textTheme))),
                     _buildVerticalDivider(colors),
-                    _buildStatItem('SAVED', CurrencyDisplay(amount: _totalSaved, compact: true, style: _valueStyle(textTheme))),
+                    _buildStatItem(lang.translate('saved'), CurrencyDisplay(amount: _totalSaved, compact: true, style: _valueStyle(textTheme))),
                   ],
                 ),
               ],
@@ -198,6 +202,7 @@ class _SavingsPageState extends State<SavingsPage> {
   Widget _buildEmptyState() {
     final illustrationTheme = Theme.of(context).extension<IllustrationTheme>();
     final theme = Theme.of(context);
+    final lang = context.watch<LanguageProvider>();
 
     return Center(
       child: TweenAnimationBuilder<double>(
@@ -224,12 +229,12 @@ class _SavingsPageState extends State<SavingsPage> {
           
             const SizedBox(height: 20),
             Text(
-              'No savings goals yet',
+              lang.translate('no_goals_yet'),
               style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Text(
-              'Start by creating your first savings goal',
+              lang.translate('start_by_creating'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey)
             ),
@@ -239,7 +244,7 @@ class _SavingsPageState extends State<SavingsPage> {
               child: ElevatedButton.icon(
                 onPressed: _addGoal,
                 icon: const Icon(Icons.add),
-                label: const Text('Create Goal'),
+                label: Text(lang.translate('create_goal')),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   backgroundColor: theme.colorScheme.primary,
@@ -263,6 +268,7 @@ class _SavingsPageState extends State<SavingsPage> {
   }
 
   Widget _buildErrorState() {
+    final lang = context.watch<LanguageProvider>();
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -275,8 +281,8 @@ class _SavingsPageState extends State<SavingsPage> {
               color: Colors.red,
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Failed to load goals',
+            Text(
+              lang.translate('failed_to_load_goals'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -285,13 +291,13 @@ class _SavingsPageState extends State<SavingsPage> {
             ),
             const SizedBox(height: 10),
             Text(
-              _errorMessage ?? 'Unknown error',
+              _errorMessage ?? lang.translate('unknown_error'),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _loadGoals,
-              child: const Text('Try Again'),
+              child: Text(lang.translate('retry')),
             ),
           ],
         ),
@@ -312,11 +318,13 @@ class _SavingsPageState extends State<SavingsPage> {
 
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final lang = context.watch<LanguageProvider>();
     
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
       appBar: AppBar(
-        title: Text('Savings Goals', 
+        title: Text(lang.translate('savings_goals'), 
+
           style: theme.textTheme.titleLarge?.copyWith(
             color: colors.onPrimary,
             fontWeight: FontWeight.bold,
@@ -331,7 +339,7 @@ class _SavingsPageState extends State<SavingsPage> {
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: _addGoal,
-              tooltip: 'Add Goal',
+              tooltip: lang.translate('add_goal_tooltip'),
             ),
         ],
       ),
@@ -349,8 +357,8 @@ class _SavingsPageState extends State<SavingsPage> {
                   _buildStatsCard(),
                   const SizedBox(height: 20),
 
-                  const Text(
-                    'Your Goals',
+                  Text(
+                    lang.translate('your_goals'),
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -376,7 +384,7 @@ class _SavingsPageState extends State<SavingsPage> {
             onPressed: _addGoal,
             heroTag: 'addGoal',
             icon: const Icon(Icons.add),
-            label: const Text('New Goal'),
+            label: Text(lang.translate('new_goal')),
           )      
         : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,

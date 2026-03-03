@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/core/widgets/savings/currency_input_field.dart';
 import 'package:personal_fin/core/widgets/savings/progress_chart.dart';
 import 'package:personal_fin/core/widgets/shared/currency_display.dart';
 import 'package:personal_fin/models/savings.dart';
+import 'package:provider/provider.dart';
 
 
 class SetGoalPage extends StatefulWidget {
@@ -71,6 +73,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
 
     final messenger = ScaffoldMessenger.of(context);
     final theme = Theme.of(context);
+    final lang = context.read<LanguageProvider>();
     
     try {
       final goal = SavingsGoal(
@@ -95,8 +98,8 @@ class _SetGoalPageState extends State<SetGoalPage> {
           SnackBar(
             content: Text(
               widget.existingGoal != null 
-                ? 'Goal updated successfully!' 
-                : 'Goal created successfully!',
+                ? lang.translate('goal_updated') 
+                : lang.translate('goal_created'),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onPrimaryContainer,
               ),
@@ -118,7 +121,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('${lang.translate('err_generic')}: ${e.toString()}'),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -139,12 +142,13 @@ class _SetGoalPageState extends State<SetGoalPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
       appBar: AppBar(
         title: Text(
-          isEditing ? 'Edit Goal' : 'Set Savings Goal',
+          isEditing ? lang.translate('edit_goal') : lang.translate('set_savings_goal'),
           style: textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
             color: colors.onPrimary,
@@ -160,7 +164,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
                 color: colors.error,
               ),
               onPressed: _deleteGoal,
-              tooltip: 'Delete Goal',
+              tooltip: lang.translate('delete_goal'),
             ),
         ],
       ),
@@ -181,11 +185,11 @@ class _SetGoalPageState extends State<SetGoalPage> {
                 controller: _nameController,
                 style: textTheme.bodyLarge,
                 decoration: InputDecoration(
-                  labelText: 'Goal Name',
+                  labelText: lang.translate('goal_name'),
                   labelStyle: textTheme.bodyMedium?.copyWith(
                     color: colors.onSurface.withValues(alpha: 0.7),
                   ),
-                  hintText: 'e.g., New Car, Vacation, Emergency Fund',
+                  hintText: lang.translate('goal_hint'),
                   hintStyle: textTheme.bodyMedium?.copyWith(
                     color: colors.onSurface.withValues(alpha: 0.5),
                   ),
@@ -206,10 +210,10 @@ class _SetGoalPageState extends State<SetGoalPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a goal name';
+                    return lang.translate('err_no_name');
                   }
                   if (value.length < 3) {
-                    return 'Goal name must be at least 3 characters';
+                    return lang.translate('err_name_short');
                   }
                   return null;
                 },
@@ -220,18 +224,18 @@ class _SetGoalPageState extends State<SetGoalPage> {
               // Target Amount with CurrencyInputField
               CurrencyInputField(
                 controller: _targetAmountController,
-                labelText: 'Target Amount',
+                labelText: lang.translate('target_amount'),
                 
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter target amount';
+                    return lang.translate('err_no_amount');
                   }
                   final amount = double.tryParse(value);
                   if (amount == null || amount <= 0) {
-                    return 'Enter a valid positive amount';
+                    return lang.translate('err_invalid_amount');
                   }
                   if (amount > 10000000) {
-                    return 'Amount is too large';
+                    return lang.translate('err_amount_large');
                   }
                   return null;
                 },
@@ -244,7 +248,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
                 onTap: () => _selectDate(context),
                 child: InputDecorator(
                   decoration: InputDecoration(
-                    labelText: 'Target Date',
+                    labelText: lang.translate('target_date'),
                     labelStyle: textTheme.bodyMedium?.copyWith(
                       color: colors.onSurface.withValues(alpha: 0.7),
                     ),
@@ -263,7 +267,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        DateFormat('MMMM d, yyyy').format(_selectedDeadline),
+                        DateFormat.yMMMMd(lang.localeCode).format(_selectedDeadline),
                         style: textTheme.bodyLarge,
                       ),
                       Icon(
@@ -296,7 +300,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${_selectedDeadline.difference(DateTime.now()).inDays} days from now',
+                      '${_selectedDeadline.difference(DateTime.now()).inDays} ${lang.translate('days_from_now')}',
                       style: textTheme.labelMedium?.copyWith(
                         color: colors.primary,
                         fontWeight: FontWeight.w600,
@@ -331,7 +335,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
                         ),
                       )
                     : Text(
-                        isEditing ? 'UPDATE GOAL' : 'CREATE GOAL',
+                        isEditing ? lang.translate('update_goal_btn') : lang.translate('create_goal_btn'),
                         style: textTheme.labelLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
@@ -356,9 +360,10 @@ class _SetGoalPageState extends State<SetGoalPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final lang = context.watch<LanguageProvider>();
 
     final targetAmount = double.tryParse(_targetAmountController.text) ?? 0;
-    final goalName = _nameController.text.isEmpty ? 'New Goal' : _nameController.text;
+    final goalName = _nameController.text.isEmpty ? lang.translate('new_goal') : _nameController.text;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -381,7 +386,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Preview',
+                lang.translate('preview'),
                 style: textTheme.titleSmall?.copyWith(
                   color: colors.primary,
                   fontWeight: FontWeight.w600,
@@ -408,12 +413,13 @@ class _SetGoalPageState extends State<SetGoalPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final lang = context.watch<LanguageProvider>();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Targets',
+          lang.translate('quick_targets'),
           style: textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: colors.onSurface.withValues(alpha: 0.8),
@@ -421,7 +427,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Tap to set amount:',
+          lang.translate('tap_to_set'),
           style: textTheme.bodySmall?.copyWith(
             color: colors.onSurface.withValues(alpha: 0.6),
           ),
@@ -470,25 +476,26 @@ class _SetGoalPageState extends State<SetGoalPage> {
 
   Future<void> _deleteGoal() async {
     if (widget.existingGoal == null) return;
+    final lang = context.read<LanguageProvider>();
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          'Delete Goal',
+          lang.translate('delete_goal'),
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
         ),
         content: Text(
-          'Are you sure you want to delete "${widget.existingGoal!.name}"? This action cannot be undone.',
+          '${lang.translate('delete_goal_confirm')} ${widget.existingGoal!.name}',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              lang.translate('cancel'),
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
@@ -500,7 +507,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
             child: Text(
-              'Delete',
+              lang.translate('delete'),
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: Theme.of(context).colorScheme.error,
                     fontWeight: FontWeight.w600,
@@ -520,7 +527,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Goal deleted successfully!"),
+              content: Text(lang.translate('goal_deleted_successfully')),
               backgroundColor: Theme.of(context).colorScheme.primary,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -534,7 +541,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Delete failed: ${e.toString()}'),
+              content: Text('${lang.translate('delete_failed')} $e'),
               backgroundColor: Theme.of(context).colorScheme.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(

@@ -4,9 +4,11 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/widgets/settings_page/profile_card.dart';
 import 'package:personal_fin/pages/settings_page/appearance.dart';
 import 'package:personal_fin/pages/settings_page/general_settings.dart';
+import 'package:provider/provider.dart';
 import '../../core/widgets/settings_page/settings_section.dart';
 import '../../models/setting_item.dart';
 
@@ -20,7 +22,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final User? _user = FirebaseAuth.instance.currentUser;
   File? _selectedImage;
-
+  
   Future<String?> _uploadImage(File image) async {
     try {
       final storageRef = FirebaseStorage.instance
@@ -40,90 +42,90 @@ class _SettingsPageState extends State<SettingsPage> {
   }
   
   // Define all settings items for main hub
-  List<SettingItem> get _generalSettings => [
+  List<SettingItem>  _getgeneralSettings(LanguageProvider lang) => [
     SettingItem(
       id: 'appearance',
-      title: 'Appearance',
-      subtitle: 'Theme, colors, display',
+      title: lang.translate('appearance_title'),
+      subtitle: lang.translate('appearance_sub'),
       icon: Icons.color_lens,
       type: SettingType.navigation,
     ),
     SettingItem(
       id: 'general',
-      title: 'General Settings',
-      subtitle: 'Currency, language, units',
+      title: lang.translate('general_settings_title'),
+      subtitle: lang.translate('general_settings_sub'),
       icon: Icons.settings,
       type: SettingType.navigation,
     ),
   ];
 
-  List<SettingItem> get _notificationSettings => [
+  List<SettingItem>  _getnotificationSettings(LanguageProvider lang) => [
     SettingItem(
       id: 'notifications',
-      title: 'Notifications',
-      subtitle: 'Push, email, reminders',
+      title: lang.translate('notifications_title'),
+      subtitle: lang.translate('notifications_sub'),
       icon: Icons.notifications,
       type: SettingType.navigation,
     ),
     SettingItem(
       id: 'push_enabled',
-      title: 'Push Notifications',
-      subtitle: 'Alerts for overspending',
+      title: lang.translate('push_notifications'),
+      subtitle: lang.translate('push_notifications_sub'),
       icon: Icons.notifications_active,
       type: SettingType.toggle, // Changed to toggle
       value: true, 
     ),
   ];
 
-  List<SettingItem> get _securitySettings => [
+  List<SettingItem> _getsecuritySettings(LanguageProvider lang) => [
     SettingItem(
       id: 'security',
-      title: 'Security',
-      subtitle: 'Login, privacy, data protection',
+      title: lang.translate('security_title'),
+      subtitle: lang.translate('security_sub'),
       icon: Icons.security,
       type: SettingType.navigation,
     ),
   ];
 
-  List<SettingItem> get _budgetSettings => [
+  List<SettingItem>  _getbudgetSettings(LanguageProvider lang) => [
     SettingItem(
       id: 'budget',
-      title: 'Budget & Goals',
-      subtitle: 'Monthly budget, savings targets',
+      title: lang.translate('budget_goals_title'),
+      subtitle: lang.translate('budget_goals_sub'),
       icon: Icons.account_balance_wallet,
       type: SettingType.navigation,
     ),
   ];
 
-  List<SettingItem> get _dataSettings => [
+  List<SettingItem>  _getdataSettings(LanguageProvider lang) => [
     SettingItem(
       id: 'data',
-      title: 'Data Management',
-      subtitle: 'Backup, export, clear data',
+      title: lang.translate('data_mgmt_title'),
+      subtitle: lang.translate('data_mgmt_sub'),
       icon: Icons.storage,
       type: SettingType.navigation,
     ),
     SettingItem(
       id: 'export_csv',
-      title: 'Export Data',
-      subtitle: 'Download your history as CSV',
+      title: lang.translate('export_data'),
+      subtitle: lang.translate('export_data_sub'),
       icon: Icons.file_download,
       type: SettingType.action, 
     ),
     SettingItem(
       id: 'delete_account',
-      title: 'Delete Account',
-      subtitle: 'Permanently remove all data',
+      title: lang.translate('delete_account'),
+      subtitle: lang.translate('delete_account_sub'),
       icon: Icons.delete_forever,
       type: SettingType.destructive, // Changed to destructive
     ),
   ];
 
-  List<SettingItem> get _aboutSettings => [
+  List<SettingItem> _getaboutSettings(LanguageProvider lang) => [
     SettingItem(
       id: 'about',
-      title: 'About & Legal',
-      subtitle: 'App info, privacy, terms',
+      title: lang.translate('about_legal'),
+      subtitle: lang.translate('about_legal_sub'),
       icon: Icons.info,
       type: SettingType.navigation,
     ),
@@ -131,6 +133,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   // Navigation handlers
   void _navigateToPage(String pageId) {
+    final lang = context.read<LanguageProvider>();  
     switch (pageId) {
       case 'appearance':
         Navigator.push(context, MaterialPageRoute(builder: (context) => const AppearancePage()));
@@ -142,7 +145,7 @@ class _SettingsPageState extends State<SettingsPage> {
       // For all other pages, show a snackbar message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('page coming soon!'),
+          content: Text(lang.translate('page_coming_soon')),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -154,10 +157,11 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings',
+        title: Text(lang.translate('settings'),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: colors.onPrimary,
@@ -172,7 +176,7 @@ class _SettingsPageState extends State<SettingsPage> {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: _searchSettings,
-            tooltip: 'Search Settings',
+            tooltip: lang.translate('search_settings'),
           ),
         ],
       ),
@@ -181,6 +185,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildBody() {
+    final lang = context.watch<LanguageProvider>();
+    
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -192,8 +198,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
           // Settings Sections
           SettingsSection(
-            title: 'Personalization',
-            items: _generalSettings,
+            title: lang.translate('personalization'),
+            items: _getgeneralSettings(lang),
             onSettingTapped: (SettingItem item) {
               switch (item.id) {
                 case 'appearance':
@@ -209,8 +215,8 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
 
           SettingsSection(
-            title: 'Alerts & Notifications',
-            items: _notificationSettings,
+            title: lang.translate('alerts_notifications'),
+            items: _getnotificationSettings(lang),
             onSettingTapped: (SettingItem item) {
               if (item.id == 'notifications') {
                 _navigateToPage('notifications');
@@ -219,9 +225,9 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
 
           SettingsSection(
-            title: 'Security',
-            subtitle: _user == null ? 'Sign in to enable security features' : null,
-            items: _securitySettings,
+            title: lang.translate('security_title'),
+            subtitle: _user == null ? lang.translate('security_sign_in') : null,
+            items: _getsecuritySettings(lang),
             onSettingTapped: (SettingItem item) {
               if (item.id == 'security') {
                 _navigateToPage('security');
@@ -230,8 +236,8 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
 
           SettingsSection(
-            title: 'Financial Planning',
-            items: _budgetSettings,
+            title: lang.translate('financial_planning'),
+            items: _getbudgetSettings(lang),
             onSettingTapped: (SettingItem item) {
               if (item.id == 'budget') {
                 _navigateToPage('budget');
@@ -240,8 +246,9 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
 
           SettingsSection(
-            title: 'Data',
-            items: _dataSettings,
+            title: lang.translate('data_mgmt_title'),
+            subtitle: lang.translate('data_mgmt_sub'),
+            items: _getdataSettings(lang),
             onSettingTapped: (SettingItem item) {
               if (item.id == 'data') {
                 _navigateToPage('data');
@@ -250,8 +257,8 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
 
           SettingsSection(
-            title: 'About',
-            items: _aboutSettings,
+            title: lang.translate('about'),
+            items: _getaboutSettings(lang),
             onSettingTapped: (SettingItem item) {
               if (item.id == 'about') {
                 _navigateToPage('about');
@@ -270,13 +277,15 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildSignOutButton() {
+    final lang = context.watch<LanguageProvider>();
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(
           icon: const Icon(Icons.logout),
-          label: const Text('Sign Out'),
+          label: Text(lang.translate('sign_out')),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.red,
             side: BorderSide(color: Colors.red.shade300),
@@ -351,6 +360,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final nameController = TextEditingController(text: _user?.displayName);
     final formKey = GlobalKey<FormState>();
     bool isSaving = false;
+    final lang = context.read<LanguageProvider>();
 
     showModalBottomSheet(
       context: context,
@@ -397,16 +407,16 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Text('Edit Profile', style: Theme.of(context).textTheme.headlineSmall),
+                  Text(lang.translate('edit_profile'), style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Display Name',
+                    decoration: InputDecoration(
+                      labelText: lang.translate('display_name'),
                       prefixIcon: Icon(Icons.person_outline),
                       border: OutlineInputBorder(),
                     ),
-                    validator: (v) => v!.isEmpty ? 'Name cannot be empty' : null,
+                    validator: (v) => v!.isEmpty ? lang.translate('name_cannot_be_empty') : null,
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
@@ -437,7 +447,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               navigator.pop(); 
                               scaffoldMessenger.showSnackBar(
                                 SnackBar(
-                                  content: Text('Profile updated successfully!',
+                                  content: Text(lang.translate('profile_updated_successfully'),
                                     style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onPrimaryContainer)
                                   ),
                                   backgroundColor: theme.colorScheme.primaryContainer,
@@ -456,7 +466,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       },
                       child: isSaving 
                         ? const CircularProgressIndicator() 
-                        : const Text('Save Changes'),
+                        : Text(lang.translate('save_changes')),
                     ),
                   ),
                 ],
@@ -473,20 +483,21 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _signOut() async {
+    final lang = context.read<LanguageProvider>();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sign Out'),
+        title: Text(lang.translate('sign_out')),
         content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(lang.translate('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Sign Out'),
+            child: Text(lang.translate('sign_out')),
           ),
         ],
       ),

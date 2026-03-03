@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:personal_fin/core/widgets/shared/top_navbar.dart';
 import 'package:personal_fin/core/widgets/drawer/drawer.dart';
@@ -23,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   void _handleUserLogout() async {
     // 1. Close the drawer
     Navigator.of(context).pop();
+    final lang = context.read<LanguageProvider>();
 
     try {
       await FirebaseAuth.instance.signOut();
@@ -30,13 +32,31 @@ class _HomePageState extends State<HomePage> {
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Logout successful!')),
+          SnackBar(
+            content: Text(lang.translate('logout_successful'),
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.all(20),
+            duration: const Duration(seconds: 3),
+          ),
         ); 
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Logout failed: $e')),
+          SnackBar(
+            content: Text('${lang.translate('logout_failed')}: $e',
+              style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.errorContainer,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.all(20),
+            duration: const Duration(seconds: 3),
+          ),
         );
       }
     }
@@ -67,6 +87,7 @@ class _HomePageState extends State<HomePage> {
     final navigationProvider = Provider.of<NavigationProvider>(context);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final lang = context.watch<LanguageProvider>();
     
     final int selectedIndex = navigationProvider.selectedIndex;
 
@@ -122,26 +143,26 @@ class _HomePageState extends State<HomePage> {
             topRight: Radius.circular(24.0),
           ),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15), // The blur intensity
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15), 
             child: Container(
-              color: colors.surface.withValues(alpha: 0.4), // Semi-transparent frost
+              color: colors.surface.withValues(alpha: 0.4), 
               child: BottomNavigationBar(
-                items: const <BottomNavigationBarItem>[
+                items:  <BottomNavigationBarItem>[
                   BottomNavigationBarItem(
                     icon: Icon(Icons.dashboard_rounded), 
-                    label: 'Dashboard',
+                    label: lang.translate('dashboard'),
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.swap_horiz_rounded), 
-                    label: 'Transactions',
+                    label: lang.translate('transactions'),
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.auto_graph_rounded), 
-                    label: 'Budgeting',
+                    label: lang.translate('budgeting'),
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.account_circle), 
-                    label: 'Profile',
+                    label: lang.translate('profile'),
                   ),
                 ],
                 currentIndex: navigationProvider.selectedIndex,

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/core/widgets/shared/loading_state.dart';
 import 'package:personal_fin/models/transaction.dart';
+import 'package:provider/provider.dart';
 import 'stats_card.dart';
 
 final FirestoreService _firestoreService = FirestoreService.instance;
@@ -93,6 +95,7 @@ class _QuickStatsState extends State<QuickStats> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const LoadingState();
+    final lang = context.watch<LanguageProvider>();
 
     return Column(
       children: [
@@ -105,13 +108,13 @@ class _QuickStatsState extends State<QuickStats> {
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: StatCard(
-                  title: 'This Month',
+                  title: lang.translate('this_month'),
                   income: _currentMonthIncome,
                   expenses: _currentMonthExpenses,
                 ),
               ),
               StatCard(
-                title: 'Last Month',
+                title: lang.translate('last_month'),
                 income: _lastMonthIncome,
                 expenses: _lastMonthExpenses,
               ),

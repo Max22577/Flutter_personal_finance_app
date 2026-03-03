@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:provider/provider.dart';
 
 class MonthSelectorCard extends StatelessWidget {
   final DateTime selectedDate;
@@ -20,6 +22,7 @@ class MonthSelectorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final lang = context.watch<LanguageProvider>();
     
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -68,7 +71,7 @@ class MonthSelectorCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            'BUDGET PERIOD',
+                            lang.translate('budget_period'),
                             style: theme.textTheme.labelSmall?.copyWith(
                               letterSpacing: 1.2,
                               fontWeight: FontWeight.bold,
@@ -77,13 +80,13 @@ class MonthSelectorCard extends StatelessWidget {
                           ),
                           if (_isCurrentMonth()) ...[
                             const SizedBox(width: 8),
-                            _buildCurrentBadge(colors),
+                            _buildCurrentBadge(colors, lang),
                           ],
                         ],
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        DateFormat('MMMM yyyy').format(selectedDate),
+                        DateFormat('MMMM yyyy', lang.localeCode).format(selectedDate),
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                           letterSpacing: -0.5,
@@ -106,7 +109,7 @@ class MonthSelectorCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCurrentBadge(ColorScheme colors) {
+  Widget _buildCurrentBadge(ColorScheme colors, LanguageProvider lang) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -114,7 +117,7 @@ class MonthSelectorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        'THIS MONTH',
+        lang.translate('this_month'),
         style: TextStyle(
           fontSize: 8,
           fontWeight: FontWeight.bold,

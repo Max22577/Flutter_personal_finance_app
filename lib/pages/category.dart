@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/widgets/category/predefined_chip.dart';
+import 'package:provider/provider.dart';
 import '../core/services/firestore_service.dart';
 import '../models/category.dart';
 
@@ -19,6 +21,8 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
   // --- Add New Category ---
   void _submitNewCategory() async {
     if (_formKey.currentState!.validate()) {
+      final lang = context.read<LanguageProvider>();
+            
       try {
         final categoryName = _newCategoryController.text.trim();
         await _firestoreService.addCategory(categoryName);
@@ -26,7 +30,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Category "$categoryName" added successfully!', 
+              content: Text(lang.translate('category_added_success'), 
                 style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer)
               ),
               backgroundColor: Theme.of(context).colorScheme.primaryContainer,
@@ -42,7 +46,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error adding category: $e',
+              content: Text('${lang.translate('error_adding_category')}: $e',
                 style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer)
               ),
               backgroundColor: Theme.of(context).colorScheme.errorContainer,
@@ -61,6 +65,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
   void _showEditCategoryDialog(Category category) {
     final TextEditingController editController = TextEditingController(text: category.name);
     final editFormKey = GlobalKey<FormState>();
+    final lang = context.read<LanguageProvider>();
 
     showDialog(
       context: context,
@@ -69,15 +74,15 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
         final colors = theme.colorScheme;
         
         return AlertDialog(
-          title: Text('Edit Category Name', style: theme.textTheme.titleMedium),
+          title: Text(lang.translate('edit_category_name'), style: theme.textTheme.titleMedium),
           content: Form(
             key: editFormKey,
             child: TextFormField(
               controller: editController,
               autofocus: true,
               decoration: InputDecoration(
-                labelText: 'New Name',
-                hintText: 'Enter new category name',
+                labelText: lang.translate('new_name'),
+                hintText: lang.translate('enter_new_category_name'),
                 prefixIcon: Icon(Icons.edit, color: colors.primary),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -89,7 +94,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
               style: theme.textTheme.bodyLarge,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Name cannot be empty.';
+                  return lang.translate('name_empty_error');
                 }
                 return null;
               },
@@ -98,7 +103,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel', style: TextStyle(color: colors.error)),
+              child: Text(lang.translate('cancel'), style: TextStyle(color: colors.error)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -113,7 +118,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                   if (!mounted) return;
                   messenger.showSnackBar(
                     SnackBar(
-                      content: Text('Category updated to "$newName"', 
+                      content: Text('${lang.translate('category_updated_to')} "$newName"', 
                         style: TextStyle(color: theme.colorScheme.onPrimaryContainer)
                       ),
                       behavior: SnackBarBehavior.floating,
@@ -131,7 +136,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                 backgroundColor: colors.primary,
                 foregroundColor: colors.onPrimary,
               ),
-              child: const Text('Save Changes'),
+              child: Text(lang.translate('save_changes')),
             ),
           ],
           shape: RoundedRectangleBorder(
@@ -145,6 +150,8 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
   void _showAddCategorySheet() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final lang = context.read<LanguageProvider>();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true, 
@@ -178,18 +185,18 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                         children: [
                           Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
                           const SizedBox(height: 20),
-                          Text('New Category', style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Theme.of(context).colorScheme.primary)),
+                          Text(lang.translate('new_category'), style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Theme.of(context).colorScheme.primary)),
                           const SizedBox(height: 24),
                           TextFormField(
                             controller: _newCategoryController,
                             autofocus: true,
                             decoration: InputDecoration(
-                              hintText: 'Category name',
+                              hintText: lang.translate('category_name'),
                               filled: true,
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(15),),
                               fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                             ),
-                            validator: (v) => v!.isEmpty ? 'Required' : null,
+                            validator: (v) => v!.isEmpty ? lang.translate('name_empty_error') : null,
                           ),
                           const SizedBox(height: 24),
                           SizedBox(
@@ -200,7 +207,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                                 Navigator.pop(context);
                               },
                               style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                              child: const Text('Create Category'),
+                              child: Text(lang.translate('create_category')),
                             ),
                           ),
                         ],
@@ -221,11 +228,12 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
       appBar: AppBar(
-        title: Text('Categories', 
+        title: Text(lang.translate('categories'), 
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: colors.onPrimary,
@@ -249,7 +257,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Text(
-                'STANDARD CATEGORIES',
+                lang.translate('standard_categories'),
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: colors.outline,
                   letterSpacing: 1.1,
@@ -275,7 +283,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'YOUR CUSTOM CATEGORIES',
+                lang.translate('your_custom_categories'),
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: colors.outline,
                   letterSpacing: 1.1,
@@ -305,7 +313,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Error loading categories',
+                            lang.translate('error_loading_categories'),
                             style: textTheme.titleMedium?.copyWith(
                               color: colors.error,
                             ),
@@ -340,7 +348,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No Custom Categories',
+                            lang.translate('no_custom_categories'),
                             style: textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: colors.onSurface.withValues(alpha: 0.7),
@@ -348,7 +356,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Add your first category using the form above',
+                            lang.translate('add_first_category'),
                             textAlign: TextAlign.center,
                             style: textTheme.bodyMedium?.copyWith(
                               color: colors.onSurface.withValues(alpha: 0.5),
@@ -380,7 +388,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
         heroTag: 'category_add',
         onPressed: _showAddCategorySheet,
         icon: const Icon(Icons.add_rounded),
-        label: const Text('New Category'),
+        label: Text(lang.translate('new_category')),
         elevation: 3,
       ),         
     );

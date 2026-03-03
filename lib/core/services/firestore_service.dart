@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:personal_fin/models/budget.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:personal_fin/models/transaction.dart';
-
 import '../../models/savings.dart';
 
 const String __appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
@@ -124,11 +123,11 @@ class FirestoreService {
 
   // Predefined Categories (Hardcoded for initial structure)
   final List<Category> predefinedCategories = [
-    Category(id: 'cat_food', name: 'Food & Drink'),
-    Category(id: 'cat_trans', name: 'Transportation'),
-    Category(id: 'cat_salary', name: 'Salary (Income)'),
-    Category(id: 'cat_rent', name: 'Housing'),
-    Category(id: 'cat_savings', name: 'Savings Contribution'),
+    Category(id: 'cat_food', name: 'cat_food'),
+    Category(id: 'cat_trans', name: 'cat_trans'),
+    Category(id: 'cat_salary', name: 'cat_salary'),
+    Category(id: 'cat_rent', name: 'cat_rent'),
+    Category(id: 'cat_savings', name: 'cat_savings'),
   ];
   
   // ------------------------------------------
@@ -356,7 +355,7 @@ class FirestoreService {
   // 1. Parse the string (e.g., "January 2026") into a DateTime object
   // If null, use the current month
   DateTime selectedDate = monthYear != null 
-      ? DateFormat('MMMM yyyy').parse(monthYear) 
+      ? DateFormat('yyyy-MM').parse(monthYear) 
       : DateTime.now();
 
   DateTime startOfMonth = DateTime(selectedDate.year, selectedDate.month, 1);

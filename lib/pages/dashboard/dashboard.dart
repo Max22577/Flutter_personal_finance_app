@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/widgets/dashboard/income_expense.dart';
 import 'package:personal_fin/core/widgets/dashboard/monthly_review.dart';
+import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../core/services/monthly_data_service.dart';
 import '../../core/widgets/dashboard/quick_stats.dart';
@@ -39,7 +41,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    
+    final lang = context.read<LanguageProvider>();
+
     return  Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -68,7 +71,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         children: [
                           const Icon(Icons.error, color: Colors.red, size: 40),
                           const SizedBox(height: 16),
-                          const Text('Error loading monthly data'),
+                          Text(lang.translate('error_loading_monthly_data')),
                           const SizedBox(height: 16),
                           ElevatedButton(
                             onPressed: () {
@@ -76,7 +79,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                 // Trigger a rebuild to retry loading data
                               });
                             },
-                            child: const Text('Retry'),
+                            child: Text(lang.translate('retry')),
                           ),
                         ],
                       ),
@@ -96,7 +99,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       MaterialPageRoute(
                         builder: (context) => MonthlyReviewPage(
                           month: DateTime.now(),
-                          customTitle: 'This Month',
+                          customTitle: lang.translate('this_month'),
                         ),
                       ),
                     );
@@ -129,16 +132,16 @@ class _DashboardPageState extends State<DashboardPage> {
               elevation: 4,
               color: Theme.of(context).colorScheme.surface,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.0)),
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Quick Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                    Text(lang.translate('quick_actions'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                     SizedBox(height: 10),
                     // In a real app, this would be buttons for 'Add Budget', 'Set Goal', etc.
-                    ListTile(leading: Icon(Icons.add_to_photos), title: Text('Set Next Budget')),
-                    ListTile(leading: Icon(Icons.star_border), title: Text('Review Savings Goals')),
+                    ListTile(leading: Icon(Icons.add_to_photos), title: Text(lang.translate('set_next_budget'))),
+                    ListTile(leading: Icon(Icons.star_border), title: Text(lang.translate('review_savings_goals'))),
                   ],
                 ),
               ),
