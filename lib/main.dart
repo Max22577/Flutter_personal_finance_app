@@ -5,14 +5,23 @@ import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:personal_fin/core/providers/theme_provider.dart';
+import 'package:personal_fin/core/repositories/budget_repository.dart';
+import 'package:personal_fin/core/repositories/category_repository.dart';
+import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
+import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
+import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
-import 'package:personal_fin/core/widgets/theme/app_theme.dart';
-import 'package:personal_fin/pages/auth/sign_in.dart';
-import 'package:personal_fin/pages/category.dart';
-import 'package:personal_fin/pages/home.dart';
-import 'package:personal_fin/pages/savings/savings.dart';
-import 'package:personal_fin/pages/savings/set_savings_goal.dart';
-import 'package:personal_fin/pages/settings_page/settings.dart';
+import 'package:personal_fin/core/theme/app_theme.dart';
+import 'package:personal_fin/features/auth/pages/sign_in_page.dart';
+import 'package:personal_fin/features/budgeting/view_models/budgeting_view_model.dart';
+import 'package:personal_fin/features/category/pages/category_management_page.dart';
+import 'package:personal_fin/features/category/view_models/category_view_model.dart';
+import 'package:personal_fin/features/dashboard/view_models/dashboard_view_model.dart';
+import 'package:personal_fin/features/savings/pages/savings_page.dart';
+import 'package:personal_fin/features/savings/pages/set_goal_page.dart';
+import 'package:personal_fin/features/settings/pages/settings_page.dart';
+import 'package:personal_fin/features/transactions/view_models/transactions_view_model.dart';
+import 'package:personal_fin/features/home/home.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -44,6 +53,11 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        Provider(create: (_) => TransactionRepository()),
+        Provider(create: (_) => MonthlyDataRepository()),
+        Provider(create: (_) => CategoryRepository()),
+        Provider(create: (_) => BudgetRepository()),
+        Provider(create: (_) => MonthlyTransactionRepository()),
         ChangeNotifierProvider.value( 
           value: themeProvider, 
         ),
@@ -55,6 +69,30 @@ void main() async {
         ),
         ChangeNotifierProvider.value(
           value: languageProvider, 
+        ),
+        ChangeNotifierProvider(
+          create: (context) => DashboardViewModel(
+            context.read<MonthlyDataRepository>(), 
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => TransactionViewModel(
+            context.read<TransactionRepository>(),
+            context.read<CategoryRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CategoryViewModel(
+            context.read<CategoryRepository>()
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => BudgetingViewModel(
+            context.read<BudgetRepository>(),
+            context.read<MonthlyTransactionRepository>(),
+            context.read<CategoryRepository>(),
+            context.read<LanguageProvider>(),
+          )
         ),
       ],
       child: const MyApp(),
@@ -80,8 +118,8 @@ class MyApp extends StatelessWidget {
           themeMode: themeProvider.themeMode,
           locale: Locale(langProvider.localeCode),
           routes: {
-            '/login': (context) => const SignInPage(),
-            '/signup': (context) => const SignInPage(),
+            '/login': (context) => SignInPage(),
+            '/signup': (context) => SignInPage(),
             '/categories': (context) => const CategoryManagementPage(),
             '/settings': (context) => const SettingsPage(),
             '/savings': (context) => const SavingsPage(),
@@ -96,7 +134,7 @@ class MyApp extends StatelessWidget {
               if (snapshot.hasData) {
                 return const HomePage();
               }
-              return const SignInPage();
+              return SignInPage();
             },
           ),
         );

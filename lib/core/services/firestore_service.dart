@@ -355,7 +355,7 @@ class FirestoreService {
   // 1. Parse the string (e.g., "January 2026") into a DateTime object
   // If null, use the current month
   DateTime selectedDate = monthYear != null 
-      ? DateFormat('yyyy-MM').parse(monthYear) 
+      ? DateFormat('MMMM yyyy').parse(monthYear) 
       : DateTime.now();
 
   DateTime startOfMonth = DateTime(selectedDate.year, selectedDate.month, 1);

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/theme/app_theme.dart';
+import '../theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {

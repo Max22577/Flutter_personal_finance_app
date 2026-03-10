@@ -1,0 +1,35 @@
+import 'package:flutter/material.dart';
+import 'package:personal_fin/core/services/savings_service.dart';
+
+class AddToSavingsViewModel extends ChangeNotifier {
+  final SavingsService _savingsService = SavingsService();
+  bool _isProcessing = false;
+
+  bool get isProcessing => _isProcessing;
+
+  Future<bool> addToGoal({
+    required String goalId,
+    required double amount,
+    required String note,
+    required String defaultNote,
+  }) async {
+    if (amount <= 0) return false;
+
+    _isProcessing = true;
+    notifyListeners();
+
+    try {
+      await _savingsService.addToSavingsGoal(
+        goalId: goalId,
+        amount: amount,
+        transactionNote: note.isNotEmpty ? note : defaultNote,
+      );
+      return true;
+    } catch (e) {
+      rethrow; 
+    } finally {
+      _isProcessing = false;
+      notifyListeners();
+    }
+  }
+}

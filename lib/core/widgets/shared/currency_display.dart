@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/core/widgets/theme/app_theme.dart';
+import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/currency_provider.dart';
 
