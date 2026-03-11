@@ -5,13 +5,14 @@ import 'package:personal_fin/features/budgeting/widgets/budget_category_card.dar
 import 'package:personal_fin/features/budgeting/widgets/budget_edit_dialog.dart';
 import 'package:personal_fin/features/budgeting/widgets/month_picker.dart';
 import 'package:personal_fin/features/budgeting/widgets/month_selector.dart';
-import 'package:personal_fin/core/widgets/shared/currency_display.dart';
 import 'package:personal_fin/core/widgets/shared/empty_state.dart';
 import 'package:personal_fin/core/widgets/shared/loading_state.dart';
+import 'package:personal_fin/features/budgeting/widgets/small_stat_card.dart';
 import 'package:personal_fin/features/category/pages/category_management_page.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:provider/provider.dart';
 import '../view_models/budgeting_view_model.dart';
+import '../widgets/main_budget_stat.dart';
 
 class BudgetingPage extends StatelessWidget {
   const BudgetingPage({super.key});
@@ -127,75 +128,57 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
             ),
           ),
           _buildBudgetList(context, state),
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          const SliverToBoxAdapter(child: SizedBox(height: 120)),
         ],
       ),
     );
   }
 
   Widget _buildStatsOverview(BuildContext context, BudgetingState state) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
     final lang = context.watch<LanguageProvider>();
     final totalBudget = state.totalBudget;
     final activeBudgets = state.activeBudgetsCount;
     final categoryCount = state.totalCategoryCount;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _StatItem(
-              icon: Icons.account_balance_wallet_rounded,
-              label: lang.translate('total_budget'),
-              value: totalBudget,
-              isCurrency: true,
+    return Column(
+      children: [
+
+        /// MAIN STAT (TOTAL BUDGET)
+        MainBudgetStat(
+          label: lang.translate('total_budget'),
+          amount: totalBudget,
+        ),
+
+        const SizedBox(height: 16),
+
+        /// SECONDARY STATS
+        Row(
+          children: [
+            Expanded(
+              child: SmallStatCard(
+                icon: Icons.check_circle_outline,
+                iconColor: Colors.blue,
+                label: lang.translate('active'),
+                value: activeBudgets.toDouble(),
+              ),
             ),
-          ),
-          _divider(colors),
-          Expanded(
-            child: _StatItem(
-              icon: Icons.check_circle_outline,
-              label: lang.translate('active'),
-              value: activeBudgets.toDouble(),
-              isCurrency: false,
+
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: SmallStatCard(
+                icon: Icons.category_outlined,
+                iconColor: Colors.orange,
+                label: lang.translate('categories_count'),
+                value: categoryCount.toDouble(),
+              ),
             ),
-          ),
-          _divider(colors),
-          Expanded(
-            child: _StatItem(
-              icon: Icons.category_outlined,
-              label: lang.translate('categories_count'),
-              value: categoryCount.toDouble(),
-              isCurrency: false,
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );   
   }
 
-  Widget _divider(ColorScheme colors) {
-    return Container(
-      width: 1,
-      height: 100,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      color: colors.outlineVariant,
-    );
-  }
-  
   
   Widget _buildBudgetList(BuildContext context, BudgetingState state) {
     final vm = context.read<BudgetingViewModel>();
@@ -209,7 +192,7 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
             .fold(0.0, (sum, t) => sum + t.amount);
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: BudgetCategoryCard(
             colors: Theme.of(context).colorScheme,
             category: category,
@@ -236,75 +219,5 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
 
 }
 
-class _StatItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final double value;
-  final bool isCurrency;
 
-  const _StatItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.isCurrency,
-  });
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: value),
-      duration: const Duration(milliseconds: 600),
-      builder: (context, animatedValue, _) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: colors.primaryContainer.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: colors.primary,
-                size: 24,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            isCurrency
-                ? CurrencyDisplay(
-                    amount: animatedValue,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    compact: true,
-                  )
-                : Text(
-                    animatedValue.toInt().toString(),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-            const SizedBox(height: 4),
-
-            Text(
-              label.toUpperCase(),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: colors.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}

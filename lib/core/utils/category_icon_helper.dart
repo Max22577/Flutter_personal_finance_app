@@ -8,12 +8,16 @@ class CategoryIconHelper {
         return Icons.restaurant;
       case 'cat_trans':
         return Icons.directions_car;
+      case 'cat_rent': 
+        return Icons.home_rounded;
+      case 'cat_savings': 
+        return Icons.savings_rounded;
+      case 'cat_salary':
+        return Icons.favorite;
       case 'shopping':
         return Icons.shopping_bag;
       case 'entertainment':
-        return Icons.movie;
-      case 'cat_salary':
-        return Icons.favorite;
+        return Icons.movie;      
       case 'education':
         return Icons.school;
       default:
@@ -27,10 +31,10 @@ class CategoryIconHelper {
         return Colors.orange;
       case 'cat_trans':
         return Colors.blue;
-      case 'shopping':
+      case 'cat_rent':
         return Colors.purple;
-      case 'entertainment':
-        return Colors.redAccent;
+      case 'cat_savings':
+        return Colors.indigo;
       case 'cat_salary':
         return Colors.green;
       case 'education':

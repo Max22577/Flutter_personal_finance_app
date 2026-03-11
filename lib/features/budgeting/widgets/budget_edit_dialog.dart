@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/utils/category_icon_helper.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:provider/provider.dart';
 
@@ -82,6 +83,8 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
   Widget _buildAnimatedDialog(BuildContext context, BudgetEditViewModel vm, LanguageProvider lang, String symbol) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final icon = CategoryIconHelper.getIcon(widget.category.name);
+    final iconColor = CategoryIconHelper.getColor(widget.category.name, colors);
     
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -126,8 +129,8 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
                       Row(
                         children: [
                           CircleAvatar(
-                            backgroundColor: colors.primaryContainer,
-                            child: Icon(Icons.account_balance_wallet, color: colors.onPrimaryContainer),
+                            backgroundColor: iconColor.withValues(alpha: 0.15) ,
+                            child: Icon(icon, color: iconColor),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -135,7 +138,7 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(lang.translate('edit_budget'), style: theme.textTheme.titleLarge?.copyWith(fontSize: 20, letterSpacing: -1)),
-                                Text(widget.category.name, style: theme.textTheme.titleMedium?.copyWith(color: colors.outline, letterSpacing: -1)),
+                                Text(lang.translate(widget.category.name), style: theme.textTheme.titleMedium?.copyWith(color: colors.outline, letterSpacing: -1)),
                               ],
                             ),
                           ),

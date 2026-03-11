@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/utils/category_icon_helper.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +18,8 @@ class PredefinedCategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final lang = context.watch<LanguageProvider>();
+    final icon = CategoryIconHelper.getIcon(category.name);
+    final iconColor = CategoryIconHelper.getColor(category.name, colors);
 
     return TweenAnimationBuilder<double>(
       duration: Duration(milliseconds: 400 + (index * 100)), 
@@ -42,7 +45,7 @@ class PredefinedCategoryChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(_getIconForId(category.id), size: 18, color: colors.primary),
+            Icon(icon, size: 18, color: iconColor),
             const SizedBox(width: 8),
             Text(
               lang.translate(category.name),
@@ -57,15 +60,5 @@ class PredefinedCategoryChip extends StatelessWidget {
       ),
     );
   }
-
-  IconData _getIconForId(String id) {
-    switch (id) {
-      case 'cat_food': return Icons.restaurant_rounded;
-      case 'cat_trans': return Icons.directions_car_rounded;
-      case 'cat_salary': return Icons.payments_rounded;
-      case 'cat_rent': return Icons.home_rounded;
-      case 'cat_savings': return Icons.savings_rounded;
-      default: return Icons.category_rounded;
-    }
-  }
+  
 }

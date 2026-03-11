@@ -46,7 +46,7 @@ class BudgetCategoryCard extends StatelessWidget {
       elevation: 2,
       color: colors.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: InkWell(
         onTap: onEditPressed,
@@ -107,33 +107,25 @@ class BudgetCategoryCard extends StatelessWidget {
                           isPrimary: true,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: _buildAmountTile(
                           title: lang.translate('spent'),
                           amount: currentSpending,
                           theme: theme,
+                          isExpense: true,
                         ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildAmountTile(
+                        title: lang.translate('remaining'),
+                        amount: remaining,
+                        theme: theme,
+                        isPositive: isBudgetSet ? remaining >= 0 : null,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildAmountTile(
-                          title: lang.translate('remaining'),
-                          amount: remaining,
-                          theme: theme,
-                          isPositive: isBudgetSet ? remaining >= 0 : null,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildProgressTile(theme),
-                      ),
-                    ],
-                  ),
+                  
                 ],
               ),
 
@@ -174,12 +166,15 @@ class BudgetCategoryCard extends StatelessWidget {
                       duration: const Duration(milliseconds: 700),
                       curve: Curves.easeOutCubic,
                       builder: (context, value, child) {
-                        return LinearProgressIndicator(
-                          value: value,
-                          backgroundColor: colors.surfaceContainerHigh,
-                          color: _progressColor,
-                          minHeight: 6,
-                          borderRadius: BorderRadius.circular(4),
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: LinearProgressIndicator(
+                            value: value,
+                            backgroundColor: colors.surfaceContainerHigh,
+                            color: _progressColor,
+                            minHeight: 6,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         );
                       },
                     )
@@ -189,7 +184,7 @@ class BudgetCategoryCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   decoration: BoxDecoration(
-                    color: colors.surfaceContainerHighest,
+                    color: colors.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -221,6 +216,7 @@ class BudgetCategoryCard extends StatelessWidget {
     required String title,
     required double amount,
     required ThemeData theme,
+    bool isExpense = false,
     bool isPrimary = false,
     bool? isPositive,
   }) {
@@ -244,55 +240,18 @@ class BudgetCategoryCard extends StatelessWidget {
           const SizedBox(height: 6),
           CurrencyDisplay(
             amount: amount,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: isPrimary ? FontWeight.w700 : FontWeight.w600,
+            isExpense: isExpense,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: isPrimary ? FontWeight.w500 : FontWeight.w400,
               color: isPositive != null
                   ? (isPositive ? Colors.green : Colors.red)
                   : colors.onSurface,
             ),
-            compact: true,
+            compact: false,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProgressTile(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHigh.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'PROGRESS',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: colors.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: _spendingPercentage / 100,
-            backgroundColor: colors.surfaceContainerHigh,
-            color: _progressColor,
-            minHeight: 6,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '${_spendingPercentage.toStringAsFixed(0)}%',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: _progressColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
