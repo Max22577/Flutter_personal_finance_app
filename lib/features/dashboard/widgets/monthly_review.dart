@@ -321,7 +321,7 @@ class MonthlyReview extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      cf.format(previousMonthData!.net, lang.localeCode),
+                      cf.formatNumber(previousMonthData!.net, lang.localeCode),
                       style: textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colors.onSurface.withValues(alpha: 0.5),

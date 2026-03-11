@@ -239,7 +239,7 @@ class IncomeExpensesGraph extends StatelessWidget {
       return formatter.formatCompact(value, lang.localeCode);
     }
     
-    return formatter.format(value, lang.localeCode);
+    return formatter.formatNumber(value, lang.localeCode);
   }
 
   LineChartBarData _generateLineData(bool isIncome, Color color, List<DailyFinanceData> dailyData) {

@@ -120,7 +120,6 @@ class StatCard extends StatelessWidget {
             return CurrencyDisplay(
               amount: value,
               style: textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w900,
                 color: colors.onSurface,
                 letterSpacing: 0.2,
               ),

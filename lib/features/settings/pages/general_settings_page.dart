@@ -30,7 +30,7 @@ class GeneralSettingsPage extends StatelessWidget {
       
       // Show confirmation with example
       final newCf = context.read<CurrencyProvider>().formatter;
-      final exampleAmount = newCf.format(1234.56, lang.localeCode);
+      final exampleAmount = newCf.formatNumber(1234.56, lang.localeCode);
       
       messenger.showSnackBar(
         SnackBar(
@@ -164,7 +164,7 @@ class GeneralSettingsPage extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            cf.format(1234.56, lang.localeCode),
+            cf.formatNumber(1234.56, lang.localeCode),
             style: theme.textTheme.displaySmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,

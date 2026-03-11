@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -321,7 +320,7 @@ class _TransactionFormState extends State<TransactionForm> {
                       future: () async {
                         final amount = _parseAmount(_amountController.text);
                         if (amount == null || amount <= 0) return '';
-                        return cf.format(amount, lang.localeCode);
+                        return cf.formatNumber(amount, lang.localeCode);
                       }(),
                       builder: (context, snapshot) {
                         if (snapshot.hasData && snapshot.data!.isNotEmpty) {

@@ -27,32 +27,29 @@ class CurrencyDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Assuming you've kept your ThemeExtension for custom financial colors
     final financialColors = theme.extension<FinancialColors>();
-
-    // 1. Get the synchronous formatter from your Provider
     final lang = context.watch<LanguageProvider>();
-    final cf = context.watch<CurrencyProvider>().formatter;
+    final currencyProvider = context.watch<CurrencyProvider>();
 
-    // 2. Logic to determine if it's visually negative/positive
+    final cf = currencyProvider.formatter;
+    final symbol = currencyProvider.currency.symbol;
+
+    // 1. Determine if the amount is negative or positive
     final bool actsAsNegative = amount < 0 || isExpense;
     final bool actsAsPositive = amount > 0 && !isExpense;
 
-    // 3. Format the amount immediately (no FutureBuilder needed!)
-    String displayText = compact 
+    // 2. Format the amount immediately (no FutureBuilder needed!)
+    String formattedAmount = compact
         ? cf.formatCompact(amount.abs(), lang.localeCode)
         : cf.formatDisplay(amount.abs(), lang.localeCode);
 
-    // 4. Handle signs manually based on your parameters
+    // 3. Handle signs manually based on your parameters
     if (showSign) {
-      if (actsAsPositive) {
-        displayText = '+$displayText';
-      } else if (actsAsNegative) {
-        displayText = '-$displayText';
-      }
+      if (actsAsPositive) formattedAmount = '+$formattedAmount';
+      if (actsAsNegative) formattedAmount = '-$formattedAmount';
     }
 
-    // 5. Determine the appropriate color
+    // 4. Determine the appropriate color
     Color? textColor;
     if (actsAsPositive) {
       textColor = positiveColor ?? financialColors?.income ?? Colors.green;
@@ -60,16 +57,26 @@ class CurrencyDisplay extends StatelessWidget {
       textColor = negativeColor ?? financialColors?.expense ?? Colors.red;
     }
 
-    return Text(
-      displayText,
-      style: style?.copyWith(color: textColor) ?? TextStyle(color: textColor),
+    final baseStyle =
+        style?.copyWith(color: textColor) ?? TextStyle(color: textColor);
+
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: "$symbol ",
+            style: baseStyle.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          TextSpan(
+            text: formattedAmount,
+            style: baseStyle.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
-
-// Usage example:
-// CurrencyDisplay(
-//   amount: 1500.75,
-//   style: Theme.of(context).textTheme.titleLarge,
-//   showSign: true,
-// )
