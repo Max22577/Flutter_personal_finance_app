@@ -50,10 +50,17 @@ class _TransactionsPageState extends State<TransactionsPage> {
       
       if (_navigationProvider.selectedIndex == 1) {
         _navigationProvider.setActions([
-          IconButton(
-            key: const ValueKey('_transaction_add'), 
-            icon: const Icon(Icons.add),
-            onPressed: () => _showTransactionForm(context),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              key: const ValueKey('_transaction_add'), 
+              icon: const Icon(Icons.add),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.15),
+                shape: const CircleBorder(),
+              ),
+              onPressed: () => _showTransactionForm(context),
+            ),
           ),
         ]);
       }
@@ -99,6 +106,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
     final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
+      backgroundColor: colors.surfaceContainerLow,
       body: TransactionHistory(user: user, isActive: widget.isActive),
       
       floatingActionButton: FloatingActionButton.extended(

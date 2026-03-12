@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
@@ -52,26 +54,61 @@ class SavingsViewContent extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLow,
-      appBar: AppBar(
-        title: Text(lang.translate('savings_goals'), 
-
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: colors.onPrimary,
-            fontWeight: FontWeight.bold,
-          )
-        ),
-        backgroundColor: colors.primary,
-        foregroundColor: colors.onPrimary,
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          if (vm.goals.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () => _addGoal(context),
-              tooltip: lang.translate('add_goal_tooltip'),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                colors.primary,
+                Color.lerp(colors.primary, colors.secondary, 0.6)!,
+                colors.secondary,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-        ],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+              child: AppBar(
+                title: Text(lang.translate('savings_goals'), 
+
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: colors.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  )
+                ),
+                backgroundColor: Colors.transparent,
+                foregroundColor: colors.onPrimary,
+                centerTitle: true,
+                elevation: 0,
+                actions: [
+                  if (vm.goals.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: IconButton(
+                        icon: const Icon(Icons.add),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white.withValues(alpha: 0.15),
+                          shape: const CircleBorder(),
+                        ),
+                        onPressed: () => _addGoal(context),
+                        tooltip: lang.translate('add_goal_tooltip'),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
       body: vm.goals.isEmpty 
           ? _buildEmptyState(context, lang) 

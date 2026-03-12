@@ -59,9 +59,16 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
 
     if (_navigationProvider.selectedIndex == 3) {
       _navigationProvider.setActions([
-        IconButton(
-          icon: const Icon(Icons.logout_rounded),
-          onPressed: () => context.read<ProfileViewModel>().signOut(),
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: 0.15),
+              shape: const CircleBorder(),
+            ),
+            onPressed: () => context.read<ProfileViewModel>().signOut(),
+          ),
         )
       ]);
     }
@@ -95,6 +102,7 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
     }
 
     return Scaffold(
+      backgroundColor: colors.surfaceContainerLow,
       body: vm.isLoading 
         ? const Center(child: CircularProgressIndicator())
         : SingleChildScrollView(

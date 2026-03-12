@@ -8,9 +8,12 @@ class AppColors {
   static const Color lightPrimaryContainer = Color(0xFFEADDFF); // For tonal buttons
   static const Color lightOnPrimaryContainer = Color(0xFF21005D);
 
-  static const Color lightBackground = Color(0xFFF7F7F7);
-  static const Color lightSurface = Color(0xFFF8F9FF); // Your "Surface Low" background
-  static const Color lightSurfaceContainer = Color(0xFFFFFFFF); // Pure white for cards
+  // Light surfaces (tonal hierarchy)
+  static const Color lightBackground = Color(0xFFF5F6FA); 
+  static const Color lightSurfaceContainerLow = Color(0xFFF8F9FF);
+  static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color lightSurfaceContainer = Color(0xFFF1F3F9);
+  static const Color lightSurfaceContainerHigh = Color(0xFFE9ECF5);
 
   static const Color lightOutline = Color(0xFF79747E);
   static const Color lightOutlineVariant = Color(0xFFCAC4D0); // For subtle glass borders
@@ -21,9 +24,11 @@ class AppColors {
   static const Color darkSecondary = Color(0xFF03DAC6);
   static const Color darkOnPrimary = Color(0xFF381E72);
 
-  static const Color darkBackground = Color(0xFF121212); // Deeper black
-  static const Color darkSurface = Color(0xFF1E1E1E); // Standard surface
-  static const Color darkSurfaceContainer = Color(0xFF2B2B2B); // Lighter "elevated" surface
+  static const Color darkBackground = Color(0xFF0F1115);
+  static const Color darkSurfaceContainerLow = Color(0xFF17191F);
+  static const Color darkSurface = Color(0xFF1E1F26);
+  static const Color darkSurfaceContainer = Color(0xFF25272F);
+  static const Color darkSurfaceContainerHigh = Color(0xFF2F313A);
 
   static const Color darkOutline = Color(0xFF938F99);
   static const Color darkOutlineVariant = Color(0xFF49454F); // For dark-mode glass borders
@@ -111,7 +116,7 @@ class AppThemes {
         width: 0.5,
       ),
     ),
-    color: isDark ? AppColors.darkSurface : Colors.white,
+    color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
   );
 
   static InputDecorationTheme _inputTheme(bool isDark) => InputDecorationTheme(
@@ -137,12 +142,12 @@ class AppThemes {
       primaryContainer: AppColors.lightPrimaryContainer,
       onPrimaryContainer: AppColors.lightOnPrimaryContainer,
       secondary: AppColors.lightSecondary,
-      surface: AppColors.lightSurfaceContainer,
+      surface: AppColors.lightSurface,
       onSurface: Colors.black87,
       onSurfaceVariant: Color(0xFF49454F), // Crucial for subtitles
-      surfaceContainerLow: AppColors.lightSurface, 
-      surfaceContainer: Colors.white,
-      surfaceContainerHigh: Colors.white,
+      surfaceContainerLow: AppColors.lightSurfaceContainerLow, 
+      surfaceContainer: AppColors.lightSurfaceContainer,
+      surfaceContainerHigh: AppColors.lightSurfaceContainerHigh,
       outline: AppColors.lightOutline,
       outlineVariant: AppColors.lightOutlineVariant,
       shadow: AppColors.lightShadow,
@@ -189,9 +194,9 @@ class AppThemes {
       surface: AppColors.darkSurface,
       onSurface: Colors.white,
       onSurfaceVariant: Color(0xFFCAC4D0),
-      surfaceContainerLow: AppColors.darkBackground,
-      surfaceContainer: AppColors.darkSurface,
-      surfaceContainerHigh: AppColors.darkSurfaceContainer,
+      surfaceContainerLow: AppColors.darkSurfaceContainerLow,
+      surfaceContainer: AppColors.darkSurfaceContainer,
+      surfaceContainerHigh: AppColors.darkSurfaceContainerHigh,
       outline: AppColors.darkOutline,
       outlineVariant: AppColors.darkOutlineVariant,
       shadow: AppColors.darkShadow,

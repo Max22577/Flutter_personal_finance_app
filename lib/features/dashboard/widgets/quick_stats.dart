@@ -24,21 +24,24 @@ class QuickStats extends StatelessWidget {
 
           return SizedBox(
             height: height,
-            child: PageView(
-              controller: PageController(viewportFraction: 0.9),
-              padEnds: false,
-              children: [
-                _buildCard(
-                  title: lang.translate('this_month'),
-                  income: vm.currentMonthIncome,
-                  expenses: vm.currentMonthExpenses,
-                ),
-                _buildCard(
-                  title: lang.translate('last_month'),
-                  income: vm.lastMonthIncome,
-                  expenses: vm.lastMonthExpenses,
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: PageView(
+                controller: PageController(viewportFraction: 0.9),
+                padEnds: false,
+                children: [
+                  _buildCard(
+                    title: lang.translate('this_month'),
+                    income: vm.currentMonthIncome,
+                    expenses: vm.currentMonthExpenses,
+                  ),
+                  _buildCard(
+                    title: lang.translate('last_month'),
+                    income: vm.lastMonthIncome,
+                    expenses: vm.lastMonthExpenses,
+                  ),
+                ],
+              ),
             ),
           );
         },

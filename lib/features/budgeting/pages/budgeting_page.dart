@@ -52,9 +52,16 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
     if (!mounted) return;
     if (_navProvider.selectedIndex == 2) {
       _navProvider.setActions([
-        IconButton(
-          icon: const Icon(Icons.category),
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryManagementPage())),
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: IconButton(
+            icon: const Icon(Icons.category),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: 0.15),
+              shape: const CircleBorder(),
+            ),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryManagementPage())),
+          ),
         ),
       ]);
     }
@@ -78,6 +85,7 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
     final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       body: _buildBody(vm, lang),
     );
   }

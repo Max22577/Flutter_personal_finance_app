@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
@@ -41,48 +43,70 @@ class TopNavbar extends StatelessWidget implements PreferredSizeWidget {
 
     return Container(
       decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colors.primary,
+            Color.lerp(colors.primary, colors.secondary, 0.6)!,
+            colors.secondary,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         boxShadow: [
           BoxShadow(
-            color: colors.shadow.withValues(alpha: theme.brightness == Brightness.light ? 0.08 : 0.3),
-            blurRadius: elevation ?? 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: AppBar(
-        title: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: Text(
-            lang.translate(navigationProvider.currentTitle),
-            key: ValueKey(navigationProvider.currentTitle), 
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: colors.onPrimary,
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          child: AppBar(
+            title: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Text(
+                lang.translate(navigationProvider.currentTitle),
+                key: ValueKey(navigationProvider.currentTitle), 
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colors.onPrimary,
+                ),
+              ),
             ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true, 
+            surfaceTintColor: Colors.transparent,
+            leading: leading,
+            iconTheme: IconThemeData(color: colors.onPrimary),
+            automaticallyImplyLeading: automaticallyImplyLeading,
+            actions: actionsToShow,
           ),
         ),
-        backgroundColor: colors.primary,
-        elevation: 0,
-        centerTitle: true, 
-        surfaceTintColor: Colors.transparent,
-        leading: leading,
-        iconTheme: IconThemeData(color: colors.onPrimary),
-        automaticallyImplyLeading: automaticallyImplyLeading,
-        actions: actionsToShow,
       ),
     );
   }
 
   List<Widget> _defaultActions(BuildContext context) {
     return [
-      IconButton(
-        icon: const Icon(Icons.notifications_outlined),
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Notifications coming soon!')),
-          );
-        },
-        tooltip: 'Notifications',
+      Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: IconButton(
+          icon: const Icon(Icons.notifications_outlined),
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.white.withValues(alpha: 0.15),
+            shape: const CircleBorder(),
+          ),
+          iconSize: 22,
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Notifications coming soon!')),
+            );
+          },
+          tooltip: 'Notifications',
+        ),
       ),
     ];
   }

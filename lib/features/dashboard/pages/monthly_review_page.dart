@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
@@ -30,20 +31,48 @@ class MonthlyReviewPage extends StatelessWidget {
 
           return Scaffold(
             backgroundColor: colors.surfaceContainerLow,
-            appBar: AppBar(
-              title: Text(lang.translate('monthly_review_title'), 
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colors.onPrimary,
+            appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(kToolbarHeight),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      colors.primary,
+                      Color.lerp(colors.primary, colors.secondary, 0.6)!,
+                      colors.secondary,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: ClipRect(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                    child: AppBar(
+                      title: Text(lang.translate('monthly_review_title'), 
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colors.onPrimary,
+                        ),
+                      ),
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: colors.onPrimary,
+                      elevation: 0,
+                      centerTitle: true, 
+                      surfaceTintColor: Colors.transparent,
+                      iconTheme: IconThemeData(color: colors.onPrimary),
+                      automaticallyImplyLeading: true,
+                    ),
+                  ),
                 ),
               ),
-              backgroundColor: colors.primary,
-              foregroundColor: colors.onPrimary,
-              elevation: 0,
-              centerTitle: true, 
-              surfaceTintColor: Colors.transparent,
-              iconTheme: IconThemeData(color: colors.onPrimary),
-              automaticallyImplyLeading: true,
             ),
             body: _buildBody(context, vm, lang, targetMonth, colors, text),
           );
@@ -195,6 +224,7 @@ class MonthlyReviewPage extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         _topSpendingCard(vm, vm.currentMonthData!.expenses, colors, text, lang),
+        const SizedBox(height: 70),
       ],
     );
   }
@@ -278,10 +308,10 @@ class MonthlyReviewPage extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildDetailRow(lang.translate('income_label'), '\$${data.income.toStringAsFixed(2)}', financialColors.income),
-            _buildDetailRow(lang.translate('expenses_label'), '\$${data.expenses.toStringAsFixed(2)}', financialColors.expense),
+            _buildDetailRow(lang.translate('income_label'), data.income, financialColors.income),
+            _buildDetailRow(lang.translate('expenses_label'), data.expenses, financialColors.expense),
             const Divider(),
-            _buildDetailRow(lang.translate('net_profit'), '\$${data.net.toStringAsFixed(2)}', theme.colorScheme.primary),
+            _buildDetailRow(lang.translate('net_profit'), data.net, theme.colorScheme.primary),
           ],
         ),
         actions: [
@@ -294,14 +324,14 @@ class MonthlyReviewPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, Color color) {
+  Widget _buildDetailRow(String label, double value, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label),
-          Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: color)),
+          CurrencyDisplay(amount: value, compact: false, style: TextStyle(fontWeight: FontWeight.bold, color: color)),
         ],
       ),
     );

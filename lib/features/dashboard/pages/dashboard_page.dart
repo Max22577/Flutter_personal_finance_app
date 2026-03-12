@@ -31,8 +31,11 @@ class DashboardViewContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<DashboardViewModel>();
     final lang = context.watch<LanguageProvider>();
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     
     return Scaffold(
+      backgroundColor: colors.surfaceContainerLow,
       body: RefreshIndicator(
         onRefresh: () async => await Future.wait([
           context.read<TransactionRepository>().refresh(),
@@ -53,7 +56,7 @@ class DashboardViewContent extends StatelessWidget {
               const SizedBox(height: 32),
               const QuickStats(height: 220),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 25),
               RecentTransactions(
                 maxItems: 5,
                 onViewAll: () { /* Navigate via NavProvider */ },

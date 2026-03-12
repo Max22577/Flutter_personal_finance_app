@@ -31,24 +31,16 @@ class StatCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        // Gradient background makes the card look more premium than solid surface
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
           colors: [
             colors.surface,
-            colors.surfaceContainerLow,
+            colors.surfaceContainer.withValues(alpha: 0.6),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.25)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),

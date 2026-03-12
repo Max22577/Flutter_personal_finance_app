@@ -168,25 +168,61 @@ class SettingsPage extends StatelessWidget {
           final lang = context.watch<LanguageProvider>();
 
           return Scaffold(
-            appBar: AppBar(
-              title: Text(lang.translate('settings'),
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colors.onPrimary,
+            backgroundColor: colors.surfaceContainerLow,
+            appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(kToolbarHeight),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      colors.primary,
+                      Color.lerp(colors.primary, colors.secondary, 0.6)!,
+                      colors.secondary,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: ClipRect(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                    child: AppBar(
+                      title: Text(lang.translate('settings'),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colors.onPrimary,
+                        ),
+                      ),
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      centerTitle: true, 
+                      surfaceTintColor: Colors.transparent,
+                      iconTheme: IconThemeData(color: colors.onPrimary),
+                      actions: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: IconButton(
+                            icon: const Icon(Icons.search),
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.white.withValues(alpha: 0.15),
+                              shape: const CircleBorder(),
+                            ),
+                            onPressed: _searchSettings,
+                            tooltip: lang.translate('search_settings'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              backgroundColor: colors.primary,
-              elevation: 0,
-              centerTitle: true, 
-              surfaceTintColor: Colors.transparent,
-              iconTheme: IconThemeData(color: colors.onPrimary),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: _searchSettings,
-                  tooltip: lang.translate('search_settings'),
-                ),
-              ],
             ),
             body: SingleChildScrollView(
               child: Column(

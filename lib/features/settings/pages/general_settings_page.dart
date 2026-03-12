@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
@@ -121,35 +123,61 @@ class GeneralSettingsPage extends StatelessWidget {
           final colors = theme.colorScheme;
           final text = theme.textTheme;
 
-          if (vm.isLoading) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator()));
-          }
-
           return Scaffold(
             backgroundColor: theme.colorScheme.surfaceContainerLow,
-            appBar: AppBar(
-              title: Text(lang.translate('general_settings'), 
-                style: text.titleLarge?.copyWith(
-                  color: colors.onPrimary,
-                  fontWeight: FontWeight.bold,
-                )
+            appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(kToolbarHeight),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      colors.primary,
+                      Color.lerp(colors.primary, colors.secondary, 0.6)!,
+                      colors.secondary,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: ClipRect(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                    child: AppBar(
+                      title: Text(lang.translate('general_settings'), 
+                        style: text.titleLarge?.copyWith(
+                          color: colors.onPrimary,
+                          fontWeight: FontWeight.bold,
+                        )
+                      ),
+                      centerTitle: true,
+                      elevation: 0,
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: colors.onPrimary,
+                    ),
+                  ),
+                ),
               ),
-              centerTitle: true,
-              elevation: 0,
-              backgroundColor: colors.primary,
-              foregroundColor: colors.onPrimary,
             ),
-            body: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  _buildHeroHeader(context, theme, lang),
-                  _buildSettingsList(context, vm, lang),
-                  const SizedBox(height: 32),
-                  _buildDangerZone(theme, lang, context, vm),
-                ],
+            body: vm.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    _buildHeroHeader(context, theme, lang),
+                    _buildSettingsList(context, vm, lang),
+                    const SizedBox(height: 32),
+                    _buildDangerZone(theme, lang, context, vm),
+                  ],
+                ),
               ),
-            ),
           );
         },
       ),
