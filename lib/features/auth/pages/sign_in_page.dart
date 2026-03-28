@@ -11,39 +11,33 @@ class SignInPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => SignInViewModel(),
-      child: Consumer<SignInViewModel>(
-        builder: (context, vm, _) {
-          final theme = Theme.of(context);
-          
-          return Scaffold(
-            body: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+    final theme = Theme.of(context);
+    final vm = context.watch<SignInViewModel>();
+    
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                _buildSignInCard(context, vm, theme),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(context, '/signup'),
+                  child: const Text("New here? Create a secure account", style: TextStyle(color: Colors.white70)),
                 ),
-              ),
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      _buildSignInCard(context, vm, theme),
-                      const SizedBox(height: 16),
-                      TextButton(
-                        onPressed: () => Navigator.pushNamed(context, '/signup'),
-                        child: const Text("New here? Create a secure account", style: TextStyle(color: Colors.white70)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
@@ -105,7 +99,7 @@ class SignInPage extends StatelessWidget {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: vm.isLoading ? null : () => _handleSignIn,
+                onPressed: vm.isLoading ? null : () => _handleSignIn(context, vm),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.secondary,
                   foregroundColor: colors.surface,
@@ -133,7 +127,7 @@ class SignInPage extends StatelessWidget {
               width: double.infinity,
               height: 60,
               child: OutlinedButton(
-                onPressed: vm.isLoading ? null : () => vm.signInWithGoogle(),
+                onPressed: vm.isLoading ? null : () => _handleGoogleSignIn(context, vm),
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: Colors.grey[300]!),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -178,6 +172,17 @@ class SignInPage extends StatelessWidget {
     }
   }
 
+  void _handleGoogleSignIn(BuildContext context, SignInViewModel vm) async {
+    final error = await vm.signInWithGoogle();
+    if (error != null && context.mounted) {
+      _showErrorSnackBar(context, error);
+    } else if (context.mounted) {
+      // This was the missing piece!
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  }
+
+  
   void _showErrorSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

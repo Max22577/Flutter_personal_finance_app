@@ -13,6 +13,7 @@ import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:personal_fin/features/auth/pages/sign_in_page.dart';
+import 'package:personal_fin/features/auth/view_models/sign_in_view_model.dart';
 import 'package:personal_fin/features/budgeting/view_models/budgeting_view_model.dart';
 import 'package:personal_fin/features/category/pages/category_management_page.dart';
 import 'package:personal_fin/features/category/view_models/category_view_model.dart';
@@ -71,6 +72,9 @@ void main() async {
           value: languageProvider, 
         ),
         ChangeNotifierProvider(
+          create: (context) => SignInViewModel() 
+        ),
+        ChangeNotifierProvider(
           create: (context) => DashboardViewModel(
             context.read<MonthlyDataRepository>(), 
           ),
@@ -120,6 +124,7 @@ class MyApp extends StatelessWidget {
           routes: {
             '/login': (context) => SignInPage(),
             '/signup': (context) => SignInPage(),
+            '/home': (context) => const HomePage(),
             '/categories': (context) => const CategoryManagementPage(),
             '/settings': (context) => const SettingsPage(),
             '/savings': (context) => const SavingsPage(),
