@@ -33,6 +33,7 @@ class SignInViewModel extends ChangeNotifier {
       final user = await _auth.signInWithGoogle();
       return user != null ? null : 'Google sign-in cancelled.';
     } catch (e) {
+      debugPrint("FULL ERROR: $e");
       return 'Google Sign-In failed. Please try again.';
     } finally {
       _setLoading(false);
