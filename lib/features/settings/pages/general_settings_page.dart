@@ -1,8 +1,8 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/widgets/shared/custom_appbar.dart';
 import 'package:personal_fin/features/settings/widgets/currency_picker.dart';
 import 'package:personal_fin/features/settings/view_models/general_settings_view_model.dart';
 import 'package:personal_fin/models/currency.dart';
@@ -120,50 +120,12 @@ class GeneralSettingsPage extends StatelessWidget {
         builder: (context, vm, _) {
           final lang = context.watch<LanguageProvider>();
           final theme = Theme.of(context);
-          final colors = theme.colorScheme;
-          final text = theme.textTheme;
 
           return Scaffold(
             backgroundColor: theme.colorScheme.surfaceContainerLow,
-            appBar: PreferredSize(
-              preferredSize: const Size.fromHeight(kToolbarHeight),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      colors.primary,
-                      Color.lerp(colors.primary, colors.secondary, 0.6)!,
-                      colors.secondary,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                    child: AppBar(
-                      title: Text(lang.translate('general_settings'), 
-                        style: text.titleLarge?.copyWith(
-                          color: colors.onPrimary,
-                          fontWeight: FontWeight.bold,
-                        )
-                      ),
-                      centerTitle: true,
-                      elevation: 0,
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: colors.onPrimary,
-                    ),
-                  ),
-                ),
-              ),
+            appBar: CustomAppBar(
+              title: 'general_settings',
+              isRootNav: false, // Tells the widget to use the passed title 
             ),
             body: vm.isLoading
               ? const Center(child: CircularProgressIndicator())

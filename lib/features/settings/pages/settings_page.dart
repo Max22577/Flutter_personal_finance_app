@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/widgets/shared/custom_appbar.dart';
 import 'package:personal_fin/features/settings/widgets/profile_card.dart';
 import 'package:personal_fin/features/settings/widgets/settings_section.dart';
 import 'package:personal_fin/features/settings/pages/general_settings_page.dart';
@@ -169,60 +170,23 @@ class SettingsPage extends StatelessWidget {
 
           return Scaffold(
             backgroundColor: colors.surfaceContainerLow,
-            appBar: PreferredSize(
-              preferredSize: const Size.fromHeight(kToolbarHeight),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      colors.primary,
-                      Color.lerp(colors.primary, colors.secondary, 0.6)!,
-                      colors.secondary,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
+            appBar: CustomAppBar(
+              title: 'settings',
+              isRootNav: false, // Tells the widget to use the passed title
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: IconButton(
+                    icon: const Icon(Icons.search),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(alpha: 0.15),
+                      shape: const CircleBorder(),
                     ),
-                  ],
-                ),
-                child: ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                    child: AppBar(
-                      title: Text(lang.translate('settings'),
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colors.onPrimary,
-                        ),
-                      ),
-                      backgroundColor: Colors.transparent,
-                      elevation: 0,
-                      centerTitle: true, 
-                      surfaceTintColor: Colors.transparent,
-                      iconTheme: IconThemeData(color: colors.onPrimary),
-                      actions: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: IconButton(
-                            icon: const Icon(Icons.search),
-                            style: IconButton.styleFrom(
-                              backgroundColor: Colors.white.withValues(alpha: 0.15),
-                              shape: const CircleBorder(),
-                            ),
-                            onPressed: _searchSettings,
-                            tooltip: lang.translate('search_settings'),
-                          ),
-                        ),
-                      ],
-                    ),
+                    onPressed: _searchSettings,
+                    tooltip: lang.translate('search_settings'),
                   ),
                 ),
-              ),
+              ],
             ),
             body: SingleChildScrollView(
               child: Column(
