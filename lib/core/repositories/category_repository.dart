@@ -5,8 +5,8 @@ import '../services/firestore_service.dart';
 
 class CategoryRepository {
   final FirestoreService _service = FirestoreService.instance;
-  final _categorySubject = BehaviorSubject<List<Category>>();
-  final _userCategorySubject = BehaviorSubject<List<Category>>();
+  final _categorySubject = BehaviorSubject<List<Category>>(); //pre-defined and user defined categories
+  final _userCategorySubject = BehaviorSubject<List<Category>>(); //user defined categories
   StreamSubscription? _catSub;
   StreamSubscription? _userCatSub;
 

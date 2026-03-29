@@ -123,11 +123,11 @@ class FirestoreService {
 
   // Predefined Categories (Hardcoded for initial structure)
   final List<Category> predefinedCategories = [
-    Category(id: 'cat_food', name: 'cat_food'),
-    Category(id: 'cat_trans', name: 'cat_trans'),
-    Category(id: 'cat_salary', name: 'cat_salary'),
-    Category(id: 'cat_rent', name: 'cat_rent'),
-    Category(id: 'cat_savings', name: 'cat_savings'),
+    Category(id: 'cat_food', name: 'Food'),
+    Category(id: 'cat_trans', name: 'Transportation'),
+    Category(id: 'cat_salary', name: 'Salary'),
+    Category(id: 'cat_rent', name: 'Rent'),
+    Category(id: 'cat_savings', name: 'Savings'),
   ];
   
   // ------------------------------------------

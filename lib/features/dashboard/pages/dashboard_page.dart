@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
-import 'package:personal_fin/features/dashboard/widgets/income_expenses_graph.dart';
+import 'package:personal_fin/features/dashboard/widgets/category_pie_chart.dart';
 import 'package:personal_fin/features/dashboard/widgets/monthly_review.dart';
 import 'package:personal_fin/features/dashboard/view_models/dashboard_view_model.dart';
 import 'package:personal_fin/features/dashboard/widgets/quick_stats.dart';
@@ -15,12 +15,7 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => DashboardViewModel(
-        context.read<MonthlyDataRepository>(),
-      ),
-      child: const DashboardViewContent(),
-    );
+    return const DashboardViewContent();
   }
 }
 
@@ -51,7 +46,8 @@ class DashboardViewContent extends StatelessWidget {
               _buildMonthlyReview(vm, lang, context),
 
               const SizedBox(height: 16),
-              const IncomeExpensesGraph(daysToShow: 7, height: 250),
+              //const IncomeExpensesGraph(daysToShow: 7, height: 250),
+              const CategoryPieChart(),
               
               const SizedBox(height: 32),
               const QuickStats(height: 220),
