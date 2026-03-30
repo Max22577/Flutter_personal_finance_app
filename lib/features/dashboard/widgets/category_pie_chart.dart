@@ -80,10 +80,16 @@ class CategoryPieChart extends StatelessWidget {
   }
 
   List<PieChartSectionData> _buildSections(Map<String, double> data, ColorScheme colors) {
+    final totalExpenses = data.values.fold(0.0, (sum, item) => sum + item);
     int index = 0;
+
     return data.entries.map((entry) {
       final color = _vibrantColors[index % _vibrantColors.length];
       index++;
+
+      final percentage = totalExpenses > 0 ? entry.value / totalExpenses : 0.0;
+
+      final bool shouldShowBadge = percentage >= 0.08;
 
       return PieChartSectionData(
         color: color,
@@ -91,15 +97,16 @@ class CategoryPieChart extends StatelessWidget {
         radius: 50,
         showTitle: false, 
         
-        badgeWidget: CurrencyDisplay(
-          amount: entry.value,
-          compact: true, 
-          isExpense: true,
-          // Pro-tip: override to white so it's readable on your vibrant slices!
-          positiveColor: colors.onSurface, 
-          negativeColor: colors.onSurface,
-          style: const TextStyle(fontSize: 11),
-        ),
+        badgeWidget: shouldShowBadge 
+        ? CurrencyDisplay(
+            amount: entry.value,
+            compact: true, 
+            isExpense: true,
+            positiveColor: colors.onSurface, 
+            negativeColor: colors.onSurface,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+          )
+        : null,
         
         // 3. Move the badge to the center of the slice (0.0 = center of donut, 1.0 = outer edge)
         badgePositionPercentageOffset: 0.55,
