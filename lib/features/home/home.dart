@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:personal_fin/core/widgets/shared/custom_appbar.dart';
-import 'package:personal_fin/core/widgets/shared/top_navbar.dart';
 import 'package:personal_fin/core/widgets/drawer/drawer.dart';
 import 'package:personal_fin/features/budgeting/pages/budgeting_page.dart';
 import 'package:personal_fin/features/dashboard/pages/dashboard_page.dart';
