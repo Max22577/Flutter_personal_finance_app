@@ -6,7 +6,6 @@ import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:personal_fin/models/monthly_data.dart';
 import 'package:provider/provider.dart';
  
-
 class MonthlyReview extends StatelessWidget {
   final MonthlyData monthlyData;
   final MonthlyData? previousMonthData;
@@ -29,7 +28,8 @@ class MonthlyReview extends StatelessWidget {
     final colors = theme.colorScheme;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      padding: const EdgeInsets.all(8.0),
+      margin: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(20),
@@ -42,7 +42,7 @@ class MonthlyReview extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -53,19 +53,19 @@ class MonthlyReview extends StatelessWidget {
                 _buildAnimatedHeader(context),
                 
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
                   child: Column(
                     children: [
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 8),
                       _buildAnimatedStats(context),
                       
                       if (monthlyData.income > 0) ...[
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
                         _buildAnimatedSavingsSection(context),
                       ],
 
                       if (showComparison && previousMonthData != null) ...[
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         _buildComparisonTile(context),
                       ],
                     ],
@@ -81,6 +81,7 @@ class MonthlyReview extends StatelessWidget {
 
   Widget _buildAnimatedHeader(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
@@ -217,6 +218,8 @@ class MonthlyReview extends StatelessWidget {
     final clampedRatio = savingsRatio.clamp(0.0, 1.0);
     final lang = context.read<LanguageProvider>();
 
+    const double barHeight = 8.0; 
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -231,35 +234,41 @@ class MonthlyReview extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        Stack(
-          children: [
-            Container(
-              height: 10,
-              decoration: BoxDecoration(
-                color: colors.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: clampedRatio),
-              duration: const Duration(milliseconds: 1500),
-              curve: Curves.fastOutSlowIn,
-              builder: (context, value, child) {
-                return FractionallySizedBox(
-                  widthFactor: value,
-                  child: Container(
-                    height: 7,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [colors.primary, colors.tertiary],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+        // LayoutBuilder gives us the exact pixel width of this specific spot on the screen
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return Stack(
+              alignment: Alignment.centerLeft, 
+              children: [
+                Container(
+                  height: barHeight,
+                  decoration: BoxDecoration(
+                    color: colors.surfaceContainerHigh.withValues(alpha: 0.65), 
+                    borderRadius: BorderRadius.circular(barHeight),
                   ),
-                );
-              },
-            ),
-          ],
+                ),
+                
+                // 3. Foreground Progress
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: clampedRatio),
+                  duration: const Duration(milliseconds: 1500),
+                  curve: Curves.fastOutSlowIn,
+                  builder: (context, value, child) {
+                    return Container(
+                      width: constraints.maxWidth * value, 
+                      height: barHeight, 
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [colors.primary, colors.secondary],
+                        ),
+                        borderRadius: BorderRadius.circular(barHeight),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -326,7 +335,7 @@ class MonthlyReview extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         color: colors.onSurface.withValues(alpha: 0.5),
                       ),
-                    ),                      
+                    ),
                   ],
                 ),
               ],

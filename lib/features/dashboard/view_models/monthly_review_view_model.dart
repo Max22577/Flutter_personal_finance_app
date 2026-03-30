@@ -28,11 +28,22 @@ class MonthlyReviewViewModel extends ChangeNotifier {
 
   List<MapEntry<String, double>> get topSpendingCategories {
     if (_currentMonthData == null) return [];
-    return _currentMonthData!.categoryBreakdown.entries
+    final allEntries = _currentMonthData!.categoryBreakdown.entries
         .toList()
-        .sorted((a, b) => b.value.compareTo(a.value))
-        .take(3)
-        .toList();
+        .sorted((a, b) => b.value.compareTo(a.value));
+
+    if (allEntries.length <= 4) return allEntries;
+
+    // Keep the top 3
+    final topThree = allEntries.take(3).toList();
+
+    // Sum up the value of all the remaining categories
+    final otherSum = allEntries.skip(3).map((e) => e.value).reduce((a, b) => a + b);
+
+    // Add the "Other" category to the end
+    topThree.add(MapEntry('other_label', otherSum));
+
+    return topThree;
   }
 
   Future<void> loadData(DateTime month) async {
