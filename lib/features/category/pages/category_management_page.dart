@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
+import 'package:personal_fin/core/widgets/shared/custom_appbar.dart';
 import 'package:personal_fin/features/category/widgets/predefined_chip.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:provider/provider.dart';
@@ -241,58 +242,22 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colors.primary,
-                Color.lerp(colors.primary, colors.secondary, 0.6)!,
-                colors.secondary,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
+      appBar: CustomAppBar(
+        title: 'categories',
+        isRootNav: false, // Tells the widget to use the passed title 
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              icon: const Icon(Icons.sort_rounded),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.15),
+                shape: const CircleBorder(),
               ),
-            ],
-          ),
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-              child: AppBar(
-                title: Text(lang.translate('categories'), 
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colors.onPrimary,
-                  ),
-                ),
-                centerTitle: true,
-                scrolledUnderElevation: 0,
-                backgroundColor: colors.primary,
-                foregroundColor: colors.onPrimary,
-                actions: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: IconButton(
-                      icon: const Icon(Icons.sort_rounded),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white.withValues(alpha: 0.15),
-                        shape: const CircleBorder(),
-                      ),
-                      onPressed: () {}, // Optional: Add sorting logic
-                    ),
-                  ),
-                ],
-              ),
+              onPressed: () {}, // Optional: Add sorting logic
             ),
           ),
-        ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

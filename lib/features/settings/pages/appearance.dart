@@ -1,8 +1,7 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/widgets/shared/currency_display.dart';
+import 'package:personal_fin/core/widgets/shared/custom_appbar.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
@@ -14,51 +13,14 @@ class AppearancePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final text = theme.textTheme;
     final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colors.primary,
-                Color.lerp(colors.primary, colors.secondary, 0.6)!,
-                colors.secondary,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-              child: AppBar(
-                title: Text(
-                  lang.translate('appearance'),
-                  style: text.titleLarge?.copyWith(
-                    color: colors.onPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                backgroundColor: Colors.transparent, 
-                foregroundColor: colors.onPrimary,
-                centerTitle: true,
-                elevation: 0,
-              ),
-            ),
-          ),
-        ),
+      appBar: CustomAppBar(
+        title: 'appearance',
+        isRootNav: false, 
+        
       ),
       body: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

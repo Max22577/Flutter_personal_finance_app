@@ -1,9 +1,8 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
+import 'package:personal_fin/core/widgets/shared/custom_appbar.dart';
 import 'package:personal_fin/features/savings/widgets/currency_input_field.dart';
 import 'package:personal_fin/features/savings/widgets/progress_chart.dart';
 import 'package:personal_fin/models/savings.dart';
@@ -146,56 +145,21 @@ class _SetGoalPageState extends State<SetGoalPage> {
           
           return Scaffold(
             backgroundColor: colors.surfaceContainerLow,
-            appBar: PreferredSize(
-              preferredSize: const Size.fromHeight(kToolbarHeight),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      colors.primary,
-                      Color.lerp(colors.primary, colors.secondary, 0.6)!,
-                      colors.secondary,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
+            appBar: CustomAppBar(
+              title: vm.isEditing ? 'edit_goal' : 'set_savings_goal',
+              isRootNav: false,
+              actions: [
+                if (vm.isEditing)
+                  IconButton(
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: colors.error,
                     ),
-                  ],
-                ),
-                child: ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                    child: AppBar(
-                      title: Text(
-                        vm.isEditing ? lang.translate('edit_goal') : lang.translate('set_savings_goal'),
-                        style: textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colors.onPrimary,
-                        ),
-                      ),
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: colors.onPrimary,
-                      actions: [
-                        if (vm.isEditing)
-                          IconButton(
-                            icon: Icon(
-                              Icons.delete_outline,
-                              color: colors.error,
-                            ),
-                            onPressed: () => _deleteGoal(vm),
-                            tooltip: lang.translate('delete_goal'),
-                          ),
-                      ],
-                    ),
+                    onPressed: () => _deleteGoal(vm),
+                    tooltip: lang.translate('delete_goal'),
                   ),
-                ),
-              ),
-            ),
+              ],
+            ),           
             body: Form(
               key: _formKey,
               child: ListView(
