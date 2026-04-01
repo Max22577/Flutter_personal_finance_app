@@ -11,16 +11,20 @@ import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
-import 'package:personal_fin/core/theme/app_theme.dart';
+import 'package:personal_fin/core/theme/app_theme.dart'; 
 import 'package:personal_fin/features/auth/pages/sign_in_page.dart';
 import 'package:personal_fin/features/auth/view_models/sign_in_view_model.dart';
+import 'package:personal_fin/features/budgeting/pages/budgeting_page.dart';
 import 'package:personal_fin/features/budgeting/view_models/budgeting_view_model.dart';
 import 'package:personal_fin/features/category/pages/category_management_page.dart';
 import 'package:personal_fin/features/category/view_models/category_view_model.dart';
+import 'package:personal_fin/features/dashboard/pages/dashboard_page.dart';
+import 'package:personal_fin/features/dashboard/pages/monthly_review_page.dart';
 import 'package:personal_fin/features/dashboard/view_models/dashboard_view_model.dart';
 import 'package:personal_fin/features/savings/pages/savings_page.dart';
 import 'package:personal_fin/features/savings/pages/set_goal_page.dart';
 import 'package:personal_fin/features/settings/pages/settings_page.dart';
+import 'package:personal_fin/features/transactions/pages/transactions.dart';
 import 'package:personal_fin/features/transactions/view_models/transactions_view_model.dart';
 import 'package:personal_fin/features/home/home.dart';
 import 'package:provider/provider.dart';
@@ -129,6 +133,11 @@ class MyApp extends StatelessWidget {
             '/settings': (context) => const SettingsPage(),
             '/savings': (context) => const SavingsPage(),
             '/savings/goal': (context) => const SetGoalPage(),
+            '/budgeting': (context) => const BudgetingPage(),
+            '/transactions': (context) => const TransactionsPage(isActive: false),
+            '/dashboard': (context) => const DashboardPage(),
+            '/monthly_review': (context) => const MonthlyReviewPage(),
+            
           },
           home: StreamBuilder<User?>(
             stream: FirebaseAuth.instance.authStateChanges(),
