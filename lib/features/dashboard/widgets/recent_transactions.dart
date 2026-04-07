@@ -3,7 +3,6 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/features/dashboard/widgets/transaction_item.dart';
 import 'package:provider/provider.dart';
-
 import '../view_models/recent_transactions_view_model.dart';
 
 class RecentTransactions extends StatelessWidget {
