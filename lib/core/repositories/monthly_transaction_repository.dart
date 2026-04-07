@@ -4,11 +4,14 @@ import 'package:personal_fin/models/transaction.dart';
 import 'package:rxdart/rxdart.dart';
 
 class MonthlyTransactionRepository {
-  final FirestoreService _service = FirestoreService.instance;
+  final FirestoreService _service;
   final _monthlySub = BehaviorSubject<List<Transaction>>();
   StreamSubscription? _sub;
 
   Stream<List<Transaction>> get stream => _monthlySub.stream;
+
+  MonthlyTransactionRepository({FirestoreService? service})
+   : _service = service ?? FirestoreService.instance;
 
   void fetchForMonth(String monthYear) {
     _sub?.cancel();

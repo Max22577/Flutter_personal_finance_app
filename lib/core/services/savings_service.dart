@@ -7,7 +7,7 @@ class SavingsService {
   static final SavingsService _instance = SavingsService._internal();
   factory SavingsService() => _instance;
   SavingsService._internal();
-  
+  static SavingsService get instance => _instance;
   final FirestoreService _firestore = FirestoreService.instance;
   
   // Add money to specific savings goal

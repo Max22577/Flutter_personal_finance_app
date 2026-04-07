@@ -220,7 +220,7 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
         category: cat,
         currentBudget: amount,
         monthYear: my,
-        onSave: (id, newAmount, month) => vm.updateBudget(id, newAmount, month),
+        onSave: (id, newAmount, month) => vm.updateBudget(id, newAmount),
       ),
     );
   }

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:personal_fin/core/services/savings_service.dart';
-
+import 'package:personal_fin/core/repositories/savings_repository.dart';
 class AddToSavingsViewModel extends ChangeNotifier {
-  final SavingsService _savingsService = SavingsService();
+  final SavingsRepository _repository;
+
+  AddToSavingsViewModel(this._repository);
   bool _isProcessing = false;
 
   bool get isProcessing => _isProcessing;
@@ -19,17 +20,19 @@ class AddToSavingsViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _savingsService.addToSavingsGoal(
+      await _repository.addToGoal(
         goalId: goalId,
         amount: amount,
-        transactionNote: note.isNotEmpty ? note : defaultNote,
+        note: note,
+        defaultNote: defaultNote,
       );
       return true;
     } catch (e) {
-      rethrow; 
+      rethrow;
     } finally {
       _isProcessing = false;
       notifyListeners();
     }
   }
+  
 }

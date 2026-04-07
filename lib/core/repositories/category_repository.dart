@@ -4,15 +4,16 @@ import '../../models/category.dart';
 import '../services/firestore_service.dart';
 
 class CategoryRepository {
-  final FirestoreService _service = FirestoreService.instance;
+  final FirestoreService _service;
   final _categorySubject = BehaviorSubject<List<Category>>(); //pre-defined and user defined categories
   final _userCategorySubject = BehaviorSubject<List<Category>>(); //user defined categories
   StreamSubscription? _catSub;
   StreamSubscription? _userCatSub;
 
 
-  CategoryRepository() {
-    _init();
+  CategoryRepository({FirestoreService? service}) 
+    : _service = service ?? FirestoreService.instance {
+      _init();
   }
 
   void _init() {
@@ -31,6 +32,15 @@ class CategoryRepository {
   // The stream shared by the whole app
   Stream<List<Category>> get categoriesStream => _categorySubject.stream;
   Stream<List<Category>> get customCategoriesStream => _userCategorySubject.stream;
+  List<Category> get predefinedCategories => _service.predefinedCategories;
+
+  Future<void> addCategory(String name) async {
+    await _service.addCategory(name);
+  }
+
+  Future<void> updateCategory(String id, String newName) async {
+    await _service.updateCategoryName(id, newName);
+  }
 
   // Sync refresh if needed
   Future<void> refresh() async {

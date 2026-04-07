@@ -4,13 +4,14 @@ import '../../models/monthly_data.dart';
 import '../services/monthly_data_service.dart';
 
 class MonthlyDataRepository {
-  final MonthlyDataService _service = MonthlyDataService();
+  final MonthlyDataService _service;
   
   final _monthlyComparisonSubject = BehaviorSubject<Map<String, MonthlyData?>>();
 
   StreamSubscription? _sub;
 
-  MonthlyDataRepository() {
+  MonthlyDataRepository({MonthlyDataService? service}) 
+      : _service = service ?? MonthlyDataService() {
     _init();
   }
 

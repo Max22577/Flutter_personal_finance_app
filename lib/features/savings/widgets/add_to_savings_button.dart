@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/repositories/savings_repository.dart';
 import 'package:personal_fin/features/savings/view_models/add_to_savings_view_model.dart';
 import 'package:personal_fin/models/savings.dart';
 import 'package:provider/provider.dart';
@@ -62,7 +63,7 @@ class _AddToSavingsButtonState extends State<AddToSavingsButton> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (bottomSheetContext) => ChangeNotifierProvider(
-        create: (_) => AddToSavingsViewModel(),
+        create: (_) => AddToSavingsViewModel(SavingsRepository()),
         child: Consumer<AddToSavingsViewModel>(
           builder: (context, vm, _) => Padding(
             // Forces the padding to respect the on-screen keyboard
