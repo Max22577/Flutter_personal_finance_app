@@ -1,15 +1,18 @@
 import 'dart:async';
-
+import 'package:personal_fin/core/services/savings_service.dart';
 import 'package:rxdart/subjects.dart';
 import '../../models/savings.dart';
 import '../services/firestore_service.dart';
 
 class SavingsRepository {
-  final FirestoreService _firestore = FirestoreService.instance;
+  final FirestoreService _firestore;
+  final SavingsService _savingsService;
   final _savingsSubject = BehaviorSubject<List<SavingsGoal>>();
   StreamSubscription? _savingsSub;
 
-  SavingsRepository(){
+  SavingsRepository({FirestoreService? firestore, SavingsService? savingsService})
+   : _firestore = firestore ?? FirestoreService.instance,
+    _savingsService = savingsService ?? SavingsService.instance {
     _init();
   }
 
@@ -27,6 +30,22 @@ class SavingsRepository {
   Future<void> updateGoal(SavingsGoal goal) => _firestore.updateSavingsGoal(goal);
 
   Future<void> deleteGoal(String id) => _firestore.deleteSavingsGoal(id);
+
+  Future<bool> addToGoal({
+    required String goalId,
+    required double amount,
+    required String note,
+    required String defaultNote,
+  }) async {
+    
+    await _savingsService.addToSavingsGoal(
+      goalId: goalId,
+      amount: amount,
+      transactionNote: note.isNotEmpty ? note : defaultNote,
+    );
+    return true;
+
+  }
 
   Future <void> refresh() async {
     _savingsSub?.cancel();

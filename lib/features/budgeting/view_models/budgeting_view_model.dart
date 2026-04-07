@@ -5,14 +5,12 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/budget_repository.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
-import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/models/budget.dart';
 import 'package:rxdart/rxdart.dart'; 
 import 'package:personal_fin/models/category.dart';
 import 'package:personal_fin/models/transaction.dart';
 
 class BudgetingViewModel extends ChangeNotifier {
-  final _firestore = FirestoreService.instance;
   final BudgetRepository _budgetRepo;
   final MonthlyTransactionRepository _txRepo;
   final CategoryRepository _catRepo;
@@ -101,12 +99,14 @@ class BudgetingViewModel extends ChangeNotifier {
     _txRepo.fetchForMonth(formattedMonthYear(_langRepo.localeCode));
   }
 
-  Future<void> updateBudget(String categoryId, double amount, String monthYear) async {
-    await _firestore.setBudget(
-      categoryId: categoryId,
-      amount: amount,
-      monthYear: monthYear,
-    );
+  Future<void> updateBudget(String categoryId, double amount) async {
+    try {
+      await _budgetRepo.updateBudget(categoryId, amount, formattedMonthYear(_langRepo.localeCode));
+      // No need to manually update state here, the stream will emit new data
+    } catch (e) {
+      errorMessage = 'Failed to update budget: ${e.toString()}';
+      notifyListeners();
+    }
   }
 
   void retry() {

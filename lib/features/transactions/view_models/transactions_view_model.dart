@@ -2,13 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
-import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:personal_fin/models/category.dart';
 
 
 class TransactionViewModel extends ChangeNotifier {
-  final _firestore = FirestoreService.instance;
   StreamSubscription? _txsub;
   StreamSubscription? _catSub;
   final TransactionRepository _txrepo;
@@ -53,7 +51,7 @@ class TransactionViewModel extends ChangeNotifier {
 
   Future<void> deleteTransaction(String id) async {
     try {
-      await _firestore.deleteTransaction(id);
+      await _txrepo.deleteTransaction(id);
     
     } catch (e) {
       _handleError(e);
@@ -81,7 +79,7 @@ class TransactionViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final uid = _firestore.currentUid;
+      final uid = _txrepo.uid;
       final transaction = Transaction(
         id: existingTransaction?.id,
         userId: uid,
@@ -93,13 +91,13 @@ class TransactionViewModel extends ChangeNotifier {
       );
 
       if (existingTransaction != null) {
-        await _firestore.updateTransaction(transaction);
+        await _txrepo.updateTransaction(transaction);
       } else {
-        await _firestore.addTransaction(transaction);
+        await _txrepo.addTransaction(transaction);
       }
       return true;
     } catch (e) {
-      rethrow; // Let the UI handle the specific error message
+      rethrow; 
     } finally {
       isSaving = false;
       notifyListeners();
