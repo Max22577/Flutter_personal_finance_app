@@ -21,12 +21,13 @@ import 'package:personal_fin/features/category/view_models/category_view_model.d
 import 'package:personal_fin/features/dashboard/pages/dashboard_page.dart';
 import 'package:personal_fin/features/dashboard/pages/monthly_review_page.dart';
 import 'package:personal_fin/features/dashboard/view_models/dashboard_view_model.dart';
+import 'package:personal_fin/features/home/pages/home_page.dart';
+import 'package:personal_fin/features/home/view_models/home_view_model.dart';
 import 'package:personal_fin/features/savings/pages/savings_page.dart';
 import 'package:personal_fin/features/savings/pages/set_goal_page.dart';
 import 'package:personal_fin/features/settings/pages/settings_page.dart';
 import 'package:personal_fin/features/transactions/pages/transactions.dart';
 import 'package:personal_fin/features/transactions/view_models/transactions_view_model.dart';
-import 'package:personal_fin/features/home/home.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -74,6 +75,9 @@ void main() async {
         ),
         ChangeNotifierProvider.value(
           value: languageProvider, 
+        ),
+        ChangeNotifierProvider(
+          create: (context) => HomeViewModel(),
         ),
         ChangeNotifierProvider(
           create: (context) => SignInViewModel() 

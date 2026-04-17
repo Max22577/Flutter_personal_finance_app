@@ -5,8 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
-import 'package:personal_fin/core/widgets/shared/currency_display.dart';
-import 'package:personal_fin/core/widgets/shared/custom_appbar.dart';
+import 'package:personal_fin/core/widgets/currency_display.dart';
+import 'package:personal_fin/core/widgets/custom_appbar.dart';
 import 'package:personal_fin/features/dashboard/view_models/monthly_review_view_model.dart';
 import 'package:personal_fin/features/dashboard/widgets/monthly_review.dart';
 import 'package:personal_fin/models/monthly_data.dart';
@@ -23,7 +23,9 @@ class MonthlyReviewPage extends StatelessWidget {
     final targetMonth = month ?? DateTime.now();
 
     return ChangeNotifierProvider(
-      create: (_) => MonthlyReviewViewModel(MonthlyDataRepository())..loadData(targetMonth),
+      create: (context) => MonthlyReviewViewModel(
+        context.read<MonthlyDataRepository>(), 
+      )..loadData(targetMonth),
       child: Consumer<MonthlyReviewViewModel>(
         builder: (context, vm, _) {
           final lang = context.watch<LanguageProvider>();
@@ -176,31 +178,30 @@ class MonthlyReviewPage extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             // Total Transactions Box
-            Expanded(
-              child: FadeInUp(
-                duration: baseDuration,
-                curve: baseCurve,
-                delay: cascadeDelay * 2, // CONCEPTUAL DELAY: 300ms
-                child: Container(
-                  height: 140,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: colors.primaryContainer.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.receipt_long_rounded, color: colors.primary),
-                      const SizedBox(height: 8),
-                      Text('${vm.currentMonthData!.transactionCount}', 
-                        style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
-                      Text(lang.translate('items_label'), style: text.labelSmall),
-                    ],
-                  ),
+            FadeInUp(
+              duration: baseDuration,
+              curve: baseCurve,
+              delay: cascadeDelay * 2, // CONCEPTUAL DELAY: 300ms
+              child: Container(
+                height: 140,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.receipt_long_rounded, color: colors.primary),
+                    const SizedBox(height: 8),
+                    Text('${vm.currentMonthData!.transactionCount}', 
+                      style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
+                    Text(lang.translate('items_label'), style: text.labelSmall),
+                  ],
                 ),
               ),
             ),
+           
           ],
         ),
         const SizedBox(height: 16),
@@ -384,6 +385,7 @@ class MonthlyReviewPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

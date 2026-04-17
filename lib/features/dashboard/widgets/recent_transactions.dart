@@ -77,6 +77,7 @@ class RecentTransactions extends StatelessWidget {
     return Column(
       children: vm.recentTransactions.map((tx) => TransactionItem(
         transaction: tx,
+        categoryName: vm.getCategoryName(tx.categoryId),
         showDate: true,
         showCategory: true,
         showTime: false,

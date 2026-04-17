@@ -3,16 +3,16 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:personal_fin/core/utils/ui_helpers.dart';
 import 'package:provider/provider.dart';
-
 import '../view_models/profile_view_model.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  final ProfileViewModel? viewModel;
+  const ProfilePage({super.key, this.viewModel});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ProfileViewModel(),
+      create: (_) => viewModel ?? ProfileViewModel(),
       child: const ProfileViewContent(),
     );
   }
@@ -29,7 +29,7 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
   final _fullNameController = TextEditingController();
   final _bioController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  late NavigationProvider _navigationProvider;
+  late NavigationProvider? _navigationProvider;
 
   @override
   void initState() {
@@ -42,23 +42,27 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _navigationProvider = context.read<NavigationProvider>();
-    _navigationProvider.addListener(_onNavChanged);
+    try {
+      _navigationProvider = context.read<NavigationProvider>();
+      _navigationProvider?.addListener(_onNavChanged); 
+    } catch (e) {
+      debugPrint('NavigationProvider not found: $e');
+    }
   }
 
   void _onNavChanged() {
-    if (!mounted) return;
+    if (!mounted || _navigationProvider == null) return;
     
-    if (_navigationProvider.selectedIndex == 3 && _navigationProvider.currentActions.isEmpty) {
+    if (_navigationProvider!.selectedIndex == 3 && _navigationProvider!.currentActions.isEmpty) {
       _updateAppBar();
     } 
   }
 
   void _updateAppBar() {
-    if (!mounted) return;
+    if (!mounted || _navigationProvider == null) return;
 
-    if (_navigationProvider.selectedIndex == 3) {
-      _navigationProvider.setActions([
+    if (_navigationProvider!.selectedIndex == 3) {
+      _navigationProvider!.setActions([
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: IconButton(
@@ -77,12 +81,9 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
 
   @override
   void dispose() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _navigationProvider.setActions([]);
-      }
-    });
-    _navigationProvider.removeListener(_onNavChanged);
+    if (_navigationProvider != null) {
+      _navigationProvider!.removeListener(_onNavChanged);
+    }
     _fullNameController.dispose();
     _bioController.dispose();
     super.dispose();
@@ -251,25 +252,27 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
         children: [
           Icon(icon, color: colors.primary.withValues(alpha: 0.7)),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: colors.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const Spacer(),
           Icon(Icons.lock_outline, size: 18, color: colors.outline),

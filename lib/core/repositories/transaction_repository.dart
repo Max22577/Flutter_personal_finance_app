@@ -36,7 +36,11 @@ class TransactionRepository {
   }
 
   Future<void> deleteTransaction(String id) async {
-    await _service.deleteTransaction(id);   
+    await _service.deleteTransaction(id);  
+  }
+
+  Future<String> getCategoryName(String categoryId) async {
+    return await _service.getCategoryName(categoryId);
   }
 
   Future<void> refresh() async {

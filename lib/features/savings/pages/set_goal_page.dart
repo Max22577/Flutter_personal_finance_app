@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
-import 'package:personal_fin/core/widgets/shared/custom_appbar.dart';
+import 'package:personal_fin/core/widgets/custom_appbar.dart';
 import 'package:personal_fin/features/savings/widgets/currency_input_field.dart';
 import 'package:personal_fin/features/savings/widgets/progress_chart.dart';
 import 'package:personal_fin/models/savings.dart';
@@ -135,7 +135,10 @@ class _SetGoalPageState extends State<SetGoalPage> {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => SetGoalViewModel(SavingsRepository(), existingGoal: widget.existingGoal),
+      create: (_) => SetGoalViewModel(
+        context.read<SavingsRepository>(), 
+        existingGoal: widget.existingGoal
+      ),
       child: Consumer<SetGoalViewModel>(
         builder: (context, vm, child) {
           final lang = context.watch<LanguageProvider>();

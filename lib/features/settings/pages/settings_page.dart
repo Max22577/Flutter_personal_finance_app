@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/core/widgets/shared/custom_appbar.dart';
+import 'package:personal_fin/core/widgets/custom_appbar.dart';
 import 'package:personal_fin/features/settings/widgets/profile_card.dart';
 import 'package:personal_fin/features/settings/widgets/settings_section.dart';
 import 'package:personal_fin/features/settings/pages/general_settings_page.dart';

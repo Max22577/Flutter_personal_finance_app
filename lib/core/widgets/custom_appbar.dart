@@ -5,10 +5,10 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String? title; // Used if not root nav
-  final List<Widget>? actions; // Used if not root nav
+  final String? title; 
+  final List<Widget>? actions; 
   final Widget? leading;
-  final bool isRootNav; // True for bottom-bar pages, false for deep pages
+  final bool isRootNav; 
   final bool automaticallyImplyLeading;
 
   const CustomAppBar({
@@ -26,7 +26,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     final colors = theme.colorScheme;
     final lang = context.watch<LanguageProvider>();
 
-    // 1. Determine Title and Actions dynamically
+    // Determine Title and Actions dynamically
     String displayTitle = '';
     List<Widget> displayActions = [];
 
@@ -41,7 +41,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       displayActions = actions ?? [];
     }
 
-    // 2. Material 3 Glassmorphism UI
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -53,7 +52,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        // M3 Tip: Keep this shadow very soft, or remove it entirely
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.10),
@@ -95,7 +93,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     return theme.textTheme.titleLarge!.copyWith(
       fontWeight: FontWeight.bold,
       color: colors.onPrimary,
-      letterSpacing: 0.5, // Material 3 spacing
+      letterSpacing: 0.5, 
     );
   }
 

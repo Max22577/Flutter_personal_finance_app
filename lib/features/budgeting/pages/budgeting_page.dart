@@ -5,8 +5,8 @@ import 'package:personal_fin/features/budgeting/widgets/budget_category_card.dar
 import 'package:personal_fin/features/budgeting/widgets/budget_edit_dialog.dart';
 import 'package:personal_fin/features/budgeting/widgets/month_picker.dart';
 import 'package:personal_fin/features/budgeting/widgets/month_selector.dart';
-import 'package:personal_fin/core/widgets/shared/empty_state.dart';
-import 'package:personal_fin/core/widgets/shared/loading_state.dart';
+import 'package:personal_fin/core/widgets/empty_state.dart';
+import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:personal_fin/features/budgeting/widgets/small_stat_card.dart';
 import 'package:personal_fin/features/category/pages/category_management_page.dart';
 import 'package:personal_fin/models/category.dart';
@@ -38,6 +38,9 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
     super.didChangeDependencies();
     _navProvider = context.read<NavigationProvider>();
     _navProvider.addListener(_onNavChanged);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+      _onNavChanged(); 
+    });
   }
 
   void _onNavChanged() {
@@ -71,9 +74,8 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
   @override
   void dispose() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _navProvider.setActions([]);
-      }
+      _navProvider.setActions([]);
+  
     });
     _navProvider.removeListener(_onNavChanged);
     super.dispose();

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/core/widgets/shared/currency_display.dart';
-import 'package:personal_fin/core/widgets/shared/custom_appbar.dart';
+import 'package:personal_fin/core/widgets/currency_display.dart';
+import 'package:personal_fin/core/widgets/custom_appbar.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/core/widgets/shared/currency_display.dart';
+import 'package:personal_fin/core/widgets/currency_display.dart';
 import 'package:personal_fin/core/theme/app_theme.dart'; 
 import 'package:personal_fin/models/monthly_data.dart';
 import 'package:provider/provider.dart';

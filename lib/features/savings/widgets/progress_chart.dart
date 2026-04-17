@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/core/widgets/shared/currency_display.dart';
+import 'package:personal_fin/core/widgets/currency_display.dart';
 import 'package:personal_fin/features/savings/widgets/add_to_savings_button.dart';
 import 'package:provider/provider.dart';
 import '../../../models/savings.dart';

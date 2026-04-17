@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../models/transaction.dart';
-import '../../../core/widgets/shared/currency_display.dart';
+import '../../../core/widgets/currency_display.dart';
 import '../../../core/theme/app_theme.dart';
 
 
@@ -26,7 +26,7 @@ class TransactionListItem extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
-    final financialColors = theme.extension<FinancialColors>()!;
+    final financialColors = theme.extension<FinancialColors>() ?? FinancialColors(income: Colors.green, expense: Colors.red);
     final lang = context.watch<LanguageProvider>();
     
     final isIncome = transaction.type == 'Income';

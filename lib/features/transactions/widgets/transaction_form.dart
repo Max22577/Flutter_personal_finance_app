@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
@@ -14,9 +13,8 @@ import 'package:personal_fin/models/transaction.dart' show Transaction;
 import 'package:provider/provider.dart';
 
 class TransactionForm extends StatefulWidget {
-  final User user;
   final Transaction? transactionToEdit;
-  const TransactionForm({this.transactionToEdit, required this.user, super.key});
+  const TransactionForm({this.transactionToEdit, super.key});
 
   @override
   State<TransactionForm> createState() => _TransactionFormState();
@@ -43,6 +41,17 @@ class _TransactionFormState extends State<TransactionForm> {
     _amountController = TextEditingController(text: tx != null ? tx.amount.toStringAsFixed(2) : '');
     _selectedType = tx?.type ?? 'Expense';
     _selectedDate = tx?.date ?? DateTime.now();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = Provider.of<TransactionViewModel>(context, listen: false);
+      if (vm.categories.isNotEmpty) {
+        setState(() {
+          _selectedCategory = widget.transactionToEdit != null 
+              ? vm.categories.firstWhere((c) => c.id == widget.transactionToEdit!.categoryId)
+              : vm.categories.first;
+        });
+      }
+    });
   }
 
   @override
@@ -123,17 +132,10 @@ class _TransactionFormState extends State<TransactionForm> {
     final textTheme = theme.textTheme;
     final lang = context.watch<LanguageProvider>();
     final cf = context.watch<CurrencyProvider>().formatter;
-    final financialColors = theme.extension<FinancialColors>()!;
+    final financialColors = theme.extension<FinancialColors>() ?? FinancialColors(income: Colors.green, expense: Colors.red);
     final isIncome = _selectedType == 'Income';
     final typeColor = isIncome ? financialColors.income : financialColors.expense;
     
-    // Auto-select category if editing or if list just loaded
-    if (_selectedCategory == null && vm.categories.isNotEmpty) {
-      _selectedCategory = widget.transactionToEdit != null 
-          ? vm.categories.firstWhere((c) => c.id == widget.transactionToEdit!.categoryId)
-          : vm.categories.first;
-    }
-
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(25.0)),
       child: BackdropFilter(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:provider/provider.dart';
-import '../../../core/providers/currency_provider.dart';
+import '../providers/currency_provider.dart';
 
 class CurrencyDisplay extends StatelessWidget {
   final double amount;
@@ -34,22 +34,18 @@ class CurrencyDisplay extends StatelessWidget {
     final cf = currencyProvider.formatter;
     final symbol = currencyProvider.currency.symbol;
 
-    // 1. Determine if the amount is negative or positive
     final bool actsAsNegative = amount < 0 || isExpense;
     final bool actsAsPositive = amount > 0 && !isExpense;
 
-    // 2. Format the amount immediately (no FutureBuilder needed!)
     String formattedAmount = compact
         ? cf.formatCompact(amount.abs(), lang.localeCode)
         : cf.formatDisplay(amount.abs(), lang.localeCode);
 
-    // 3. Handle signs manually based on your parameters
     if (showSign) {
       if (actsAsPositive) formattedAmount = '+$formattedAmount';
       if (actsAsNegative) formattedAmount = '-$formattedAmount';
     }
 
-    // 4. Determine the appropriate color
     Color? textColor;
     if (actsAsPositive) {
       textColor = positiveColor ?? financialColors?.income ?? Colors.green;

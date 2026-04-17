@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:personal_fin/core/widgets/shared/currency_display.dart';
+import 'package:personal_fin/core/widgets/currency_display.dart';
 
 class MainBudgetStat extends StatelessWidget {
   final String label;
@@ -43,7 +43,6 @@ class MainBudgetStat extends StatelessWidget {
 
       child: Stack(
         children: [
-
           /// Decorative highlight (glass reflection effect)
           Positioned(
             right: -30,
@@ -66,7 +65,6 @@ class MainBudgetStat extends StatelessWidget {
               /// Header Row
               Row(
                 children: [
-
                   /// Icon badge
                   Container(
                     padding: const EdgeInsets.all(10),

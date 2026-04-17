@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/models/transaction.dart';
-import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:provider/provider.dart';
+import '../../../core/widgets/currency_display.dart';
 
-import '../../../core/widgets/shared/currency_display.dart';
-
-final FirestoreService _firestoreService = FirestoreService.instance;
-
-class TransactionItem extends StatefulWidget {
+class TransactionItem extends StatelessWidget {
   final Transaction transaction;
+  final String? categoryName;
   final bool showDate;
   final bool showCategory;
   final bool showTime;
@@ -23,6 +20,7 @@ class TransactionItem extends StatefulWidget {
 
   const TransactionItem({
     required this.transaction,
+    this.categoryName,
     this.showDate = false,
     this.showCategory = false,
     this.showTime = false,
@@ -34,41 +32,16 @@ class TransactionItem extends StatefulWidget {
     super.key,
   });
 
-  @override
-  State<TransactionItem> createState() => _TransactionItemState();
-}
-
-class _TransactionItemState extends State<TransactionItem> {
-  String _categoryName = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCategoryName();
-  }
-
-  Future<void> _loadCategoryName() async {
-    if (!widget.showCategory) return;
-    
-    try {
-      final name = await _firestoreService.getCategoryName(widget.transaction.categoryId);
-      if (mounted) {
-        setState(() => _categoryName = name);
-      }
-    } catch (e) {
-      debugPrint('Error loading category name: $e');
-    }
-  }
-
+  
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
-    final financialColors = theme.extension<FinancialColors>()!;
+    final financialColors = theme.extension<FinancialColors>() ?? FinancialColors(income: Colors.green, expense: Colors.red);
     final lang = context.watch<LanguageProvider>();
     
-    final isIncome = widget.transaction.type == 'Income';
+    final isIncome = transaction.type == 'Income';
     final iconColor = isIncome ? financialColors.income : financialColors.expense;
     final bgColor = isIncome ? 
         financialColors.income.withValues(alpha: 0.1) : 
@@ -80,7 +53,7 @@ class _TransactionItemState extends State<TransactionItem> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: widget.onTap,
+          onTap: onTap,
           child: Container(
             constraints: BoxConstraints(
               minHeight: 72, // Ensure minimum height
@@ -128,7 +101,7 @@ class _TransactionItemState extends State<TransactionItem> {
                       children: [
                         // Title
                         Text(
-                          widget.transaction.title,
+                          transaction.title,
                           style: textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w500,
                             color: colors.onSurface,
@@ -161,20 +134,20 @@ class _TransactionItemState extends State<TransactionItem> {
                       children: [
                         // Amount
                         CurrencyDisplay(
-                          amount: widget.transaction.amount,
+                          amount: transaction.amount,
                           isExpense: isIncome ? false : true,
                           style: textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             letterSpacing: -0.5,
                           ),
-                          compact: widget.compactAmount,
-                          showSign: widget.alwaysShowSign,
+                          compact: compactAmount,
+                          showSign: alwaysShowSign,
                           positiveColor: financialColors.income,
                           negativeColor: financialColors.expense,
                         ),
                         
                         // Edit button below amount
-                        if (widget.showEditButton)
+                        if (showEditButton)
                           Padding(
                             padding: const EdgeInsets.only(top: 2),
                             child: IconButton(
@@ -183,7 +156,7 @@ class _TransactionItemState extends State<TransactionItem> {
                                 size: 14,
                                 color: colors.onSurface.withValues(alpha: 0.6),
                               ),
-                              onPressed: widget.onEdit,
+                              onPressed: onEdit,
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(
                                 minWidth: 24,
@@ -212,7 +185,7 @@ class _TransactionItemState extends State<TransactionItem> {
     final details = <Widget>[];
     
     // Category
-    if (widget.showCategory && _categoryName.isNotEmpty) {
+    if (showCategory && categoryName!.isNotEmpty) {
       details.add(
         Container(
           constraints: BoxConstraints(
@@ -224,7 +197,7 @@ class _TransactionItemState extends State<TransactionItem> {
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
-            lang.translate(_categoryName),
+            lang.translate(categoryName?.toUpperCase() ?? ''),
             style: textTheme.labelSmall?.copyWith(
               color: colors.onSurfaceVariant,
             ),
@@ -236,13 +209,13 @@ class _TransactionItemState extends State<TransactionItem> {
     }
     
     // Date and Time
-    if (widget.showDate || widget.showTime) {
+    if (showDate || showTime) {
       final dateParts = <String>[];
-      if (widget.showDate) {
-        dateParts.add(DateFormat('MMM d').format(widget.transaction.date));
+      if (showDate) {
+        dateParts.add(DateFormat('MMM d').format(transaction.date));
       }
-      if (widget.showTime) {
-        dateParts.add(DateFormat('h:mm a').format(widget.transaction.date));
+      if (showTime) {
+        dateParts.add(DateFormat('h:mm a').format(transaction.date));
       }
       
       if (dateParts.isNotEmpty) {

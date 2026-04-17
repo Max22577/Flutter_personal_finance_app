@@ -45,7 +45,7 @@ class FirestoreService {
   Future<void> get isReady => _initializationCompleter.future;
 
   // ------------------------------------------
-  // 1. Initialization and Authentication (MANDATORY)
+  // Initialization and Authentication (MANDATORY)
   // ------------------------------------------
   Future<void> _initializeFirebase() async {
     try {  
@@ -80,7 +80,7 @@ class FirestoreService {
     });
   }
   // ------------------------------------------
-  // 2. Path Resolution (MANDATORY SECURE PATHS)
+  //Path Resolution (MANDATORY SECURE PATHS)
   // ------------------------------------------
 
   // Get current user id - throws if not signed in, but initialization handles this.
@@ -90,7 +90,6 @@ class FirestoreService {
     final uid = _auth?.currentUser?.uid ?? _currentUserId;
     
     if (uid == null) {
-      // Instead of just throwing, wait a moment for the Auth Stream to catch up
       await Future.delayed(const Duration(milliseconds: 500));
       final retryUid = _auth?.currentUser?.uid;
       if (retryUid == null) {
@@ -121,7 +120,7 @@ class FirestoreService {
     return _monthYearFormat.format(DateTime.now());
   }
 
-  // Predefined Categories (Hardcoded for initial structure)
+  // Predefined Categories 
   final List<Category> predefinedCategories = [
     Category(id: 'cat_food', name: 'Food'),
     Category(id: 'cat_trans', name: 'Transportation'),
@@ -131,7 +130,7 @@ class FirestoreService {
   ];
   
   // ------------------------------------------
-  // 3. Collection References (CORRECTED PATHS)
+  // Collection References 
   // ------------------------------------------
   
   // Base reference for all user-specific collections
@@ -170,7 +169,7 @@ class FirestoreService {
   }
 
   // ------------------------------------------
-  // 4. CRUD Operations (Updated to use isReady guard)
+  // CRUD Operations (Updated to use isReady guard)
   // ------------------------------------------
   
   Stream<List<Category>> streamCategories() async* {
@@ -194,7 +193,7 @@ class FirestoreService {
     );
     if (predefined.id.isNotEmpty) return predefined.name;
 
-    // 2. Check the Cache (Instantly available in memory)
+    // Check the Cache (Instantly available in memory)
     final cached = _allCategoriesCache.firstWhere(
       (cat) => cat.id == categoryId,
       orElse: () => Category(id: '', name: 'Unknown'),
@@ -247,7 +246,7 @@ class FirestoreService {
     }
   }
 
-  // 1. Stream all transactions
+  
   Stream<List<Transaction>> streamTransactions() async* {
     await isReady;
     final transactionsRef = await transactionsCollectionRef();
@@ -262,7 +261,7 @@ class FirestoreService {
         });
   }
 
-  // 2. Delete transaction
+
   Future<void> deleteTransaction(String transactionId) async {
     await isReady;
     final transactionsRef = await transactionsCollectionRef();
@@ -270,7 +269,7 @@ class FirestoreService {
     debugPrint('Transaction $transactionId deleted');
   }
 
-  // 3. Update transaction (for editing)
+  
   Future<void> updateTransaction(Transaction transaction) async {
     await isReady;
     final transactionsRef = await transactionsCollectionRef();
@@ -285,7 +284,7 @@ class FirestoreService {
     debugPrint('Transaction ${transaction.id} updated');
   }
 
-  // 4. Get categories by ID (for displaying category names)
+
   Future<String> getCategoryName(String categoryId) async {
     await isReady;
     

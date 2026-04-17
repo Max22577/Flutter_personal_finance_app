@@ -3,7 +3,6 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:provider/provider.dart';
 
-
 class CategoryDropdown extends StatelessWidget {
   final Category? selectedCategory;
   final List<Category> categories;
@@ -23,7 +22,6 @@ class CategoryDropdown extends StatelessWidget {
     final lang = context.watch<LanguageProvider>();
 
     return DropdownButtonFormField<Category?>(
-      // Use value instead of initialValue for controlled widgets
       initialValue: selectedCategory, 
       decoration: InputDecoration(
         labelText: lang.translate('category'),
@@ -32,10 +30,9 @@ class CategoryDropdown extends StatelessWidget {
         filled: true,
         fillColor: colors.surfaceContainerHigh.withValues(alpha: 0.5),
       ),
-      // Set the dropdown menu style
       dropdownColor: colors.surface,
       items: [
-        // 1. Map existing categories
+        // Map existing categories
         ...categories.map((Category category) {
           return DropdownMenuItem<Category?>(
             value: category,
@@ -43,7 +40,7 @@ class CategoryDropdown extends StatelessWidget {
           );
         }),
         
-        // 2. The "Add Category" Action
+        // "Add Category" Action
         DropdownMenuItem<Category?>(
           value: null, 
           child: Row(
@@ -63,7 +60,6 @@ class CategoryDropdown extends StatelessWidget {
       ],
       onChanged: (Category? value) {
         if (value == null) {
-          // If they clicked the 'null' value (Add Category)
           Navigator.pushNamed(context, '/categories');
         } else {
           onChanged(value);

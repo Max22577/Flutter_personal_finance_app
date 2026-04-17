@@ -63,7 +63,7 @@ class _AddToSavingsButtonState extends State<AddToSavingsButton> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (bottomSheetContext) => ChangeNotifierProvider(
-        create: (_) => AddToSavingsViewModel(SavingsRepository()),
+        create: (context) => AddToSavingsViewModel(context.read<SavingsRepository>()),
         child: Consumer<AddToSavingsViewModel>(
           builder: (context, vm, _) => Padding(
             // Forces the padding to respect the on-screen keyboard

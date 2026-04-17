@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
@@ -7,7 +6,6 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/utils/category_icon_helper.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:provider/provider.dart';
-
 import '../view_models/budget_edit_view_model.dart';
 
 class BudgetEditDialog extends StatefulWidget {
@@ -226,9 +224,9 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
                                   HapticFeedback.mediumImpact();
                                   final success = await vm.updateBudget(_amountController.text);
                                   
-                                  if (success && context.mounted) {
-                                    Navigator.of(context).pop();
+                                  if (success && context.mounted) {                                  
                                     _showSuccessToast();
+                                    Navigator.of(context).pop();
                                   }
                                 }
                               },
@@ -262,22 +260,23 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
       decoration: ShapeDecoration(
         color: colors.secondaryContainer.withValues(alpha: 0.5),
         shape: const StadiumBorder(),
-      ),
-      child: SizedBox(
-        width: 200,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.history, size: 14, color: colors.onSecondaryContainer),
-            const SizedBox(width: 6),
-            Text(
+      ),      
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.history, size: 14, color: colors.onSecondaryContainer),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
               '${lang.translate('previous')}: $symbol${widget.currentBudget.toStringAsFixed(0)}',
               style: theme.textTheme.labelMedium?.copyWith(color: colors.onSecondaryContainer),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+        
+      
     );
   }
 }
