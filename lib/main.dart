@@ -9,6 +9,7 @@ import 'package:personal_fin/core/repositories/budget_repository.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
+import 'package:personal_fin/core/repositories/savings_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/core/theme/app_theme.dart'; 
@@ -25,6 +26,7 @@ import 'package:personal_fin/features/home/pages/home_page.dart';
 import 'package:personal_fin/features/home/view_models/home_view_model.dart';
 import 'package:personal_fin/features/savings/pages/savings_page.dart';
 import 'package:personal_fin/features/savings/pages/set_goal_page.dart';
+import 'package:personal_fin/features/savings/view_models/savings_view_model.dart';
 import 'package:personal_fin/features/settings/pages/settings_page.dart';
 import 'package:personal_fin/features/transactions/pages/transactions.dart';
 import 'package:personal_fin/features/transactions/view_models/transactions_view_model.dart';
@@ -64,6 +66,7 @@ void main() async {
         Provider(create: (_) => CategoryRepository()),
         Provider(create: (_) => BudgetRepository()),
         Provider(create: (_) => MonthlyTransactionRepository()),
+        Provider(create: (_) => SavingsRepository()),
         ChangeNotifierProvider.value( 
           value: themeProvider, 
         ),
@@ -104,6 +107,11 @@ void main() async {
             context.read<MonthlyTransactionRepository>(),
             context.read<CategoryRepository>(),
             context.read<LanguageProvider>(),
+          )
+        ),
+        ChangeNotifierProvider(
+          create: (context) => SavingsViewModel(
+            context.read<SavingsRepository>(),
           )
         ),
       ],
