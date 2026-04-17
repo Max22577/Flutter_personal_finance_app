@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/features/dashboard/widgets/stats_card.dart';
-import 'package:personal_fin/core/widgets/shared/loading_state.dart';
+import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:provider/provider.dart';
 import '../view_models/quick_stats_view_model.dart';
 

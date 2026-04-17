@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/core/widgets/shared/custom_appbar.dart';
+import 'package:personal_fin/core/widgets/custom_appbar.dart';
 import 'package:personal_fin/features/settings/widgets/currency_picker.dart';
 import 'package:personal_fin/features/settings/view_models/general_settings_view_model.dart';
 import 'package:personal_fin/models/currency.dart';

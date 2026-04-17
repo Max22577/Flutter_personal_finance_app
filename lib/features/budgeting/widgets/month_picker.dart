@@ -12,11 +12,10 @@ class MonthPickerSheet extends StatefulWidget {
   @override
   State<MonthPickerSheet> createState() => _MonthPickerSheetState();
 
-  // Helper method to call the picker
   static Future<DateTime?> show(BuildContext context, DateTime initialDate) {
     return showModalBottomSheet<DateTime>(
       context: context,
-      backgroundColor: Colors.transparent, // 1. Set to transparent
+      backgroundColor: Colors.transparent, 
       elevation: 0,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -45,13 +44,13 @@ class _MonthPickerSheetState extends State<MonthPickerSheet> {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12), // Adjust blur intensity here
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12), 
         child: Container(
           decoration: BoxDecoration(
-            color: colors.surface.withValues(alpha: 0.4), // Semi-transparent frost
+            color: colors.surface.withValues(alpha: 0.4), 
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             border: Border.all(
-              color: colors.outlineVariant.withValues(alpha: 0.2), // The "Glass" edge
+              color: colors.outlineVariant.withValues(alpha: 0.2), 
               width: 1,
             ),
           ),
@@ -73,7 +72,7 @@ class _MonthPickerSheetState extends State<MonthPickerSheet> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.chevron_left),
-                    onPressed: () => setState(() => _displayedDate = DateTime(_displayedDate.year - 1)),
+                    onPressed: () => setState(() => _displayedDate = DateTime(_displayedDate.year - 1, _displayedDate.month)),
                   ),
                   Text(
                     DateFormat('MMMM yyyy', lang.localeCode).format(_displayedDate),
@@ -81,7 +80,7 @@ class _MonthPickerSheetState extends State<MonthPickerSheet> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.chevron_right),
-                    onPressed: () => setState(() => _displayedDate = DateTime(_displayedDate.year + 1)),
+                    onPressed: () => setState(() => _displayedDate = DateTime(_displayedDate.year + 1, _displayedDate.month)),
                   ),
                 ],
               ),

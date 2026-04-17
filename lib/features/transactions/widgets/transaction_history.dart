@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/features/transactions/widgets/state/empty_state.dart';
@@ -9,15 +8,13 @@ import 'package:personal_fin/features/transactions/view_models/transactions_view
 import 'package:personal_fin/models/transaction.dart';
 import 'package:provider/provider.dart';
 
-class TransactionHistory extends StatelessWidget {
-  final User user;
+class TransactionHistory extends StatelessWidget { 
   final bool isActive;
   
-  const TransactionHistory({required this.user, required this.isActive, super.key});
+  const TransactionHistory({required this.isActive, super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Access the brain
     final vm = context.watch<TransactionViewModel>();
     final lang = context.read<LanguageProvider>();
 
@@ -34,7 +31,6 @@ class TransactionHistory extends StatelessWidget {
         final date = sortedDates[index];
         return TransactionGroupWidget(
           date: date,
-          user: user,
           transactions: dateGroups[date]!,
           categories: vm.categories,
           onDelete: (tx) => _confirmDelete(context, vm, tx, lang),

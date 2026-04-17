@@ -3,7 +3,7 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/utils/category_icon_helper.dart';
 import 'package:provider/provider.dart';
 import '../../../models/category.dart';
-import '../../../core/widgets/shared/currency_display.dart';
+import '../../../core/widgets/currency_display.dart';
 
 class BudgetCategoryCard extends StatelessWidget {
   final Category category;
@@ -117,11 +117,13 @@ class BudgetCategoryCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      _buildAmountTile(
-                        title: lang.translate('remaining'),
-                        amount: remaining,
-                        theme: theme,
-                        isPositive: isBudgetSet ? remaining >= 0 : null,
+                      Expanded(
+                        child: _buildAmountTile(
+                          title: lang.translate('remaining'),
+                          amount: remaining,
+                          theme: theme,
+                          isPositive: isBudgetSet ? remaining >= 0 : null,
+                        ),
                       ),
                     ],
                   ),

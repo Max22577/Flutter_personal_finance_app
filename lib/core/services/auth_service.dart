@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart' ;
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth _auth;
+  AuthService({FirebaseAuth? auth}) : _auth = auth ?? FirebaseAuth.instance;
+
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  User? get currentUser => _auth.currentUser;
 
   Future<void> _ensureInitialized() async {
     // Note: If on Web, you must pass clientId here
@@ -28,6 +31,11 @@ class AuthService {
       password: password,
     );
     return result.user;
+  }
+
+  Future<void> updateDisplayName(String name) async {
+    await _auth.currentUser?.updateDisplayName(name);
+    await _auth.currentUser?.reload();
   }
 
   Future<UserCredential?> signInWithGoogle() async {

@@ -2,9 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
-import 'package:personal_fin/core/widgets/shared/currency_display.dart';
+import 'package:personal_fin/core/widgets/currency_display.dart';
 import 'package:provider/provider.dart';
-
 import '../view_models/spending_chart_view_model.dart';
 
 class CategoryPieChart extends StatelessWidget {
@@ -30,32 +29,38 @@ class CategoryPieChart extends StatelessWidget {
         context.read<MonthlyTransactionRepository>(),
         context.read<CategoryRepository>(),
       ),
-      child: Consumer<SpendingChartViewModel>(
-        builder: (context, vm, _) {
-          if (vm.isLoading) return const Center(child: CircularProgressIndicator());
-          
-          final data = vm.categoryData;
-          if (data.isEmpty) return const Center(child: Text("No expenses this month"));
+      builder: (context, child) {
+        final vm = context.watch<SpendingChartViewModel>();
 
-         return Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.grey[200]!),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+        if (vm.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final data = vm.categoryData;
+        if (data.isEmpty) {
+          return const Center(child: Text("No expenses this month"));
+        }
+
+        return Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.grey[200]!),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Chart Title
+                  // Chart Title
                   const Text(
                     "Monthly Spending Breakdown",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
 
-                  // 2. The Pie Chart
+                  // Pie Chart
                   AspectRatio(
                     aspectRatio: 1.5,
                     child: PieChart(
@@ -68,15 +73,16 @@ class CategoryPieChart extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // 3. The Legend
+                  // Legend
                   _buildLegend(data),
                 ],
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
+        
   }
 
   List<PieChartSectionData> _buildSections(Map<String, double> data, ColorScheme colors) {
@@ -108,7 +114,7 @@ class CategoryPieChart extends StatelessWidget {
           )
         : null,
         
-        // 3. Move the badge to the center of the slice (0.0 = center of donut, 1.0 = outer edge)
+        // Move the badge to the center of the slice (0.0 = center of donut, 1.0 = outer edge)
         badgePositionPercentageOffset: 0.55,
         );
     }).toList();

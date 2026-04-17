@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/core/widgets/shared/currency_display.dart';
+import 'package:personal_fin/core/widgets/currency_display.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:personal_fin/models/monthly_data.dart';
 import 'package:provider/provider.dart';
@@ -66,7 +66,7 @@ class MonthlyReview extends StatelessWidget {
 
                       if (showComparison && previousMonthData != null) ...[
                         const SizedBox(height: 16),
-                        _buildComparisonTile(context),
+                        _buildComparisonTile(context, previousMonthData!),
                       ],
                     ],
                   ),
@@ -273,15 +273,15 @@ class MonthlyReview extends StatelessWidget {
       ],
     );
   }
-  Widget _buildComparisonTile(BuildContext context) {
+  Widget _buildComparisonTile(BuildContext context, MonthlyData previousMonthData) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
-    final financialColors = theme.extension<FinancialColors>()!;
+    final financialColors = theme.extension<FinancialColors>() ?? FinancialColors(income: Colors.green, expense: Colors.red);
     final cf = context.watch<CurrencyProvider>().formatter;
     final lang = context.read<LanguageProvider>();
 
-    final percentChange = monthlyData.percentageChangeFrom(previousMonthData!);
+    final percentChange = monthlyData.percentageChangeFrom(previousMonthData);
     final isPositive = percentChange >= 0;
     final trendColor = isPositive ? financialColors.income : financialColors.expense;
 
@@ -294,11 +294,9 @@ class MonthlyReview extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 1. Icon stays fixed on the left
           _buildAnimatedTrendIcon(trendColor, isPositive),
           const SizedBox(width: 14),
 
-          // 2. Text Content now handles the overflow by stacking
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,7 +317,6 @@ class MonthlyReview extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                // 3. Sub-row for the "Previous" data to keep things compact
                 Row(
                   children: [
                     Text(
@@ -330,7 +327,7 @@ class MonthlyReview extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      cf.formatNumber(previousMonthData!.net, lang.localeCode),
+                      cf.formatNumber(previousMonthData.net, lang.localeCode),
                       style: textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colors.onSurface.withValues(alpha: 0.5),

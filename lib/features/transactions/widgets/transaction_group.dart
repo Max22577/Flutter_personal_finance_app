@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/features/transactions/widgets/transaction_form.dart';
@@ -12,14 +11,12 @@ class TransactionGroupWidget extends StatelessWidget {
   final DateTime date;
   final List<Transaction> transactions;
   final List<Category> categories;
-  final User user;
   final Function(Transaction) onDelete;
 
   const TransactionGroupWidget({
     required this.date,
     required this.transactions,
     required this.categories,
-    required this.user,
     required this.onDelete,
     super.key,
   });
@@ -53,7 +50,6 @@ class TransactionGroupWidget extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
       ),
       builder: (context) => TransactionForm(
-        user: user,
         transactionToEdit: transaction,
       ),
     ).then((updatedTransaction) {

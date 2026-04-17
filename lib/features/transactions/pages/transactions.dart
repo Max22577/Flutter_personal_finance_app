@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
-import 'package:personal_fin/core/widgets/shared/raised_floating_action_button.dart';
+import 'package:personal_fin/core/widgets/raised_floating_action_button.dart';
 import 'package:personal_fin/features/transactions/widgets/transaction_form.dart';
 import 'package:personal_fin/features/transactions/widgets/transaction_history.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:provider/provider.dart';
-
-
 
 class TransactionsPage extends StatefulWidget {
   final bool isActive;
@@ -66,11 +63,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
       }
   }
 
-  void _showTransactionForm(BuildContext context, {Transaction? transaction}) {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    
-    
+  void _showTransactionForm(BuildContext context, {Transaction? transaction}) {   
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -79,16 +72,14 @@ class _TransactionsPageState extends State<TransactionsPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
       ),
-      builder: (context) => TransactionForm(user: user, transactionToEdit: transaction),
+      builder: (context) => TransactionForm(transactionToEdit: transaction),
     );
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _navigationProvider.setActions([]);
-      }
+      _navigationProvider.setActions([]);
     });
     _navigationProvider.removeListener(_onNavChanged);
     super.dispose();
@@ -96,18 +87,14 @@ class _TransactionsPageState extends State<TransactionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return const Center(child: Text("Please sign in to view transactions."));
-    }
-
+    
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
-      body: TransactionHistory(user: user, isActive: widget.isActive),
+      body: TransactionHistory(isActive: widget.isActive),
       
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'transaction_add',

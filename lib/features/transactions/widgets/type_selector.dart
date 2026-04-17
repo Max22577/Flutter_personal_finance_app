@@ -19,7 +19,7 @@ class TypeSelector extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
-    final financialColors = theme.extension<FinancialColors>()!;
+    final financialColors = theme.extension<FinancialColors>() ?? FinancialColors(income: Colors.green, expense: Colors.red);
     final lang = context.watch<LanguageProvider>();
     
     final isIncome = selectedType == 'Income';

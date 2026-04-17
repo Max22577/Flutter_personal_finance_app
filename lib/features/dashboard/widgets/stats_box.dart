@@ -28,15 +28,13 @@ class StatBox extends StatelessWidget {
     final cf = context.watch<CurrencyProvider>().formatter;
     final lang = context.watch<LanguageProvider>();
 
-  // 2. Determine the sign logic
-  final sign = showSign && value != 0 
-      ? (value > 0 ? '+' : '-') 
-      : '';
+    final sign = showSign && value != 0 
+        ? (value > 0 ? '+' : '-') 
+        : '';
 
-  // 3. Format the value immediately using your new methods
-  final formattedValue = compact 
-      ? cf.formatCompact(value.abs(), lang.localeCode) 
-      : cf.formatDisplay(value.abs(), lang.localeCode);
+    final formattedValue = compact 
+        ? cf.formatCompact(value.abs(), lang.localeCode) 
+        : cf.formatDisplay(value.abs(), lang.localeCode);
     
     return Container(
       padding: compact ? const EdgeInsets.all(8) : const EdgeInsets.all(12),
@@ -84,7 +82,7 @@ class StatBox extends StatelessWidget {
                 color: theme.colorScheme.onSurface,
               ),
             ),
-          ),           
+          ),
         ],
       ),
     );

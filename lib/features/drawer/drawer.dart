@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
-import '../../theme/app_theme.dart';
+import '../../core/theme/app_theme.dart';
 
 class AppDrawer extends StatelessWidget {
   final String userName;
@@ -94,6 +94,7 @@ class AppDrawer extends StatelessWidget {
                       title: lang.translate('logout'),
                       color: colors.error,
                       onTap: onLogout,
+                      
                     ),
                   ],
                 ),
@@ -156,7 +157,7 @@ class AppDrawer extends StatelessWidget {
                 _buildExpansionTile(
                   context: context,
                   icon: Icons.attach_money,
-                  title: lang.translate('budget'),
+                  title: lang.translate('budgeting'),
 
                   children: [
                     _buildSubMenuItem(

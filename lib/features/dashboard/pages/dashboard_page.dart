@@ -37,6 +37,7 @@ class DashboardViewContent extends StatelessWidget {
           context.read<MonthlyDataRepository>().refresh(),
         ]),
         child: SingleChildScrollView(
+          key: const Key('dashboard_main_scroll'),
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -79,7 +80,7 @@ class DashboardViewContent extends StatelessWidget {
       );
     }
 
-    if (vm.errorMessage != null) {
+    if (vm.errorMessage != null || vm.currentMonthData == null) {
       return _buildErrorCard(vm, lang);
     }
 

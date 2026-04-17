@@ -47,7 +47,6 @@ class MonthSelectorCard extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
-                // Icon with a modern "soft square" background
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
