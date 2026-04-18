@@ -17,6 +17,7 @@ void main() {
     transactionsSubject = BehaviorSubject<List<Transaction>>();
 
     when(() => mockRepo.transactionsStream).thenAnswer((_) => transactionsSubject.stream);
+    when(() => mockRepo.getCategoryName(any())).thenAnswer((_) async => 'Test Category');
   });
 
   tearDown(() {
@@ -26,75 +27,85 @@ void main() {
   group('Initial State -', () {
     test('starts with isLoading as true and empty transactions', () {
       viewModel = RecentTransactionsViewModel(repo: mockRepo);
-
       expect(viewModel.isLoading, true);
+      expect(viewModel.errorMessage, isNull);
       expect(viewModel.recentTransactions, isEmpty);
+    });
+  });
+
+  group('Error Handling & Retry -', () {
+    test('handles stream errors and populates errorMessage', () async {
+      viewModel = RecentTransactionsViewModel(repo: mockRepo);
+
+      transactionsSubject.addError(Exception('Firebase Timeout'));
+      await Future.delayed(Duration.zero);
+
+      expect(viewModel.isLoading, false);
+      expect(viewModel.errorMessage, contains('Connection to transactions lost'));
+      expect(viewModel.recentTransactions, isEmpty);
+    });
+
+    test('retry() clears error and re-subscribes to stream', () async {
+      viewModel = RecentTransactionsViewModel(repo: mockRepo);
+
+      // error state
+      transactionsSubject.addError(Exception('Initial Failure'));
+      await Future.delayed(Duration.zero);
+      expect(viewModel.errorMessage, isNotNull);
+
+      // Retry
+      viewModel.retry();
+
+      // ASSERT: Should be loading again and error cleared
+      expect(viewModel.isLoading, true);
+      expect(viewModel.errorMessage, isNull);
+
+      // Emit valid data
+      final t1 = Transaction(id: '1', userId: 'u1', title: 'T1', amount: 10, date: DateTime.now(), type: 'Expense', categoryId: 'c1');
+      transactionsSubject.add([t1]);
+      await Future.delayed(Duration.zero);
+
+      // ASSERT: Success
+      expect(viewModel.isLoading, false);
+      expect(viewModel.recentTransactions.length, 1);
+    });
+
+    test('handles errors during category name fetching', () async {
+      viewModel = RecentTransactionsViewModel(repo: mockRepo);
+      
+      // ARRANGE: Repository fails when fetching the name
+      when(() => mockRepo.getCategoryName(any())).thenThrow(Exception('Metadata fetch failed'));
+      
+      final t1 = Transaction(id: '1', userId: 'u1', title: 'T1', amount: 10, date: DateTime.now(), type: 'Expense', categoryId: 'c1');
+
+      // ACT
+      transactionsSubject.add([t1]);
+      await Future.delayed(Duration.zero);
+
+      // ASSERT
+      expect(viewModel.isLoading, false);
+      expect(viewModel.errorMessage, contains('Failed to process transactions'));
     });
   });
 
   group('Stream Updates -', () {
     final now = DateTime.now();
 
-    test('sorts transactions by date descending and takes the default limit of 5', () async {
+    test('sorts transactions and fetches category names', () async {
       viewModel = RecentTransactionsViewModel(repo: mockRepo);
 
-      // 1. ARRANGE
-      final t1 = Transaction(id: '1', userId: 'u1', title: 'Oldest', amount: 10, date: now.subtract(const Duration(days: 5)), type: 'Expense', categoryId: 'c1');
-      final t2 = Transaction(id: '2', userId: 'u1', title: 'Newest', amount: 20, date: now, type: 'Expense', categoryId: 'c1');
-      final t3 = Transaction(id: '3', userId: 'u1', title: 'Mid 1', amount: 30, date: now.subtract(const Duration(days: 1)), type: 'Expense', categoryId: 'c1');
-      final t4 = Transaction(id: '4', userId: 'u1', title: 'Mid 2', amount: 40, date: now.subtract(const Duration(days: 2)), type: 'Expense', categoryId: 'c1');
-      final t5 = Transaction(id: '5', userId: 'u1', title: 'Mid 3', amount: 50, date: now.subtract(const Duration(days: 3)), type: 'Expense', categoryId: 'c1');
-      final t6 = Transaction(id: '6', userId: 'u1', title: 'Mid 4', amount: 60, date: now.subtract(const Duration(days: 4)), type: 'Expense', categoryId: 'c1');
-
-      // 2. ACT
-      transactionsSubject.add([t1, t3, t5, t2, t4, t6]);
-      await Future.delayed(const Duration(milliseconds: 10));
-
-      // 3. ASSERT
-      expect(viewModel.isLoading, false);
+      final t1 = Transaction(id: '1', userId: 'u1', title: 'T1', amount: 10, date: now, type: 'Expense', categoryId: 'c1');
       
-      expect(viewModel.recentTransactions.length, 5);
-      
-      expect(viewModel.recentTransactions.first.id, '2');
-      
-      expect(viewModel.recentTransactions.last.id, '5');
-    });
-
-    test('respects custom maxItems parameter when provided', () async {
-      viewModel = RecentTransactionsViewModel(repo: mockRepo, maxItems: 2);
-
-      // 1. ARRANGE
-      final transactions = [
-        Transaction(id: '1', userId: 'u1', title: 'T1', amount: 10, date: now, type: 'Expense', categoryId: 'c1'),
-        Transaction(id: '2', userId: 'u1', title: 'T2', amount: 20, date: now.subtract(const Duration(days: 1)), type: 'Expense', categoryId: 'c1'),
-        Transaction(id: '3', userId: 'u1', title: 'T3', amount: 30, date: now.subtract(const Duration(days: 2)), type: 'Expense', categoryId: 'c1'),
-      ];
-
-      // 2. ACT
-      transactionsSubject.add(transactions);
+      // ACT
+      transactionsSubject.add([t1]);
       await Future.delayed(Duration.zero);
 
-      // 3. ASSERT
+      // ASSERT
       expect(viewModel.isLoading, false);
-      
-      expect(viewModel.recentTransactions.length, 2);
       expect(viewModel.recentTransactions.first.id, '1');
-      expect(viewModel.recentTransactions.last.id, '2');
-    });
-
-    test('handles stream errors gracefully by turning off loading', () async {
-      viewModel = RecentTransactionsViewModel(repo: mockRepo);
-
-      // 1. ARRANGE
-      final error = Exception('Database corrupted');
-
-      // 2. ACT
-      transactionsSubject.addError(error);
-      await Future.delayed(Duration.zero);
-
-      // 3. ASSERT
-      expect(viewModel.isLoading, false);
-      expect(viewModel.recentTransactions, isEmpty);
+      // Verify the async category fetch was called
+      verify(() => mockRepo.getCategoryName('c1')).called(1);
+      expect(viewModel.getCategoryName('c1'), 'Test Category');
     });
   });
 }

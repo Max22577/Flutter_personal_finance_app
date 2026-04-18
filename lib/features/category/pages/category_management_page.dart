@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/widgets/custom_appbar.dart';
+import 'package:personal_fin/core/widgets/empty_state.dart';
+import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:personal_fin/features/category/widgets/predefined_chip.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:provider/provider.dart';
@@ -33,7 +35,7 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
   final _newCatController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  // Helper for Snackbars to avoid repetition
+  // Helper for Snackbars 
   void _showFeedback(BuildContext context, String message, {bool isError = false}) {
     final colors = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -119,25 +121,11 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
               onPressed: () async {
                 if (editFormKey.currentState!.validate()) {
                   final newName = editController.text.trim();
-
-                  final messenger = ScaffoldMessenger.of(context);
                   final navigator = Navigator.of(context);
-                  final theme = Theme.of(context);
-
                   await vm.updateCategory(category.id, newName);
-                  if (!mounted) return;
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: Text('${lang.translate('category_updated_to')} "$newName"', 
-                        style: TextStyle(color: theme.colorScheme.onPrimaryContainer)
-                      ),
-                      behavior: SnackBarBehavior.floating,
-                      backgroundColor: theme.colorScheme.primaryContainer,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      margin: const EdgeInsets.all(20),
-                      duration: const Duration(seconds: 3),
-                    ),
-                  );
+                  if (!context.mounted) return;
+                    _showFeedback(context, '${lang.translate('category_updated_to')} "$newName"', isError: false);
+                  
                   navigator.pop(); // Close the dialog
                   
                 }
@@ -244,7 +232,7 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
       backgroundColor: colors.surfaceContainerLow,
       appBar: CustomAppBar(
         title: 'categories',
-        isRootNav: false, // Tells the widget to use the passed title 
+        isRootNav: false,  
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -314,8 +302,18 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
     return StreamBuilder<List<Category>>(
       stream: vm.customCategoriesStream,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) return const CircularProgressIndicator();
-        if (snapshot.hasError) return Text(lang.translate('error_loading'));
+        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: LoadingState());
+        if (snapshot.hasError) {
+          return Center(
+            child: EmptyState(
+              icon: Icons.error_outline,
+              title:(lang.translate('error_loading')),
+              message: vm.errorMessage!,
+              actionText: lang.translate('retry'),
+              onAction: () => vm.refreshCategories(),
+            ),
+          );
+        }
         
         final categories = snapshot.data ?? [];
         return ListView.builder(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
+import 'package:personal_fin/core/widgets/empty_state.dart';
 import 'package:personal_fin/features/dashboard/widgets/transaction_item.dart';
 import 'package:provider/provider.dart';
 import '../view_models/recent_transactions_view_model.dart';
@@ -68,6 +69,18 @@ class RecentTransactions extends StatelessWidget {
   Widget _buildContent(RecentTransactionsViewModel vm, ThemeData theme, LanguageProvider lang) {
     if (vm.isLoading) {
       return const Center(child: CircularProgressIndicator());
+    }
+
+    if (vm.errorMessage != null) {
+      return Center(
+        child: EmptyState(
+          icon: Icons.error_outline,
+          title: lang.translate('error_loading'),
+          message: vm.errorMessage!,
+          actionText: lang.translate('retry'),
+          onAction: () => vm.retry(), 
+        ),
+      );
     }
 
     if (vm.recentTransactions.isEmpty) {

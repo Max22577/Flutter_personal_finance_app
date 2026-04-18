@@ -11,16 +11,25 @@ class SpendingChartViewModel extends ChangeNotifier {
   final CategoryRepository _categoryRepo;
 
   bool _isLoading = true;
+  String? _errorMessage;
   StreamSubscription? _subscription;
 
   Map<String, double> _categoryData = {};
   Map<String, double> get categoryData => _categoryData;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
   SpendingChartViewModel(this._transactionRepo, this._categoryRepo) {
     _init();
   }
 
   void _init() {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    _subscription?.cancel();
+
     _subscription = Rx.combineLatest2(
       _transactionRepo.stream,
       _categoryRepo.categoriesStream,
@@ -31,13 +40,13 @@ class SpendingChartViewModel extends ChangeNotifier {
         final expenses = transactions.where((t) => t.type == 'Expense');
 
         for (var t in expenses) {
-          // 1. Find the category name using the categoryId
+          // Find the category name using the categoryId
           final category = categories.firstWhere(
             (c) => c.id == t.categoryId,
             orElse: () => Category(id: 'unknown', name: 'Other'), // Fallback
           );
 
-          // 2. Add amount to that category
+          // Add amount to that category
           aggregatedData.update(
             category.name, 
             (existingValue) => existingValue + t.amount, 
@@ -49,11 +58,17 @@ class SpendingChartViewModel extends ChangeNotifier {
     ).listen((data) {
       _categoryData = data;
       _isLoading = false;
+      _errorMessage = null;
       notifyListeners();
-    });
+    },
+    onError: (error) {
+      _isLoading = false;
+      _errorMessage = "Could not load chart data. Please check your connection.";
+      notifyListeners();
+    },);
   }
 
-  bool get isLoading => _isLoading;
+  void retry() => _init();
 
   @override
   void dispose() {

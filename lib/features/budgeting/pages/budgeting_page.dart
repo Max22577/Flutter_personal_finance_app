@@ -93,7 +93,7 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
   }
 
   Widget _buildBody(BudgetingViewModel vm, LanguageProvider lang) {
-    // 1. Handle Error State
+    // Error State
     if (vm.errorMessage != null) {
       return Center(
         child: EmptyState(
@@ -106,14 +106,13 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
       );
     }
 
-    // 2. Handle Loading State
+    // Loading State
     // Since currentState is null until the first stream emission
     final state = vm.currentState;
     if (state == null) {
       return const Center(child: LoadingState());
     }
 
-    // 3. Main Content
     return RefreshIndicator(
       onRefresh: () async => await vm.refreshData(), 
       child: CustomScrollView(
