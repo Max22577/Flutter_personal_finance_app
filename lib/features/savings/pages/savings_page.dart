@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
 import 'package:personal_fin/core/widgets/custom_appbar.dart';
+import 'package:personal_fin/core/widgets/empty_state.dart';
+import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:personal_fin/features/savings/pages/set_goal_page.dart';
 import 'package:personal_fin/features/savings/widgets/progress_chart.dart';
 import 'package:personal_fin/core/widgets/currency_display.dart';
@@ -48,8 +50,18 @@ class SavingsViewContent extends StatelessWidget {
     final lang = context.watch<LanguageProvider>();
     final theme = Theme.of(context);
 
-    if (vm.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (vm.errorMessage != null) return _buildErrorState(context, vm, lang);
+    if (vm.isLoading) return const Scaffold(body: Center(child: LoadingState()));
+    if (vm.errorMessage != null) {
+      return Center(
+        child: EmptyState(
+          icon: Icons.error_outline,
+          title: lang.translate('failed_to_load_goals'),
+          message: vm.errorMessage ?? lang.translate('unknown_error'),
+          actionText: lang.translate('retry'),
+          onAction: () => vm.retry(), 
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLow,
@@ -83,43 +95,6 @@ class SavingsViewContent extends StatelessWidget {
           )
         : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-    );
-  }
-
-  Widget _buildErrorState(BuildContext context, SavingsViewModel vm, LanguageProvider lang) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 60,
-              color: Colors.red,
-            ),
-            const SizedBox(height: 20),
-            Text(
-              lang.translate('failed_to_load_goals'),
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              vm.errorMessage ?? lang.translate('unknown_error'),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: vm.retry,
-              child: Text(lang.translate('retry')),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

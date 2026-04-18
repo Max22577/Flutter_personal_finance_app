@@ -77,7 +77,6 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
     );
   }
 
-  // Use your existing TweenAnimationBuilder here...
   Widget _buildAnimatedDialog(BuildContext context, BudgetEditViewModel vm, LanguageProvider lang, String symbol) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -274,9 +273,7 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
             ),
           ),
         ],
-      ),
-        
-      
+      ),     
     );
   }
 }

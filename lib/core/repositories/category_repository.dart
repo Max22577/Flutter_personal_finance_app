@@ -47,8 +47,14 @@ class CategoryRepository {
     _catSub?.cancel();
     _userCatSub?.cancel();
     _init();
-    await _categorySubject.first.timeout(const Duration(seconds: 5));
-    await _userCategorySubject.first.timeout(const Duration(seconds: 5));
+    try {
+      await Future.wait([
+        _categorySubject.first.timeout(const Duration(seconds: 5)),
+        _userCategorySubject.first.timeout(const Duration(seconds: 5)),
+      ]);
+    } on TimeoutException {
+      throw 'Refresh timed out. Please try again.';
+    }
   }
 
   void dispose() {

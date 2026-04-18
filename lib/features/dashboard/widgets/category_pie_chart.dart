@@ -1,8 +1,11 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
 import 'package:personal_fin/core/widgets/currency_display.dart';
+import 'package:personal_fin/core/widgets/empty_state.dart';
+import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:provider/provider.dart';
 import '../view_models/spending_chart_view_model.dart';
 
@@ -22,6 +25,7 @@ class CategoryPieChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final lang = context.read<LanguageProvider>();
     final colors = theme.colorScheme;
 
     return ChangeNotifierProvider(
@@ -33,13 +37,23 @@ class CategoryPieChart extends StatelessWidget {
         final vm = context.watch<SpendingChartViewModel>();
 
         if (vm.isLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: LoadingState());
+        }
+
+        if (vm.errorMessage != null) {
+          return Center(
+            child: EmptyState(
+              icon: Icons.error_outline,
+              title: lang.translate('error_loading'),
+              message: vm.errorMessage!,
+              actionText: lang.translate('retry'),
+              onAction: () => vm.retry(), 
+            ),
+          );
         }
 
         final data = vm.categoryData;
-        if (data.isEmpty) {
-          return const Center(child: Text("No expenses this month"));
-        }
+        
 
         return Card(
           elevation: 0,

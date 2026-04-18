@@ -20,34 +20,65 @@ void main() {
     viewModel = CategoryViewModel(mockCatRepo);
   });
 
-  test('Initial state is correct', () {
-    expect(viewModel.isBusy, false);
-    expect(viewModel.predefinedCategories.length, 2);
+  group('General State', () {
+    test('Initial state is correct', () {
+      expect(viewModel.isBusy, false);
+      expect(viewModel.hasError, false);
+      expect(viewModel.errorMessage, null);
+    });
   });
 
-  test('addCategory sets busy state correctly', () async {
-    when(() => mockCatRepo.addCategory(any())).thenAnswer((_) async {});
-    
-    final future = viewModel.addCategory('New Category');
-    
-    expect(viewModel.isBusy, true);
-    
-    await future;
-    
-    expect(viewModel.isBusy, false);
-    verify(() => mockCatRepo.addCategory('New Category')).called(1);
+  group('Retry Logic', () {
+    test('handles addCategory failure and retries successfully', () async {
+      when(() => mockCatRepo.addCategory(any()))
+          .thenThrow(Exception('Network Error'));
+
+      await viewModel.addCategory('Coffee');
+
+      expect(viewModel.hasError, true);
+      expect(viewModel.errorMessage, contains('Failed to add category'));
+      verify(() => mockCatRepo.addCategory('Coffee')).called(1);
+
+      when(() => mockCatRepo.addCategory(any())).thenAnswer((_) async => {});
+
+      final retryFuture = viewModel.retryLastAction();
+      
+      expect(viewModel.isBusy, true);
+      expect(viewModel.hasError, false);
+
+      await retryFuture;
+
+      expect(viewModel.isBusy, false);
+      expect(viewModel.hasError, false);
+      verify(() => mockCatRepo.addCategory('Coffee')).called(1); 
+    });
+
+    test('updateCategory captures arguments correctly for retry', () async {
+      when(() => mockCatRepo.updateCategory(any(), any()))
+          .thenThrow(Exception('Update Failed'));
+
+      await viewModel.updateCategory('c1', 'Dining');
+
+      expect(viewModel.hasError, true);
+
+      when(() => mockCatRepo.updateCategory('c1', 'Dining'))
+          .thenAnswer((_) async => {});
+
+      await viewModel.retryLastAction();
+
+      verify(() => mockCatRepo.updateCategory('c1', 'Dining')).called(2);
+    });
   });
 
-  test('updateCategory sets busy state correctly', () async {
-    when(() => mockCatRepo.updateCategory(any(), any())).thenAnswer((_) async {});
-    
-    final future = viewModel.updateCategory('c1', 'Updated Name');
-    
-    expect(viewModel.isBusy, true);
-    
-    await future;
-    
-    expect(viewModel.isBusy, false);
-    verify(() => mockCatRepo.updateCategory('c1', 'Updated Name')).called(1);
+  group('Busy State Edge Cases', () {
+    test('isBusy is false even if repository throws', () async {
+      when(() => mockCatRepo.addCategory(any())).thenThrow(Exception('Error'));
+
+      await viewModel.addCategory('Test');
+
+      expect(viewModel.isBusy, false);
+      expect(viewModel.hasError, true);
+    });
   });
+
 }

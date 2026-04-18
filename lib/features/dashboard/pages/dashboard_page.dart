@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
+import 'package:personal_fin/core/widgets/empty_state.dart';
+import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:personal_fin/features/dashboard/widgets/category_pie_chart.dart';
 import 'package:personal_fin/features/dashboard/widgets/monthly_review.dart';
 import 'package:personal_fin/features/dashboard/view_models/dashboard_view_model.dart';
@@ -47,7 +49,7 @@ class DashboardViewContent extends StatelessWidget {
               _buildMonthlyReview(vm, lang, context),
 
               const SizedBox(height: 16),
-              //const IncomeExpensesGraph(daysToShow: 7, height: 250),
+
               const CategoryPieChart(),
               
               const SizedBox(height: 32),
@@ -72,16 +74,19 @@ class DashboardViewContent extends StatelessWidget {
 
   Widget _buildMonthlyReview(DashboardViewModel vm, LanguageProvider lang, BuildContext context) {
     if (vm.isLoading) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(40),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      );
+      return const Center(child: LoadingState());
     }
 
     if (vm.errorMessage != null || vm.currentMonthData == null) {
-      return _buildErrorCard(vm, lang);
+      return Center(
+        child: EmptyState(
+          icon: Icons.error_outline,
+          title: lang.translate('error_loading_monthly_data'),
+          message: vm.errorMessage!,
+          actionText: lang.translate('retry'),
+          onAction: () => vm.retry(), 
+        ),
+      );
     }
 
     return MonthlyReview(
@@ -98,21 +103,6 @@ class DashboardViewContent extends StatelessWidget {
     );
   }
 
-  Widget _buildErrorCard(DashboardViewModel vm, LanguageProvider lang) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.red, size: 40),
-            const SizedBox(height: 12),
-            Text(lang.translate('error_loading_monthly_data')),
-            TextButton(onPressed: vm.retry, child: Text(lang.translate('retry'))),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildQuickActions(BuildContext context, LanguageProvider lang) {
     return Card(
