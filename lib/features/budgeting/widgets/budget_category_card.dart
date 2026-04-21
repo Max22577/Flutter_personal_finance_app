@@ -39,8 +39,8 @@ class BudgetCategoryCard extends StatelessWidget {
     final isBudgetSet = currentBudget > 0;
     final remaining = isBudgetSet ? (currentBudget - currentSpending) : 0.0;
     final lang = context.watch<LanguageProvider>();
-    final icon = CategoryIconHelper.getIcon(category.name);
-    final iconColor = CategoryIconHelper.getColor(category.name, colors);
+    final icon = CategoryIconHelper.getIcon(category);
+    final iconColor = CategoryIconHelper.getColor(category, colors);
 
     return Card(
       elevation: 2,

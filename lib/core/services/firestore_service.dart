@@ -215,21 +215,39 @@ class FirestoreService {
               .toList();
         });
   }
-  
-  Future<void> addCategory(String name) async {
+
+  Future<void> addCategory({
+    required String name,
+    required int iconCode, 
+    required int colorValue, 
+    required bool isCustom
+  }) async {
     await isReady;
     final categoriesRef = await categoriesCollectionRef();  
     await categoriesRef.add({
       'name': name,
+      'icon_code': iconCode,
+      'color_value': colorValue,
+      'is_custom': isCustom,
       'created_at': Timestamp.now(),
+      'isCustom': isCustom,
     });
   }
 
-  Future<void> updateCategoryName(String categoryId, String newName) async {
+  Future<void> updateCategoryName({
+    required String categoryId, 
+    String? newName,
+    int? iconCode, 
+    int? colorValue,
+    bool? isCustom
+  }) async {
     await isReady; 
     final categoriesRef = await categoriesCollectionRef();
     await categoriesRef.doc(categoryId).update({
       'name': newName,
+      'icon_code': iconCode,
+      'color_value': colorValue,
+      'isCustom': isCustom,
     });
   }
 

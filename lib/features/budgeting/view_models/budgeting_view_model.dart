@@ -32,10 +32,10 @@ class BudgetingViewModel extends ChangeNotifier {
   }
 
   void _init() {
-    // 1. Tell repos to fetch initial data
+    // Tell repos to fetch initial data
     _updateRepos();
 
-    // 2. Combine all streams into one state listener
+    // Combine all streams into one state listener
     _combinedSub = Rx.combineLatest4(
       _catRepo.categoriesStream,
       _budgetRepo.budgetsStream,
@@ -57,34 +57,31 @@ class BudgetingViewModel extends ChangeNotifier {
   }
 
   BudgetingState _calculateState(List<Category> categories, List<Budget> budgets, List<Transaction> transactions, String locale) {
-    // 1. Filter out Income categories logic
-    final incomeIds = transactions
-        .where((t) => t.type == 'Income')
-        .map((t) => t.categoryId)
-        .toSet();
+    final Map<String, double> spendingMap = {};
 
+    for (var t in transactions) {
+      if (t.type == 'Expense') {
+        // Add the amount to the existing total for this categoryId
+        spendingMap[t.categoryId] = (spendingMap[t.categoryId] ?? 0.0) + t.amount;
+      }
+    }
+    
     final filteredCategories = categories.where((c) {
-      final isIncome = incomeIds.contains(c.id) || 
-                        ['income', 'salary', 'revenue'].any((term) => c.name.toLowerCase().contains(term));
-      return !isIncome;
+      return !['income', 'salary', 'revenue'].any((term) => c.name.toLowerCase().contains(term));
     }).toList();
 
-    // 2. Map budgets for O(1) lookup
+    // Map budgets for O(1) lookup
     final budgetMap = {for (var b in budgets) b.categoryId: b.amount};
-
-    // 3. Pre-calculate totals
-    final categoryCount = budgets.length;
-    final totalBudget = budgets.fold(0.0, (sum, b) => sum + b.amount);
-    final activeCount = budgets.where((b) => b.amount > 0).length;
 
     return BudgetingState(
       categories: filteredCategories,
       budgetMap: budgetMap,
+      spendingMap: spendingMap, 
       transactions: transactions,
-      totalBudget: totalBudget,
-      activeBudgetsCount: activeCount,
+      totalBudget: budgets.fold(0.0, (sum, b) => sum + b.amount),
+      activeBudgetsCount: budgets.where((b) => b.amount > 0).length,
       monthYear: formattedMonthYear(locale),
-      totalCategoryCount: categoryCount,
+      totalCategoryCount: budgets.length,
     );
   }
 
@@ -137,6 +134,7 @@ class BudgetingViewModel extends ChangeNotifier {
 class BudgetingState {
   final List<Category> categories;
   final Map<String, double> budgetMap;
+  final Map<String, double> spendingMap;
   final List<Transaction> transactions;
   final double totalBudget;
   final int activeBudgetsCount;
@@ -146,6 +144,7 @@ class BudgetingState {
   BudgetingState({
     required this.categories,
     required this.budgetMap,
+    required this.spendingMap,
     required this.transactions,
     required this.totalBudget,
     required this.activeBudgetsCount,

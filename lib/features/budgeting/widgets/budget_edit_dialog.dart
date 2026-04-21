@@ -80,8 +80,8 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
   Widget _buildAnimatedDialog(BuildContext context, BudgetEditViewModel vm, LanguageProvider lang, String symbol) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final icon = CategoryIconHelper.getIcon(widget.category.name);
-    final iconColor = CategoryIconHelper.getColor(widget.category.name, colors);
+    final icon = CategoryIconHelper.getIcon(widget.category);
+    final iconColor = CategoryIconHelper.getColor(widget.category, colors);
     
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),

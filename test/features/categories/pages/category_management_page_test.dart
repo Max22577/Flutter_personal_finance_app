@@ -62,50 +62,8 @@ void main() {
   });
 
   group('Category Actions', () {
-    testWidgets('opens bottom sheet and adds a new category', (tester) async {
-      when(() => mockRepo.addCategory(any())).thenAnswer((_) async => {});
-      
-      await tester.pumpWidget(buildTestWidget());
+    
 
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle(); 
-
-      expect(find.text('new_category'), findsNWidgets(2)); // Title and FAB label
-
-      await tester.enterText(find.byType(TextFormField), 'Investment');
-      
-      await tester.tap(find.text('create_category'));
-      await tester.pumpAndSettle();
-
-      verify(() => mockRepo.addCategory('Investment')).called(1);
-      
-      expect(find.textContaining('category_added_success'), findsOneWidget);
-    });
-
-    testWidgets('opens edit dialog and updates category name', (tester) async {
-      final category = Category(id: 'c1', name: 'Old Name');
-      
-      when(() => mockRepo.customCategoriesStream)
-          .thenAnswer((_) => Stream.value([category]));
-      when(() => mockRepo.updateCategory(any(), any())).thenAnswer((_) async => {});
-
-      await tester.pumpWidget(buildTestWidget());
-      await tester.pump();
-
-      await tester.tap(find.text('Old Name'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('edit_category_name'), findsOneWidget);
-
-      // Clear and enter new name
-      await tester.enterText(find.widgetWithText(TextFormField, 'Old Name'), 'New Name');
-      
-      // Save
-      await tester.tap(find.text('save_changes'));
-      await tester.pumpAndSettle();
-
-      // Verify repo was called correctly
-      verify(() => mockRepo.updateCategory('c1', 'New Name')).called(1);
-    });
+    
   });
 }

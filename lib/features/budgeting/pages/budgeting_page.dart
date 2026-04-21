@@ -195,10 +195,10 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
     return SliverList(
       delegate: SliverChildBuilderDelegate((context, index) {
         final category = state.categories[index];
+      
+        // Lookups are now O(1) - instant!
         final currentBudget = state.budgetMap[category.id] ?? 0.0;
-        final spending = state.transactions
-            .where((t) => t.categoryId == category.id && t.type == 'Expense')
-            .fold(0.0, (sum, t) => sum + t.amount);
+        final spending = state.spendingMap[category.id] ?? 0.0;
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

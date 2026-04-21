@@ -44,11 +44,21 @@ class CategoryViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> addCategory(String name) async {
-    _lastAction = () => addCategory(name);
+  Future<void> addCategory({
+    required String name, 
+    required int iconCode, 
+    required int colorValue, 
+    required bool isCustom 
+  }) async {
+    _lastAction = () => addCategory(name: name, iconCode: iconCode, colorValue: colorValue, isCustom: isCustom);
     _setBusy(true);
     try {
-      await _catRepo.addCategory(name.trim());
+      await _catRepo.addCategory(
+        name: name.trim(),
+        iconCode: iconCode,
+        colorValue: colorValue,
+        isCustom: isCustom
+      );
       _errorMessage = null;
     } catch (e) {
       _errorMessage = "Failed to add category. Please try again.";
@@ -57,16 +67,29 @@ class CategoryViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> updateCategory(String id, String newName) async {
-    _lastAction = () => updateCategory(id, newName);
+  Future<void> updateCategory({
+    required String id, 
+    String? name, 
+    int? iconCode, 
+    int? colorValue,
+    bool? isCustom
+  }) async {
+    _lastAction = () => updateCategory(id: id, name: name, iconCode: iconCode, colorValue: colorValue, isCustom: isCustom);
     _setBusy(true);
     try {
-      await _catRepo.updateCategory(id, newName.trim());
+      await _catRepo.updateCategory(
+        id: id,
+        name: name,
+        iconCode: iconCode,
+        colorValue: colorValue,
+        isCustom: isCustom
+      );
       _errorMessage = null;
     } catch (e) {
-      _errorMessage = "Failed to add category. Please try again.";
+      _errorMessage = "Failed to update category. Please try again.";
     } finally {
       _setBusy(false);
+      notifyListeners();
     }
   }
 }

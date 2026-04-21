@@ -17,9 +17,10 @@ class PredefinedCategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     final lang = context.watch<LanguageProvider>();
-    final icon = CategoryIconHelper.getIcon(category.name);
-    final iconColor = CategoryIconHelper.getColor(category.name, colors);
+    final icon = CategoryIconHelper.getIcon(category);
+    final iconColor = CategoryIconHelper.getColor(category, colors);
 
     return TweenAnimationBuilder<double>(
       duration: Duration(milliseconds: 400 + (index * 100)), 
@@ -45,15 +46,11 @@ class PredefinedCategoryChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: iconColor),
+            Icon(icon, size: 28, color: iconColor),
             const SizedBox(width: 8),
             Text(
               lang.translate(category.name),
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: colors.onPrimaryContainer,
-                fontSize: 13,
-              ),
+              style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, letterSpacing: 0.5,),
             ),
           ],
         ),
