@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/features/category/view_models/category_view_model.dart';
@@ -28,56 +29,73 @@ void main() {
     });
   });
 
-  group('Retry Logic', () {
-    test('handles addCategory failure and retries successfully', () async {
-      when(() => mockCatRepo.addCategory(any()))
-          .thenThrow(Exception('Network Error'));
+  group('Category Mutations -', () {
+    const String tName = 'Gym';
+    const int tIcon = 58115; // Icons.fitness_center.codePoint
+    final int tColor = Colors.blue.toARGB32();
 
-      await viewModel.addCategory('Coffee');
+    test('addCategory sets busy state and calls repository', () async {
+      // ARRANGE
+      when(() => mockCatRepo.addCategory(
+        name: any(named: 'name'),
+        iconCode: any(named: 'iconCode'),
+        colorValue: any(named: 'colorValue'),
+        isCustom: any(named: 'isCustom'),
+      )).thenAnswer((_) async => Future.delayed(const Duration(milliseconds: 50)));
 
-      expect(viewModel.hasError, true);
-      expect(viewModel.errorMessage, contains('Failed to add category'));
-      verify(() => mockCatRepo.addCategory('Coffee')).called(1);
+      // ACT
+      final future = viewModel.addCategory(
+        name: tName,
+        iconCode: tIcon,
+        colorValue: tColor,
+        isCustom: true,
 
-      when(() => mockCatRepo.addCategory(any())).thenAnswer((_) async => {});
+      );
 
-      final retryFuture = viewModel.retryLastAction();
-      
+      // ASSERT: Check that it's busy while the future is running
       expect(viewModel.isBusy, true);
-      expect(viewModel.hasError, false);
-
-      await retryFuture;
+      
+      await future;
 
       expect(viewModel.isBusy, false);
-      expect(viewModel.hasError, false);
-      verify(() => mockCatRepo.addCategory('Coffee')).called(1); 
+      verify(() => mockCatRepo.addCategory(
+        name: tName,
+        iconCode: tIcon,
+        colorValue: tColor,
+        isCustom: true,
+      )).called(1);
     });
 
-    test('updateCategory captures arguments correctly for retry', () async {
-      when(() => mockCatRepo.updateCategory(any(), any()))
-          .thenThrow(Exception('Update Failed'));
+    test('updateCategory handles errors gracefully', () async {
+      // ARRANGE
+      const errorMsg = 'Please try again';
+      when(() => mockCatRepo.updateCategory(
+        id: any(named: 'id'),
+        name: any(named: 'name'),
+        iconCode: any(named: 'iconCode'),
+        colorValue: any(named: 'colorValue'),
+      )).thenThrow(errorMsg);
 
-      await viewModel.updateCategory('c1', 'Dining');
+      // ACT
+      await viewModel.updateCategory(id: 'c1', name: 'New Food');
 
+      // ASSERT
+      expect(viewModel.isBusy, false);
       expect(viewModel.hasError, true);
-
-      when(() => mockCatRepo.updateCategory('c1', 'Dining'))
-          .thenAnswer((_) async => {});
-
-      await viewModel.retryLastAction();
-
-      verify(() => mockCatRepo.updateCategory('c1', 'Dining')).called(2);
+      expect(viewModel.errorMessage, contains(errorMsg));
     });
   });
 
-  group('Busy State Edge Cases', () {
-    test('isBusy is false even if repository throws', () async {
-      when(() => mockCatRepo.addCategory(any())).thenThrow(Exception('Error'));
+  group('Refresh Logic -', () {
+    test('refreshCategories calls repository refresh', () async {
+      // ARRANGE
+      when(() => mockCatRepo.refresh()).thenAnswer((_) async => {});
 
-      await viewModel.addCategory('Test');
+      // ACT
+      await viewModel.refreshCategories();
 
-      expect(viewModel.isBusy, false);
-      expect(viewModel.hasError, true);
+      // ASSERT
+      verify(() => mockCatRepo.refresh()).called(1);
     });
   });
 

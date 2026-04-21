@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/models/category.dart';
@@ -73,32 +74,80 @@ void main() {
     });
   });
 
-  group('Actions -', () {
-    test('addCategory calls Firestore service with correct name', () async {
-      // ARRANGE
-      const newCategoryName = 'Gym';
-      when(() => mockFirestoreService.addCategory(newCategoryName))
-          .thenAnswer((_) async => Future.value());
+  group('Mutations -', () {
+  const String tId = 'cat_123';
+  const String tName = 'Gym';
+  const int tIcon = 0xe243; // Icons.fitness_center
+  final int tColor = Colors.blue.toARGB32();
 
-      // ACT
-      await repository.addCategory(newCategoryName);
+  test('addCategory calls service with correct icon and color values', () async {
+    // ARRANGE
+    when(() => mockFirestoreService.addCategory(
+          name: any(named: 'name'),
+          iconCode: any(named: 'iconCode'),
+          colorValue: any(named: 'colorValue'),
+          isCustom: any(named: 'isCustom'),
+        )).thenAnswer((_) async => {});
 
-      // ASSERT
-      verify(() => mockFirestoreService.addCategory(newCategoryName)).called(1);
-    });
+    // ACT
+    await repository.addCategory(
+      name: tName,
+      iconCode: tIcon,
+      colorValue: tColor,
+      isCustom: true
 
-    test('updateCategory calls Firestore service with correct ID and name', () async {
-      // ARRANGE
-      const catId = 'u1';
-      const newName = 'Groceries';
-      when(() => mockFirestoreService.updateCategoryName(catId, newName))
-          .thenAnswer((_) async => Future.value());
+    );
 
-      // ACT
-      await repository.updateCategory(catId, newName);
-
-      // ASSERT
-      verify(() => mockFirestoreService.updateCategoryName(catId, newName)).called(1);
-    });
+    // ASSERT
+    verify(() => mockFirestoreService.addCategory(
+          name: tName,
+          iconCode: tIcon,
+          colorValue: tColor,
+          isCustom: true,
+        )).called(1);
   });
+
+  test('updateCategory calls service with provided optional values', () async {
+    // ARRANGE
+    when(() => mockFirestoreService.updateCategoryName(
+          categoryId: any(named: 'categoryId'),
+          newName: any(named: 'newName'),
+          iconCode: any(named: 'iconCode'),
+          colorValue: any(named: 'colorValue'),
+        )).thenAnswer((_) async => {});
+
+    // ACT
+    await repository.updateCategory(
+      id: tId,
+      name: 'New Name',
+      iconCode: tIcon,
+    );
+
+    // ASSERT
+    // Note: colorValue was not passed in ACT, so it should be null here
+    verify(() => mockFirestoreService.updateCategoryName(
+          categoryId: tId,
+          newName: 'New Name',
+          iconCode: tIcon,
+          colorValue: null, 
+        )).called(1);
+  });
+});
+
+group('Error Handling & Lifecycle -', () {
+  test('refresh re-initializes streams and waits for first data', () async {
+    // ARRANGE
+    categoryStreamSubject.add([Category(id: '1', name: 'A')]);
+    userCategoryStreamSubject.add([Category(id: '2', name: 'B')]);
+
+    // ACT & ASSERT
+    // If it doesn't timeout, the refresh was successful
+    await expectLater(repository.refresh(), completes);
+    
+    // Initial call was in setUp, refresh calls it again
+    verify(() => mockFirestoreService.streamCategories()).called(2);
+  });
+});
+
+  
 }

@@ -34,12 +34,34 @@ class CategoryRepository {
   Stream<List<Category>> get customCategoriesStream => _userCategorySubject.stream;
   List<Category> get predefinedCategories => _service.predefinedCategories;
 
-  Future<void> addCategory(String name) async {
-    await _service.addCategory(name);
+  Future<void> addCategory({
+    required String name, 
+    required int iconCode, 
+    required int colorValue, 
+    required bool isCustom 
+  }) async {
+    await _service.addCategory(
+      name: name,
+      iconCode: iconCode,
+      colorValue: colorValue,
+      isCustom: isCustom
+    );
   }
 
-  Future<void> updateCategory(String id, String newName) async {
-    await _service.updateCategoryName(id, newName);
+  Future<void> updateCategory({
+    required String id, 
+    String? name, 
+    int? iconCode, 
+    int? colorValue,
+    bool? isCustom = true,
+  }) async {
+    await _service.updateCategoryName(
+      categoryId: id,
+      newName: name,
+      iconCode: iconCode,
+      colorValue: colorValue,
+      isCustom: isCustom
+    );
   }
 
   // Sync refresh if needed
