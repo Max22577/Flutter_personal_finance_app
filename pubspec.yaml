@@ -88,6 +88,19 @@ flutter:
       - assets/images/choice.png
       - assets/images/googl.png
       - assets/images/google_icon.svg
+      - assets/images/empty_wallet_light.svg
+      - assets/images/empty_wallet_dark.svg
+      - assets/images/empty_wallet_dark1.svg
+      - assets/images/trans_wallet_light.svg
+      - assets/images/trans_wallet_light1.svg
+      - assets/images/trans_wallet_dark.svg
+      - assets/images/savings_light.svg
+      - assets/images/savings_dark.svg
+
+
+
+
+
 
 
   #   - images/a_dot_ham.jpeg

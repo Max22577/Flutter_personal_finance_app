@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
+import 'package:personal_fin/core/widgets/animated_empty_state.dart';
 import 'package:personal_fin/core/widgets/currency_display.dart';
 import 'package:personal_fin/core/widgets/empty_state.dart';
 import 'package:personal_fin/core/widgets/loading_state.dart';
@@ -41,18 +42,26 @@ class CategoryPieChart extends StatelessWidget {
         }
 
         if (vm.errorMessage != null) {
-          return Center(
+          return _buildCardWrapper(
             child: EmptyState(
               icon: Icons.error_outline,
               title: lang.translate('error_loading'),
               message: vm.errorMessage!,
               actionText: lang.translate('retry'),
-              onAction: () => vm.retry(), 
+              onAction: () => vm.retry(),
             ),
           );
         }
 
         final data = vm.categoryData;
+
+        if (data.isEmpty) {
+          return _buildCardWrapper(
+            child: Center(
+              child: _buildEmptyChartState(colors, lang)
+            ),
+          );
+        }
         
 
         return Card(
@@ -160,6 +169,41 @@ class CategoryPieChart extends StatelessWidget {
           ],
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildCardWrapper({required Widget child}) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey[200]!),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildEmptyChartState(ColorScheme colors, LanguageProvider lang) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            AnimatedEmptyChart(
+              message: lang.translate('No data recorded').toUpperCase(),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          "No transactions found for this month.",
+          style: TextStyle(color: colors.onSurfaceVariant),
+        ),
+      ],
     );
   }
 }
