@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
 import 'package:personal_fin/core/widgets/custom_appbar.dart';
@@ -7,7 +8,6 @@ import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:personal_fin/features/savings/pages/set_goal_page.dart';
 import 'package:personal_fin/features/savings/widgets/progress_chart.dart';
 import 'package:personal_fin/core/widgets/currency_display.dart';
-import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:personal_fin/models/savings.dart';
 import 'package:provider/provider.dart';
 import '../view_models/savings_view_model.dart';
@@ -99,8 +99,10 @@ class SavingsViewContent extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context, LanguageProvider lang) {
-    final illustrationTheme = Theme.of(context).extension<IllustrationTheme>();
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final brightness = theme.brightness;
+    final isDark = brightness == Brightness.dark;
     final lang = context.watch<LanguageProvider>();
 
     return Center(
@@ -117,13 +119,20 @@ class SavingsViewContent extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/images/savings.png', 
-              width: 180,
-              height: 180,
-              color: illustrationTheme?.tintColor,
-              colorBlendMode: illustrationTheme?.blendMode,
-              
+            Opacity(
+              opacity: isDark ? 0.4 : 1.0, 
+              child: ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  colors.surfaceContainerLow.withValues(alpha: isDark ? 0.15 : 0.05),
+                  BlendMode.srcATop,
+                ),
+                child: SvgPicture.asset(
+                  isDark 
+                  ? 'assets/images/savings_dark.svg' 
+                  : 'assets/images/savings_light.svg',
+                  height: 150,
+                ),
+              ),
             ),
           
             const SizedBox(height: 20),

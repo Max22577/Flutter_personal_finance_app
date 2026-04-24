@@ -537,7 +537,7 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
     final color = CategoryIconHelper.getColor(category, colors);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12.0, left: 6.0, right: 6.0),      
+      margin: const EdgeInsets.only(bottom: 10.0, left: 16.0, right: 16.0),      
       padding: const EdgeInsets.all(2.0),
       decoration: BoxDecoration(
         color: colors.surface,

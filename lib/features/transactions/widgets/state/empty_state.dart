@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:personal_fin/core/theme/app_theme.dart';
+import 'package:flutter_svg/svg.dart';
 
 class EmptyState extends StatefulWidget {
   final String title;
   final String message;
-  final String imagePath;
   final bool isActive;
     
   const EmptyState({
     super.key,
     this.title = 'No transactions yet',
     this.message = 'Tap + to add your first transaction',
-    this.imagePath = 'assets/images/undraw_wallet_diag.png',
     this.isActive = false,
     
   });
@@ -64,7 +62,9 @@ class _EmptyStateState extends State<EmptyState> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final illustrationTheme = theme.extension<IllustrationTheme>();
+    final colors = theme.colorScheme;
+    final brightness = theme.brightness;
+    final isDark = brightness == Brightness.dark;
     
     return Center(
       child: AnimatedBuilder(
@@ -81,15 +81,19 @@ class _EmptyStateState extends State<EmptyState> with SingleTickerProviderStateM
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ColorFiltered(
-              colorFilter: ColorFilter.mode(
-                illustrationTheme?.tintColor ?? Colors.transparent,
-                illustrationTheme?.blendMode ?? BlendMode.srcIn,
-              ),
-              child: Image.asset(
-                widget.imagePath,
-                width: 250, // Adjust size as needed
-                fit: BoxFit.contain,
+            Opacity(
+              opacity: isDark ? 0.4 : 1.0, 
+              child: ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  colors.surfaceContainerLow.withValues(alpha: isDark ? 0.15 : 0.05),
+                  BlendMode.srcATop,
+                ),
+                child: SvgPicture.asset(
+                  isDark 
+                  ? 'assets/images/trans_wallet_dark.svg' 
+                  : 'assets/images/trans_wallet_light1.svg',
+                  height: 150,
+                ),
               ),
             ),
             const SizedBox(height: 24),           
@@ -111,4 +115,6 @@ class _EmptyStateState extends State<EmptyState> with SingleTickerProviderStateM
       ),
     );
   }
+
+  
 }
