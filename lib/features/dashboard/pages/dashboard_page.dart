@@ -30,6 +30,7 @@ class DashboardViewContent extends StatelessWidget {
     final lang = context.watch<LanguageProvider>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final textScaler = MediaQuery.textScalerOf(context);
     
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
@@ -41,30 +42,31 @@ class DashboardViewContent extends StatelessWidget {
         child: SingleChildScrollView(
           key: const Key('dashboard_main_scroll'),
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(textScaler.scale(16)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. Monthly Review Section
+              // Monthly Review Section
               _buildMonthlyReview(vm, lang, context),
 
-              const SizedBox(height: 16),
+              SizedBox(height: textScaler.scale(16)),
 
               const CategoryPieChart(),
               
-              const SizedBox(height: 32),
-              const QuickStats(height: 220),
+              SizedBox(height: textScaler.scale(16)),
+              
+              QuickStats(),
 
-              const SizedBox(height: 25),
+              SizedBox(height: textScaler.scale(24)),
               RecentTransactions(
                 maxItems: 5,
                 onViewAll: () { /* Navigate via NavProvider */ },
               ),
 
-              const SizedBox(height: 16),
-              _buildQuickActions(context, lang),
+              SizedBox(height: textScaler.scale(16)),
+              _buildQuickActions(context, lang, textScaler),
               
-              const SizedBox(height: 120), // Space for FAB/BottomBar
+              SizedBox(height: textScaler.scale(120)), // Space for FAB/BottomBar
             ],
           ),
         ),
@@ -104,32 +106,52 @@ class DashboardViewContent extends StatelessWidget {
   }
 
 
-  Widget _buildQuickActions(BuildContext context, LanguageProvider lang) {
+  Widget _buildQuickActions(BuildContext context, LanguageProvider lang, TextScaler textScaler) {
+    final theme = Theme.of(context);
+    
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.0)),
+      color: theme.colorScheme.surface, 
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22.0),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(textScaler.scale(16.0)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(lang.translate('quick_actions'), 
-                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Icon(Icons.add_to_photos), 
-              title: Text(lang.translate('set_next_budget')),
-              onTap: () {},
+            Text(
+              lang.translate('quick_actions'), 
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
-            ListTile(
-              leading: const Icon(Icons.star_border), 
-              title: Text(lang.translate('review_savings_goals')),
+            SizedBox(height: textScaler.scale(12)),
+            
+            // ListTile is naturally fluid, but we ensure density is adaptive
+            _actionTile(
+              icon: Icons.add_to_photos, 
+              label: lang.translate('set_next_budget'), 
               onTap: () {},
+              textScaler: textScaler,
+            ),
+            _actionTile(
+              icon: Icons.star_border, 
+              label: lang.translate('review_savings_goals'), 
+              onTap: () {},
+              textScaler: textScaler,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _actionTile({required IconData icon, required String label, required VoidCallback onTap, required TextScaler textScaler}) {
+    return ListTile(
+      leading: Icon(icon, size: textScaler.scale(24)),
+      title: Text(label),
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
+      visualDensity: VisualDensity.comfortable,
     );
   }
 }

@@ -12,6 +12,11 @@ class QuickStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textScaler = MediaQuery.textScalerOf(context);
+    // Calculate an adaptive height based on the text scale
+    // This ensures the PageView container grows as the text inside it grows.
+    final adaptiveHeight = textScaler.scale(height);
+
     return ChangeNotifierProvider(
       create: (_) => QuickStatsViewModel(
         context.read<TransactionRepository>(),
@@ -23,7 +28,7 @@ class QuickStats extends StatelessWidget {
           final lang = context.watch<LanguageProvider>();
 
           return SizedBox(
-            height: height,
+            height: adaptiveHeight,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: PageView(
