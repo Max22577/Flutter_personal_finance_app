@@ -18,6 +18,8 @@ class RecentTransactions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textScaler = MediaQuery.textScalerOf(context);
+
     return ChangeNotifierProvider(
       create: (context) => RecentTransactionsViewModel(
         repo: context.read<TransactionRepository>(),
@@ -29,16 +31,19 @@ class RecentTransactions extends StatelessWidget {
           final lang = context.watch<LanguageProvider>();
 
           return Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.0)),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22.0),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(theme, lang),
+                  _buildHeader(theme, lang, textScaler),
                   const SizedBox(height: 12),
-                  _buildContent(vm, theme, lang),
+                  _buildContent(vm, theme, lang, textScaler),
                   const SizedBox(height: 8),
                 ],
               ),
@@ -49,9 +54,14 @@ class RecentTransactions extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(ThemeData theme, LanguageProvider lang) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildHeader(ThemeData theme, LanguageProvider lang, TextScaler textScaler) {
+    // Using Wrap instead of Row prevents the "View All" button from disappearing
+    // or squashing the title when the system font is large.
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12,
+      runSpacing: 4,
       children: [
         Text(
           lang.translate('recent_transactions'),
@@ -60,13 +70,19 @@ class RecentTransactions extends StatelessWidget {
         if (onViewAll != null)
           TextButton(
             onPressed: onViewAll,
-            child: Text(lang.translate('view_all')),
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+            ),
+            child: Text(
+              lang.translate('view_all'),
+              style: TextStyle(fontSize: textScaler.scale(14))),
           ),
       ],
     );
   }
 
-  Widget _buildContent(RecentTransactionsViewModel vm, ThemeData theme, LanguageProvider lang) {
+  Widget _buildContent(RecentTransactionsViewModel vm, ThemeData theme, LanguageProvider lang, TextScaler textScaler) {
     if (vm.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -84,7 +100,7 @@ class RecentTransactions extends StatelessWidget {
     }
 
     if (vm.recentTransactions.isEmpty) {
-      return _buildEmptyState(theme, lang);
+      return _buildEmptyState(theme, lang, textScaler);
     }
 
     return Column(
@@ -98,22 +114,22 @@ class RecentTransactions extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(ThemeData theme, LanguageProvider lang) {
-    return SizedBox(
-      height: 100,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.receipt_long, size: 40, color: theme.colorScheme.outlineVariant),
-            const SizedBox(height: 8),
-            Text(
-              lang.translate('no_recent_transactions'),
-              style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-            ),
-          ],
-        ),
-      ),
+  Widget _buildEmptyState(ThemeData theme, LanguageProvider lang, TextScaler textScaler) {
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Column(
+        children: [
+          Icon(Icons.receipt_long, size: textScaler.scale(40), color: theme.colorScheme.outlineVariant),
+          const SizedBox(height: 12),
+          Text(
+            lang.translate('no_recent_transactions'),
+            textAlign: TextAlign.center,
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+          ),
+        ],
+      ),   
     );
   }
 }

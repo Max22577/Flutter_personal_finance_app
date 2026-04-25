@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/widgets/currency_display.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
@@ -26,6 +25,8 @@ class MonthlyReview extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final textScaler = MediaQuery.textScalerOf(context);
+    final isLargeFont = textScaler.scale(1) > 1.3;
 
     return Container(
       padding: const EdgeInsets.all(8.0),
@@ -50,23 +51,23 @@ class MonthlyReview extends StatelessWidget {
             child: Column(
               children: [
                 // Animated Header Section
-                _buildAnimatedHeader(context),
+                _buildAnimatedHeader(context, textScaler),
                 
                 Padding(
                   padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
                   child: Column(
                     children: [
                       const SizedBox(height: 8),
-                      _buildAnimatedStats(context),
+                      _buildAnimatedStats(context, isLargeFont, textScaler),
                       
                       if (monthlyData.income > 0) ...[
                         const SizedBox(height: 16),
-                        _buildAnimatedSavingsSection(context),
+                        _buildAnimatedSavingsSection(context, isLargeFont),
                       ],
 
                       if (showComparison && previousMonthData != null) ...[
                         const SizedBox(height: 16),
-                        _buildComparisonTile(context, previousMonthData!),
+                        _buildComparisonTile(context, previousMonthData!, isLargeFont, textScaler),
                       ],
                     ],
                   ),
@@ -79,7 +80,7 @@ class MonthlyReview extends StatelessWidget {
     );
   }
 
-  Widget _buildAnimatedHeader(BuildContext context) {
+  Widget _buildAnimatedHeader(BuildContext context, TextScaler textScaler) {
     final colors = Theme.of(context).colorScheme;
 
     return Container(
@@ -92,7 +93,7 @@ class MonthlyReview extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_today_rounded, size: 16, color: colors.primary),
+              Icon(Icons.calendar_today_rounded, size: textScaler.scale(16), color: colors.primary),
               const SizedBox(width: 8),
               Text(
                 monthlyData.formattedMonth.toUpperCase(),
@@ -105,45 +106,50 @@ class MonthlyReview extends StatelessWidget {
             ],
           ),
           if (showDetailsButton)
-            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: colors.primary),
+            Icon(Icons.arrow_forward_ios_rounded, size: textScaler.scale(14), color: colors.primary),
         ],
       ),
     );
   }
 
-  Widget _buildAnimatedStats(BuildContext context) {
+  Widget _buildAnimatedStats(BuildContext context, bool isLargeFont, TextScaler textScaler) {
     final theme = Theme.of(context);
     final financialColors = theme.extension<FinancialColors>()!;
     final lang = context.read<LanguageProvider>();
 
-    return Column(
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
       children: [
-        // Top Row: Income and Expenses
-        Row(
-          children: [
-            _buildAnimatedStatItem(
-              label: lang.translate('income'),
-              value: monthlyData.income,
-              color: financialColors.income,
-              icon: Icons.add_circle_outline_rounded, context: context, isExpense: false
-            ),
-            const SizedBox(width: 12),
-            _buildAnimatedStatItem(
-              label: lang.translate('expense'),
-              value: monthlyData.expenses,
-              color: financialColors.expense,
-              icon: Icons.remove_circle_outline_rounded, context: context, isExpense: true,
-            ),
-          ],
+        _buildAnimatedStatItem(
+          label: lang.translate('income'),
+          value: monthlyData.income,
+          color: financialColors.income,
+          icon: Icons.add_circle_outline_rounded, 
+          context: context, 
+          isExpense: false,
+          isFullWidth: isLargeFont, 
+          textScaler: textScaler,
         ),
-        const SizedBox(height: 12),
-        // Bottom Row: Net (Full Width)
+        _buildAnimatedStatItem(
+          label: lang.translate('expense'),
+          value: monthlyData.expenses,
+          color: financialColors.expense,
+          icon: Icons.remove_circle_outline_rounded, 
+          context: context, 
+          isExpense: true,
+          isFullWidth: isLargeFont, 
+          textScaler: textScaler,
+        ),
         _buildAnimatedStatItem(
           label: lang.translate('net_balance'),
           value: monthlyData.net,
           color: monthlyData.net >= 0 ? financialColors.income : financialColors.expense,
           icon: Icons.account_balance_wallet_outlined,
-          isFullWidth: true, context: context, isExpense: false,
+          isFullWidth: true, 
+          context: context, 
+          isExpense: false, 
+          textScaler: textScaler,
         ),
       ],
     );
@@ -155,12 +161,13 @@ class MonthlyReview extends StatelessWidget {
     required Color color,
     required IconData icon,
     required bool isExpense,
-    bool isFullWidth = false,
-    required context,
+    required bool isFullWidth,
+    required BuildContext context,
+    required TextScaler textScaler,
   }) {
     final colors = Theme.of(context).colorScheme;
-    return Expanded(
-      flex: isFullWidth ? 0 : 1, 
+    return FractionallySizedBox(
+      widthFactor: isFullWidth ? 1.0 : 0.48, // Two columns or one based on font size
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -170,7 +177,7 @@ class MonthlyReview extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: color),
+            Icon(icon, size: textScaler.scale(18), color: color),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -178,8 +185,7 @@ class MonthlyReview extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 11,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: color.withValues(alpha: 0.7),
                       letterSpacing: 0.5,
@@ -192,8 +198,7 @@ class MonthlyReview extends StatelessWidget {
                     builder: (context, animatedValue, child) {
                       return CurrencyDisplay(
                         amount: animatedValue,
-                        style: TextStyle(
-                          fontSize: isFullWidth ? 15 : 13,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                           color: colors.onSurface,
                           letterSpacing: -1,
@@ -212,18 +217,19 @@ class MonthlyReview extends StatelessWidget {
     );
   }
 
-  Widget _buildAnimatedSavingsSection(BuildContext context) {
+  Widget _buildAnimatedSavingsSection(BuildContext context, bool isLargeFont) {
     final colors = Theme.of(context).colorScheme;
     final savingsRatio = (monthlyData.income - monthlyData.expenses) / monthlyData.income;
     final clampedRatio = savingsRatio.clamp(0.0, 1.0);
     final lang = context.read<LanguageProvider>();
 
-    const double barHeight = 8.0; 
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(lang.translate('savings_efficiency'), style: TextStyle(fontWeight: FontWeight.w500)),
             const Spacer(),
@@ -237,48 +243,43 @@ class MonthlyReview extends StatelessWidget {
         // LayoutBuilder gives us the exact pixel width of this specific spot on the screen
         LayoutBuilder(
           builder: (context, constraints) {
-            return Stack(
-              alignment: Alignment.centerLeft, 
-              children: [
-                Container(
-                  height: barHeight,
-                  decoration: BoxDecoration(
-                    color: colors.surfaceContainerHigh.withValues(alpha: 0.65), 
-                    borderRadius: BorderRadius.circular(barHeight),
-                  ),
-                ),
-                
-                // 3. Foreground Progress
-                TweenAnimationBuilder<double>(
+            return Container(
+              height: 10,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerHigh.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0, end: clampedRatio),
                   duration: const Duration(milliseconds: 1500),
                   curve: Curves.fastOutSlowIn,
                   builder: (context, value, child) {
                     return Container(
                       width: constraints.maxWidth * value, 
-                      height: barHeight, 
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [colors.primary, colors.secondary],
                         ),
-                        borderRadius: BorderRadius.circular(barHeight),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     );
                   },
                 ),
-              ],
+              ),
             );
           },
         ),
       ],
     );
   }
-  Widget _buildComparisonTile(BuildContext context, MonthlyData previousMonthData) {
+  Widget _buildComparisonTile(BuildContext context, MonthlyData previousMonthData, bool isLargeFont, TextScaler textScaler) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
     final financialColors = theme.extension<FinancialColors>() ?? FinancialColors(income: Colors.green, expense: Colors.red);
-    final cf = context.watch<CurrencyProvider>().formatter;
     final lang = context.read<LanguageProvider>();
 
     final percentChange = monthlyData.percentageChangeFrom(previousMonthData);
@@ -291,50 +292,31 @@ class MonthlyReview extends StatelessWidget {
         color: colors.onSurface.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Flex(
+        direction: isLargeFont ? Axis.vertical : Axis.horizontal,
+        crossAxisAlignment: isLargeFont ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
-          _buildAnimatedTrendIcon(trendColor, isPositive),
-          const SizedBox(width: 14),
+          _buildAnimatedTrendIcon(trendColor, isPositive, textScaler),
+          SizedBox(width: isLargeFont ? 0 : 16, height: isLargeFont ? 12 : 0),
 
           Expanded(
+            flex: isLargeFont ? 0 : 1,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  isPositive ? lang.translate('perf_up') : lang.translate('perf_down'),
-                  style: textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colors.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                // Main comparison text
                 Text(
                   '${percentChange.abs().toStringAsFixed(1)}% ${isPositive ? lang.translate('better') : lang.translate('lower')} ${lang.translate('than_last_month')}',
                   style: textTheme.bodySmall?.copyWith(
                     color: colors.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Text(
-                      '${lang.translate('previous')}: ',
-                      style: textTheme.labelSmall?.copyWith(
-                        color: colors.onSurface.withValues(alpha: 0.4),
-                        fontSize: 10,
-                      ),
-                    ),
-                    Text(
-                      cf.formatNumber(previousMonthData.net, lang.localeCode),
-                      style: textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colors.onSurface.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ],
+                Text(
+                  lang.translate('than_last_month'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.onSurface.withValues(alpha: 0.6),
+                  ),
                 ),
+                               
               ],
             ),
           ),
@@ -344,7 +326,7 @@ class MonthlyReview extends StatelessWidget {
   }
 
   // Helper to keep the main code clean
-  Widget _buildAnimatedTrendIcon(Color trendColor, bool isPositive) {
+  Widget _buildAnimatedTrendIcon(Color trendColor, bool isPositive, TextScaler textScaler) {
     return TweenAnimationBuilder<double>(
       key: ValueKey('${monthlyData.formattedMonth}_$isPositive'),
       tween: Tween(begin: 0.0, end: 1.0),
@@ -362,7 +344,7 @@ class MonthlyReview extends StatelessWidget {
             child: Icon(
               isPositive ? Icons.trending_up_rounded : Icons.trending_down_rounded,
               color: trendColor,
-              size: 20,
+              size: textScaler.scale(20),
             ),
           ),
         );

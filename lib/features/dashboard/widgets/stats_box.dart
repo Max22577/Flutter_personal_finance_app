@@ -28,6 +28,8 @@ class StatBox extends StatelessWidget {
     final cf = context.watch<CurrencyProvider>().formatter;
     final lang = context.watch<LanguageProvider>();
 
+    final textScaler = MediaQuery.textScalerOf(context);
+
     final sign = showSign && value != 0 
         ? (value > 0 ? '+' : '-') 
         : '';
@@ -37,7 +39,7 @@ class StatBox extends StatelessWidget {
         : cf.formatDisplay(value.abs(), lang.localeCode);
     
     return Container(
-      padding: compact ? const EdgeInsets.all(8) : const EdgeInsets.all(12),
+      padding: EdgeInsets.all(textScaler.scale(compact ? 8 : 12)),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(compact ? 8 : 12),
@@ -47,6 +49,7 @@ class StatBox extends StatelessWidget {
         ),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -54,7 +57,7 @@ class StatBox extends StatelessWidget {
               if (icon != null) ...[
                 Icon(
                   icon,
-                  size: compact ? 14 : 16,
+                  size: textScaler.scale(compact ? 14 : 16),
                   color: color,
                 ),
                 const SizedBox(width: 4),
@@ -72,17 +75,13 @@ class StatBox extends StatelessWidget {
             ],
           ),
           SizedBox(height: compact ? 4 : 8),
-          FittedBox( 
-            fit: BoxFit.scaleDown, 
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '$sign$formattedValue',
-              style: (compact ? textTheme.bodySmall : textTheme.titleSmall)?.copyWith(
-                fontWeight: FontWeight.bold, 
-                color: theme.colorScheme.onSurface,
-              ),
+          Text(
+            '$sign$formattedValue',
+            style: (compact ? textTheme.bodySmall : textTheme.titleSmall)?.copyWith(
+              fontWeight: FontWeight.bold, 
+              color: theme.colorScheme.onSurface,
             ),
-          ),
+          ),         
         ],
       ),
     );

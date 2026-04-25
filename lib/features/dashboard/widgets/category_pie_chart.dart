@@ -29,6 +29,9 @@ class CategoryPieChart extends StatelessWidget {
     final lang = context.read<LanguageProvider>();
     final colors = theme.colorScheme;
 
+    final textScaler = MediaQuery.textScalerOf(context);
+    final isLargeFont = textScaler.scale(1) > 1.3;
+
     return ChangeNotifierProvider(
       create: (_) => SpendingChartViewModel(
         context.read<MonthlyTransactionRepository>(),
@@ -72,35 +75,47 @@ class CategoryPieChart extends StatelessWidget {
           ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Chart Title
-                  const Text(
-                    "Monthly Spending Breakdown",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Chart Title
+                Text(
+                  "Monthly Spending Breakdown",
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
 
-                  // Pie Chart
-                  AspectRatio(
-                    aspectRatio: 1.5,
-                    child: PieChart(
-                      PieChartData(
-                        sectionsSpace: 3,
-                        centerSpaceRadius: 40,
-                        sections: _buildSections(data, colors),
+                Flex(
+                  direction: isLargeFont ? Axis.vertical : Axis.horizontal,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // The Pie Chart
+                    SizedBox(
+                      height: isLargeFont ? 200 : 160,
+                      width: isLargeFont ? double.infinity : 160,
+                      child: PieChart(
+                        PieChartData(
+                          sectionsSpace: 3,
+                          // Scale center space so it doesn't look tiny with big text
+                          centerSpaceRadius: textScaler.scale(35),
+                          sections: _buildSections(data, colors, textScaler),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
 
-                  // Legend
-                  _buildLegend(data),
-                ],
-              ),
-            ),
+                    if (!isLargeFont) const SizedBox(width: 24),
+                    if (isLargeFont) const SizedBox(height: 24),
+
+                    // The Legend
+                    Expanded(
+                      flex: isLargeFont ? 0 : 1,
+                      child: _buildLegend(data, textScaler),
+                    ),
+                  ],
+                ),
+              ],
+            ),            
           ),
         );
       },
@@ -108,7 +123,7 @@ class CategoryPieChart extends StatelessWidget {
         
   }
 
-  List<PieChartSectionData> _buildSections(Map<String, double> data, ColorScheme colors) {
+  List<PieChartSectionData> _buildSections(Map<String, double> data, ColorScheme colors, TextScaler textScaler) {
     final totalExpenses = data.values.fold(0.0, (sum, item) => sum + item);
     int index = 0;
 
@@ -123,7 +138,7 @@ class CategoryPieChart extends StatelessWidget {
       return PieChartSectionData(
         color: color,
         value: entry.value,
-        radius: 50,
+        radius: textScaler.scale(45),
         showTitle: false, 
         
         badgeWidget: shouldShowBadge 
@@ -143,7 +158,7 @@ class CategoryPieChart extends StatelessWidget {
     }).toList();
   }
 
-  Widget _buildLegend(Map<String, double> data) {
+  Widget _buildLegend(Map<String, double> data, TextScaler textScaler) {
     int index = 0;
     
     return Wrap(
@@ -157,14 +172,17 @@ class CategoryPieChart extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 12,
-              height: 12,
+              width: textScaler.scale(10),
+              height: textScaler.scale(10),
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
             const SizedBox(width: 6),
-            Text(
-              entry.key,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            Flexible(
+              child: Text(
+                entry.key,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+                overflow: TextOverflow.visible,
+              ),
             ),
           ],
         );
