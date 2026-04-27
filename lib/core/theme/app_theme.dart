@@ -91,7 +91,6 @@ class FinancialColors extends ThemeExtension<FinancialColors> {
 }
 
 class AppThemes {
-  // 1. Define the consistent Text Theme here
   static const TextTheme _baseTextTheme = TextTheme(
     displayMedium: TextStyle(fontSize: 45, fontWeight: FontWeight.bold),
     headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
@@ -106,7 +105,7 @@ class AppThemes {
     labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 0.5),
   );
 
-  // 2. Shared Component Styles (The Rhythm)
+
   static CardThemeData _cardTheme(bool isDark) => CardThemeData(
     elevation: 2,
     shape: RoundedRectangleBorder(

@@ -41,8 +41,7 @@ class TransactionItem extends StatelessWidget {
     final lang = context.watch<LanguageProvider>();
 
     final textScaler = MediaQuery.textScalerOf(context);
-    final isLargeFont = textScaler.scale(1) > 1.3;
-    
+   
     final isIncome = transaction.type == 'Income';
     final iconColor = isIncome ? financialColors.income : financialColors.expense;
     final bgColor = isIncome ? 
@@ -51,127 +50,83 @@ class TransactionItem extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: onTap,
-          child: Container(
-            constraints: BoxConstraints(
-              minHeight: textScaler.scale(72), // Ensure minimum height
-            ),
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: colors.outline.withValues(alpha: 0.2),
-              ),
-              boxShadow: theme.brightness == Brightness.dark ? null : [
-                BoxShadow(
-                  color: colors.shadow.withValues(alpha: 0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
+      width: double.infinity,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.all(textScaler.scale(12)),
+          child: Row( 
+            crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Icon - Fixed size
+                _buildIcon(bgColor, iconColor, isIncome, textScaler),
+                const SizedBox(width: 12),
+
+                // Title and details - Takes remaining space
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start, 
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        transaction.title,
+                        style: textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colors.onSurface,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      _buildDetails(context, lang, textScaler),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Amount - Fixed width
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CurrencyDisplay(
+                      amount: transaction.amount,
+                      isExpense: !isIncome,
+                      style: textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      compact: compactAmount,
+                      showSign: alwaysShowSign,
+                      positiveColor: financialColors.income,
+                      negativeColor: financialColors.expense,
+                    ),
+                    if (showEditButton)
+                      IconButton(
+                        icon: Icon(
+                          Icons.edit_outlined,
+                          size: textScaler.scale(18),
+                          color: colors.onSurface.withValues(alpha: 0.4),
+                        ),
+                        onPressed: onEdit,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                  ],
                 ),
               ],
             ),
-            child: Padding(
-              padding: EdgeInsets.all(textScaler.scale(12)),
-              child: Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                alignment: WrapAlignment.spaceBetween,
-                children: [
-                  // Icon + Title Group
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Icon - Fixed size
-                      _buildIcon(bgColor, iconColor, isIncome, textScaler),
-                      const SizedBox(width: 12),
-
-                      // Title and details - Takes remaining space
-                      Flexible(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Title
-                            Text(
-                              transaction.title,
-                              style: textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.w500,
-                                color: colors.onSurface,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            
-                            // Details row
-                            const SizedBox(height: 4),
-                            _buildDetails(context, lang, textScaler),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 12),
-
-                      // Amount - Fixed width
-                      Padding(
-                        padding: EdgeInsets.only(top: isLargeFont ? 8 : 0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: isLargeFont ? MainAxisAlignment.end : MainAxisAlignment.start,
-                          children: [
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                // Amount
-                                CurrencyDisplay(
-                                  amount: transaction.amount,
-                                  isExpense: !isIncome ,
-                                  style: textTheme.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: -0.5,
-                                  ),
-                                  compact: compactAmount,
-                                  showSign: alwaysShowSign,
-                                  positiveColor: financialColors.income,
-                                  negativeColor: financialColors.expense,
-                                ),
-                                
-                                // Edit button below amount
-                                if (showEditButton)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 2),
-                                    child: IconButton(
-                                      icon: Icon(
-                                        Icons.edit_outlined, 
-                                        size: textScaler.scale(16),
-                                        color: colors.onSurface.withValues(alpha: 0.6),
-                                      ),
-                                      onPressed: onEdit,
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+            
+          
         ),
       ),
     );
   }
 
   Widget _buildIcon(Color bgColor, Color iconColor, bool isIncome, TextScaler textScaler) {
-    final size = textScaler.scale(40);
+    final size = textScaler.scale(32).clamp(32.0, 48.0);
     return Container(
       width: size,
       height: size,

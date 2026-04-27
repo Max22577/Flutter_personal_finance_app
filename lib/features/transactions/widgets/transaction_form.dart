@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/utils/currency_formatter.dart';
 import 'package:personal_fin/core/utils/ui_helpers.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:personal_fin/features/transactions/widgets/category_dropdown.dart';
@@ -135,6 +136,7 @@ class _TransactionFormState extends State<TransactionForm> {
     final financialColors = theme.extension<FinancialColors>() ?? FinancialColors(income: Colors.green, expense: Colors.red);
     final isIncome = _selectedType == 'Income';
     final typeColor = isIncome ? financialColors.income : financialColors.expense;
+    final textScaler = MediaQuery.textScalerOf(context);
     
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(25.0)),
@@ -165,9 +167,11 @@ class _TransactionFormState extends State<TransactionForm> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const Divider(height: 30),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 16),
 
-                  // 1. REUSED WIDGET: Type Selector
+                  // Type Selector
                   TypeSelector(
                     selectedType: _selectedType,
                     onTypeChanged: (newType) {
@@ -268,12 +272,11 @@ class _TransactionFormState extends State<TransactionForm> {
                         labelStyle: TextStyle(color: colors.primary),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          Text(
-                            DateFormat('MMMM d, yyyy', lang.localeCode).format(_selectedDate),
-                            style: textTheme.bodyLarge?.copyWith(
-                              color: colors.onSurface,
+                          Expanded( // Allows text to wrap or shrink if font is huge
+                            child: Text(
+                              DateFormat('MMMM d, yyyy', lang.localeCode).format(_selectedDate),
+                              style: textTheme.bodyLarge,
                             ),
                           ),
                           Icon(Icons.arrow_drop_down, color: colors.primary),
@@ -284,89 +287,89 @@ class _TransactionFormState extends State<TransactionForm> {
                   const SizedBox(height: 20),
 
                   // --- Save Button ---
-                  ElevatedButton(
-                    onPressed: vm.isSaving ? null : () => _handleSubmit(lang),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isIncome ? financialColors.income : financialColors.expense,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: textScaler.scale(48)),
+                    child: ElevatedButton(
+                      onPressed: vm.isSaving ? null : () => _handleSubmit(lang),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isIncome ? financialColors.income : financialColors.expense,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                        shadowColor: colors.shadow,
                       ),
-                      elevation: 2,
-                      shadowColor: colors.shadow,
+                      child: vm.isSaving
+                          ? SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
+                            )
+                          : Text(
+                              widget.transactionToEdit != null ? lang.translate('update_transaction') : lang.translate('save_transaction'),
+                              style: textTheme.labelLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
-                    child: vm.isSaving
-                        ? SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 3,
-                            ),
-                          )
-                        : Text(
-                            widget.transactionToEdit != null ? lang.translate('update_transaction') : lang.translate('save_transaction'),
-                            style: textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
                   ),
 
                   const SizedBox(height: 50),
                   
-                  // Example preview (optional)
+                  // preview 
                   if (_amountController.text.isNotEmpty)
-                    FutureBuilder<String>(
-                      future: () async {
-                        final amount = _parseAmount(_amountController.text);
-                        if (amount == null || amount <= 0) return '';
-                        return cf.formatNumber(amount, lang.localeCode);
-                      }(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 16),
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: colors.surfaceContainerHigh.withValues(alpha: 0.3),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: colors.outline.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    isIncome ? Icons.arrow_upward : Icons.arrow_downward,
-                                    color: typeColor,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${lang.translate('preview')}: ${isIncome ? '+' : '-'}${snapshot.data}',
-                                    style: textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: typeColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-                        return const SizedBox();
-                      },
-                    ),
+                    _buildPreview(cf, lang, textTheme, typeColor, isIncome),
                 ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPreview(CurrencyFormatter cf, LanguageProvider lang, TextTheme textTheme, Color typeColor, bool isIncome) {
+    return FutureBuilder<String>(
+      future: () async {
+        final amount = _parseAmount(_amountController.text);
+        if (amount == null || amount <= 0) return '';
+        return cf.formatNumber(amount, lang.localeCode);
+      }(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox.shrink();
+        
+        return Padding(
+          padding: const EdgeInsets.only(top: 24),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: typeColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: typeColor.withValues(alpha: 0.3)),
+            ),
+            child: Wrap( 
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                Icon(isIncome ? Icons.arrow_upward : Icons.arrow_downward, color: typeColor, size: 20),
+                Text(
+                  '${lang.translate('preview')}: ${isIncome ? '+' : '-'}${snapshot.data}',
+                  style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: typeColor),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
