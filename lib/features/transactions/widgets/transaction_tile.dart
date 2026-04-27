@@ -31,6 +31,7 @@ class TransactionTile extends StatelessWidget {
     final textTheme = theme.textTheme;
     final financialColors = theme.extension<FinancialColors>() ?? FinancialColors(income: Colors.green, expense: Colors.red);
     final lang = context.watch<LanguageProvider>();
+    final textScaler = MediaQuery.textScalerOf(context);
 
     final isIncome = transaction.type == 'Income';
     final iconColor = isIncome
@@ -44,7 +45,7 @@ class TransactionTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: colors.shadow.withValues(alpha: 0.04),
@@ -56,10 +57,10 @@ class TransactionTile extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(16),
           onTap: () {}, // Optional: Add tap action
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -69,8 +70,8 @@ class TransactionTile extends StatelessWidget {
                   children: [
                     // Icon
                     Container(
-                      width: 36,
-                      height: 36,
+                      width: textScaler.scale(36), // Scales with font size
+                      height: textScaler.scale(36),
                       margin: const EdgeInsets.only(right: 12),
                       decoration: BoxDecoration(
                         color: bgColor,
@@ -81,95 +82,78 @@ class TransactionTile extends StatelessWidget {
                             ? Icons.arrow_upward_rounded
                             : Icons.arrow_downward_rounded,
                         color: iconColor,
-                        size: 16,
+                        size: textScaler.scale(18),
                       ),
                     ),
 
                     // Title - Takes full width
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Wrap( // Wrap handles cases where Title + Amount are too wide
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.start,
+                        spacing: 8,
+                        runSpacing: 4,
                         children: [
-                          Text(
-                            transaction.title,
-                            style: textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w500,
-                              color: colors.onSurface,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-
-                          // Category and Time inline
-                          Row(
-                            children: [
-                              // Category Chip
-                              if (categoryName.isNotEmpty) ...[
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 2,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: colors.surfaceContainerHighest,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    lang.translate(categoryName),
-                                    style: textTheme.labelSmall?.copyWith(
-                                      color: colors.onSurfaceVariant,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                              ],
-
-                              // Time
-                              Text(
-                                DateFormat('h:mm a').format(transaction.date),
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: colors.onSurface.withValues(
-                                    alpha: 0.6,
-                                  ),
-                                ),
+                          // Title
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: textScaler.scale(200)),
+                            child: Text(
+                              transaction.title,
+                              style: textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colors.onSurface,
                               ),
-                            ],
+                            ),
+                          ),
+                          // Amount
+                          CurrencyDisplay(
+                            amount: transaction.amount,
+                            isExpense: !isIncome,
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: isIncome ? financialColors.income : financialColors.expense,
+                            ),
                           ),
                         ],
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 12),
 
-                    // Amount and date column
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        // Amount using CurrencyDisplay widget
-                        CurrencyDisplay(
-                          amount: transaction.amount,
-                          isExpense: isIncome ? false : true,
-                          style: textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                          ),
-                          compact: compactAmount,
-                          showSign: alwaysShowSign,
-                          positiveColor: financialColors.income,
-                          negativeColor: financialColors.expense,
+                // Category and Time inline
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    if (categoryName.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                        const SizedBox(height: 4),
-                      ],
+                        child: Text(
+                          lang.translate(categoryName),
+                          style: textTheme.labelSmall?.copyWith(color: colors.onSurfaceVariant),
+                        ),
+                      ),
+                    Text(
+                      DateFormat('h:mm a').format(transaction.date),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colors.onSurface.withValues(alpha: 0.5),
+                      ),
                     ),
                   ],
                 ),
+                const Divider(height: 24),
 
-                const SizedBox(height: 8),
-
-                // Action buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                // Amount and date column
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.end,
                   children: [
                     _buildActionButton(
                       context: context,
@@ -178,7 +162,6 @@ class TransactionTile extends StatelessWidget {
                       color: colors.primary,
                       onPressed: onEdit,
                     ),
-                    const SizedBox(width: 8),
                     _buildActionButton(
                       context: context,
                       icon: Icons.delete_outline,
@@ -204,17 +187,18 @@ class TransactionTile extends StatelessWidget {
     required VoidCallback onPressed,
   }) {
     final theme = Theme.of(context);
+    final textScaler = MediaQuery.textScalerOf(context);
 
     return OutlinedButton.icon(
       onPressed: onPressed,
-      icon: Icon(icon, size: 14, color: color),
+      icon: Icon(icon, size: textScaler.scale(16), color: color),
       label: Text(
         label,
         style: theme.textTheme.labelSmall?.copyWith(color: color),
       ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        minimumSize: Size.zero,
+        minimumSize: Size(0, textScaler.scale(32)),
         side: BorderSide(color: color.withValues(alpha: 0.3)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       ),

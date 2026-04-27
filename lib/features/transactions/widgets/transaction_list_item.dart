@@ -29,6 +29,7 @@ class TransactionListItem extends StatelessWidget {
     final financialColors = theme.extension<FinancialColors>() ?? FinancialColors(income: Colors.green, expense: Colors.red);
     final lang = context.watch<LanguageProvider>();
     
+    
     final isIncome = transaction.type == 'Income';
     final amount = transaction.amount;
     final amountColor = isIncome ? financialColors.income : financialColors.expense;

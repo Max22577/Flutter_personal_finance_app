@@ -128,7 +128,7 @@ class MonthlyReview extends StatelessWidget {
           icon: Icons.add_circle_outline_rounded, 
           context: context, 
           isExpense: false,
-          isFullWidth: isLargeFont, 
+          isFullWidth: true, 
           textScaler: textScaler,
         ),
         _buildAnimatedStatItem(
@@ -138,7 +138,7 @@ class MonthlyReview extends StatelessWidget {
           icon: Icons.remove_circle_outline_rounded, 
           context: context, 
           isExpense: true,
-          isFullWidth: isLargeFont, 
+          isFullWidth: true, 
           textScaler: textScaler,
         ),
         _buildAnimatedStatItem(

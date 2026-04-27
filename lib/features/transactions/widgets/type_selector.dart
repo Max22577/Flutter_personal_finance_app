@@ -18,106 +18,92 @@ class TypeSelector extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
-    final financialColors = theme.extension<FinancialColors>() ?? FinancialColors(income: Colors.green, expense: Colors.red);
+    final financialColors = theme.extension<FinancialColors>() ??
+        FinancialColors(income: Colors.green, expense: Colors.red);
     final lang = context.watch<LanguageProvider>();
-    
-    final isIncome = selectedType == 'Income';
-    final isExpense = selectedType == 'Expense';
+    final textScaler = MediaQuery.textScalerOf(context);
 
-    return Row(
-      children: [
-        // Income Button
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () => onTypeChanged('Income'),
-            style: OutlinedButton.styleFrom(
-              backgroundColor: isIncome 
-                  ? financialColors.income.withValues(alpha: 0.1) // Selected state
-                  : colors.surfaceContainerHigh.withValues(alpha: 0.5), // Unselected state
-              foregroundColor: isIncome 
-                  ? financialColors.income 
-                  : colors.onSurfaceVariant,
-              side: BorderSide(
-                color: isIncome 
-                    ? financialColors.income // Selected border
-                    : colors.outline.withValues(alpha: 0.3), // Unselected border
-                width: isIncome ? 2 : 1,
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-              visualDensity: VisualDensity.compact,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.arrow_upward_rounded,
-                  size: 18,
-                  color: isIncome ? financialColors.income : colors.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  lang.translate('income'),
-                  style: textTheme.bodyLarge?.copyWith(
-                    fontWeight: isIncome ? FontWeight.bold : FontWeight.normal,
-                    color: isIncome ? financialColors.income : colors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        
-        const SizedBox(width: 12),
-        
-        // Expense Button
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () => onTypeChanged('Expense'),
-            style: OutlinedButton.styleFrom(
-              backgroundColor: isExpense 
-                  ? financialColors.expense.withValues(alpha: 0.1) // Selected state
-                  : colors.surfaceContainerHigh.withValues(alpha: 0.5), // Unselected state
-              foregroundColor: isExpense 
-                  ? financialColors.expense 
-                  : colors.onSurfaceVariant,
-              side: BorderSide(
-                color: isExpense 
-                    ? financialColors.expense // Selected border
-                    : colors.outline.withValues(alpha: 0.3), // Unselected border
-                width: isExpense ? 2 : 1,
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-              visualDensity: VisualDensity.compact,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.arrow_downward_rounded,
-                  size: 18,
-                  color: isExpense ? financialColors.expense : colors.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  lang.translate('expense'),
-                  style: textTheme.bodyLarge?.copyWith(
-                    fontWeight: isExpense ? FontWeight.bold : FontWeight.normal,
-                    color: isExpense ? financialColors.expense : colors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+    // We use a LayoutBuilder to decide if we should stack the buttons
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // If the font is so large that horizontal space is tight, we stack them
+        final bool shouldStack = textScaler.scale(1.0) > 1.5;
+
+        return shouldStack 
+          ? Column(children: _buildButtons(context, lang, financialColors, colors, textTheme, true))
+          : Row(children: _buildButtons(context, lang, financialColors, colors, textTheme, false));
+      },
     );
+  }
+
+  List<Widget> _buildButtons(
+    BuildContext context,
+    LanguageProvider lang,
+    FinancialColors financialColors,
+    ColorScheme colors,
+    TextTheme textTheme,
+    bool isStacked,
+  ) {
+    final types = [
+      ('Income', Icons.arrow_upward_rounded, financialColors.income, lang.translate('income')),
+      ('Expense', Icons.arrow_downward_rounded, financialColors.expense, lang.translate('expense')),
+    ];
+
+    return types.map((type) {
+      final isSelected = selectedType == type.$1;
+      final color = type.$3;
+      final label = type.$4;
+      final icon = type.$2;
+
+      Widget button = OutlinedButton(
+        onPressed: () => onTypeChanged(type.$1),
+        style: OutlinedButton.styleFrom(
+          backgroundColor: isSelected
+              ? color.withValues(alpha: 0.1)
+              : colors.surfaceContainerHigh.withValues(alpha: 0.5),
+          foregroundColor: isSelected ? color : colors.onSurfaceVariant,
+          side: BorderSide(
+            color: isSelected ? color : colors.outline.withValues(alpha: 0.3),
+            width: isSelected ? 2 : 1,
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20),
+            const SizedBox(width: 8),
+            Flexible( // Prevents text from pushing icon out of the button
+              child: Text(
+                label,
+                style: textTheme.bodyLarge?.copyWith(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      );
+
+      // Add spacing/expansion logic based on layout mode
+      if (isStacked) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: SizedBox(width: double.infinity, child: button),
+        );
+      } else {
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: type.$1 == 'Income' ? 8.0 : 0,
+              left: type.$1 == 'Expense' ? 8.0 : 0,
+            ),
+            child: button,
+          ),
+        );
+      }
+    }).toList();
   }
 }

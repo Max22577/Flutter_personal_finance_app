@@ -63,7 +63,9 @@ class TransactionGroupWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final lang = context.read<LanguageProvider>();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -72,20 +74,19 @@ class TransactionGroupWidget extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
             _formatDateHeader(lang),
-            style: const TextStyle(
+            style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Colors.grey,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
           ),
         ),
         // Transaction Tiles
         ...transactions.map((transaction) => TransactionTile(
-              transaction: transaction,
-              categoryName: _getCategoryName(transaction.categoryId, lang),
-              onEdit: () => _showEditForm(context, transaction, lang),
-              onDelete: () => onDelete(transaction),
-            )),
+          transaction: transaction,
+          categoryName: _getCategoryName(transaction.categoryId, lang),
+          onEdit: () => _showEditForm(context, transaction, lang),
+          onDelete: () => onDelete(transaction),
+        )),
       ],
     );
   }
