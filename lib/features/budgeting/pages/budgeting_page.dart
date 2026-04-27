@@ -32,6 +32,7 @@ class BudgetingViewContent extends StatefulWidget {
 
 class _BudgetingViewContentState extends State<BudgetingViewContent> {
   late NavigationProvider _navProvider;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void didChangeDependencies() {
@@ -85,14 +86,20 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
   Widget build(BuildContext context) {
     final vm = context.watch<BudgetingViewModel>();
     final lang = context.watch<LanguageProvider>();
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-      body: _buildBody(vm, lang),
+      backgroundColor: colors.surfaceContainerLow,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: _buildMainContent(vm, lang, textTheme, colors),
+      ),
     );
   }
 
-  Widget _buildBody(BudgetingViewModel vm, LanguageProvider lang) {
+  Widget _buildMainContent(BudgetingViewModel vm, LanguageProvider lang, TextTheme textTheme, ColorScheme colors) {
     // Error State
     if (vm.errorMessage != null) {
       return Center(
@@ -116,9 +123,11 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
     return RefreshIndicator(
       onRefresh: () async => await vm.refreshData(), 
       child: CustomScrollView(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             sliver: SliverToBoxAdapter(
               child: Column(
                 children: [
@@ -133,6 +142,19 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
                   const SizedBox(height: 16),
                   _buildStatsOverview(context, state),
                 ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Text(
+                lang.translate('categories').toUpperCase(),
+                style: textTheme.labelSmall?.copyWith(
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.bold,
+                  color: colors.outline,
+                ),
               ),
             ),
           ),
@@ -151,15 +173,12 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
 
     return Column(
       children: [
-
         /// MAIN STAT (TOTAL BUDGET)
         MainBudgetStat(
           label: lang.translate('total_budget'),
           amount: totalBudget,
         ),
-
         const SizedBox(height: 16),
-
         /// SECONDARY STATS
         Row(
           children: [
@@ -195,8 +214,6 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
     return SliverList(
       delegate: SliverChildBuilderDelegate((context, index) {
         final category = state.categories[index];
-      
-        // Lookups are now O(1) - instant!
         final currentBudget = state.budgetMap[category.id] ?? 0.0;
         final spending = state.spendingMap[category.id] ?? 0.0;
 

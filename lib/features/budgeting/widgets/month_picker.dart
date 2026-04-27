@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:provider/provider.dart';
@@ -40,88 +41,138 @@ class _MonthPickerSheetState extends State<MonthPickerSheet> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final lang = context.watch<LanguageProvider>();
+    final textScaler = MediaQuery.textScalerOf(context);
 
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12), 
-        child: Container(
-          decoration: BoxDecoration(
-            color: colors.surface.withValues(alpha: 0.4), 
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border.all(
-              color: colors.outlineVariant.withValues(alpha: 0.2), 
-              width: 1,
+    return Container(
+      padding: const EdgeInsets.only(top: 12), 
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 32,
+            height: 4,
+            decoration: BoxDecoration(
+              color: colors.outlineVariant,
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: colors.onSurfaceVariant.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(2),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+                  onPressed: () => setState(() => 
+                      _displayedDate = DateTime(_displayedDate.year - 1, _displayedDate.month)),
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: () => setState(() => _displayedDate = DateTime(_displayedDate.year - 1, _displayedDate.month)),
-                  ),
-                  Text(
-                    DateFormat('MMMM yyyy', lang.localeCode).format(_displayedDate),
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: () => setState(() => _displayedDate = DateTime(_displayedDate.year + 1, _displayedDate.month)),
-                  ),
-                ],
-              ),
-              const Divider(),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  childAspectRatio: 2.0,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                ),
-                itemCount: 12,
-                itemBuilder: (context, index) {
-                  final monthDate = DateTime(_displayedDate.year, index + 1);
-                  final isSelected = monthDate.month == widget.initialDate.month && 
-                                  monthDate.year == widget.initialDate.year;
-
-                  return InkWell(
-                    onTap: () => Navigator.pop(context, monthDate),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isSelected ? colors.primary : colors.surfaceContainerHigh.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(12),
+                Column(
+                  children: [
+                    Text(
+                      _displayedDate.year.toString(),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
                       ),
-                      alignment: Alignment.center,
+                    ),
+                    // Quick jump back to "Current Month"
+                    GestureDetector(
+                      onTap: () => setState(() => _displayedDate = DateTime.now()),
                       child: Text(
-                        DateFormat('MMM', lang.localeCode).format(monthDate),
-                        style: TextStyle(
-                          color: isSelected ? colors.onPrimaryContainer : colors.onSurface,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        lang.translate('go_to_today').toUpperCase(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colors.primary,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                  );
-                },
+                  ],
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios_rounded, size: 18),
+                  onPressed: () => setState(() => 
+                      _displayedDate = DateTime(_displayedDate.year + 1, _displayedDate.month)),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              // Using a slightly more square ratio for better touch targets
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: textScaler.scale(1.3), 
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
               ),
-              const SizedBox(height: 20),
-            ],
+              itemCount: 12,
+              itemBuilder: (context, index) {
+                final monthDate = DateTime(_displayedDate.year, index + 1);
+                final isSelected = monthDate.month == widget.initialDate.month && 
+                                   monthDate.year == widget.initialDate.year;
+                final isCurrentMonth = monthDate.month == DateTime.now().month && 
+                                       monthDate.year == DateTime.now().year;
+
+                return _buildMonthButton(
+                  context, 
+                  monthDate: monthDate, 
+                  isSelected: isSelected, 
+                  isCurrentMonth: isCurrentMonth,
+                  lang: lang,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );  
+  }
+
+  Widget _buildMonthButton(
+    BuildContext context, {
+    required DateTime monthDate,
+    required bool isSelected,
+    required bool isCurrentMonth,
+    required LanguageProvider lang,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    
+    return Material(
+      color: isSelected 
+          ? colors.primary 
+          : isCurrentMonth 
+              ? colors.primaryContainer.withValues(alpha: 0.4) 
+              : colors.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          Navigator.pop(context, monthDate);
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            border: isCurrentMonth && !isSelected
+                ? Border.all(color: colors.primary.withValues(alpha: 0.5))
+                : null,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            DateFormat('MMMM', lang.localeCode).format(monthDate),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected ? colors.onPrimary : colors.onSurface,
+              fontWeight: isSelected || isCurrentMonth ? FontWeight.bold : FontWeight.normal,
+              fontSize: 13,
+            ),
           ),
         ),
       ),

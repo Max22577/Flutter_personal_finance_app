@@ -18,50 +18,67 @@ class SmallStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final textScaler = MediaQuery.textScalerOf(context);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 6),
-          ),
-        ],
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.4)),
       ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Icon Badge
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle, 
+              ),
+              child: Icon(
+                icon, 
+                color: iconColor, 
+                size: textScaler.scale(20).clamp(18, 24),
+              ),
             ),
-            child: Icon(icon, color: iconColor, size: 22),
-          ),
 
-          const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
-          Text(
-            value.toInt().toString(),
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+            // Value Display
+            // FittedBox ensures the number never breaks the card width
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value.toInt().toString(),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                  color: colors.onSurface,
+                ),
+              ),
             ),
-          ),
 
-          const SizedBox(height: 4),
+            const SizedBox(height: 4),
 
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: colors.onSurfaceVariant,
+            // Adaptive Label
+            // We use a fixed number of lines to keep card heights consistent in a grid
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+                fontSize: textScaler.scale(12).clamp(10, 14),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

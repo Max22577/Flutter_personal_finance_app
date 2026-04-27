@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:provider/provider.dart';
@@ -23,104 +24,108 @@ class MonthSelectorCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final lang = context.watch<LanguageProvider>();
-    
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        // Subtle shadow or "Glass" effect
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    final textScaler = MediaQuery.textScalerOf(context);
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.3)),
       ),
-      child: Material(
-        color: colors.surface, 
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: colors.primaryContainer.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.calendar_today_rounded, 
-                    color: colors.primary, 
-                    size: 22
-                  ),
-                ),
-                const SizedBox(width: 16),
-                
-                // Date Text
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            lang.translate('budget_period'),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              letterSpacing: 1.2,
-                              fontWeight: FontWeight.bold,
-                              
-                            ),
+      // Using Card's built-in clip behavior for cleaner corners
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              // Icon Section (Fixed size but scales with text)
+              _buildLeadingIcon(colors, textScaler),
+              
+              const SizedBox(width: 16),
+              
+              // Text Section (Fluid)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Wrap allows the badge to move if "BUDGET PERIOD" is long
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          lang.translate('budget_period').toUpperCase(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            letterSpacing: 1.0,
+                            fontWeight: FontWeight.w800,
+                            color: colors.onSurfaceVariant,
                           ),
-                          if (_isCurrentMonth()) ...[
-                            const SizedBox(width: 8),
-                            _buildCurrentBadge(colors, lang),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        DateFormat('MMMM yyyy', lang.localeCode).format(selectedDate),
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.5,
                         ),
+                        if (_isCurrentMonth()) _buildCurrentBadge(colors, lang),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      DateFormat('MMMM yyyy', lang.localeCode).format(selectedDate),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.8,
+                        // Prevents text from being massive on accessibility settings
+                        fontSize: textScaler.scale(20).clamp(18.0, 24.0),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
 
-                // Interactive indicator
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: colors.onSurfaceVariant,
-                ),
-              ],
-            ),
+              // Trailing Indicator
+              Icon(
+                Icons.unfold_more_rounded, 
+                color: colors.primary.withValues(alpha: 0.5),
+                size: 20,
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
+  Widget _buildLeadingIcon(ColorScheme colors, TextScaler textScaler) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Icon(
+        Icons.calendar_month_rounded, 
+        color: colors.primary, 
+        size: textScaler.scale(24).clamp(20, 30),
+      ),
+    );
+  }
+
   Widget _buildCurrentBadge(ColorScheme colors, LanguageProvider lang) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: colors.primaryContainer,
-        borderRadius: BorderRadius.circular(4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: ShapeDecoration(
+        color: colors.primary,
+        shape: const StadiumBorder(), // Pill shape looks more modern
       ),
       child: Text(
         lang.translate('this_month'),
         style: TextStyle(
-          fontSize: 8,
+          fontSize: 10,
           fontWeight: FontWeight.bold,
-          color: colors.onPrimaryContainer,
+          color: colors.onPrimary,
         ),
       ),
     );

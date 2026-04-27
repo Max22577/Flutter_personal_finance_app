@@ -41,6 +41,7 @@ class BudgetCategoryCard extends StatelessWidget {
     final lang = context.watch<LanguageProvider>();
     final icon = CategoryIconHelper.getIcon(category);
     final iconColor = CategoryIconHelper.getColor(category, colors);
+    final textScaler = MediaQuery.textScalerOf(context);
 
     return Card(
       elevation: 2,
@@ -59,14 +60,13 @@ class BudgetCategoryCard extends StatelessWidget {
               // Header row with icon and name
               Row(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: iconColor.withValues(alpha: 0.15),
-                    radius: 20,
-                    child: Icon(
-                      icon,
-                      color: iconColor,
-                      size: 20,
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: iconColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
                     ),
+                    child: Icon(icon, color: iconColor, size: textScaler.scale(20).clamp(20, 32)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -75,7 +75,7 @@ class BudgetCategoryCard extends StatelessWidget {
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -86,7 +86,6 @@ class BudgetCategoryCard extends StatelessWidget {
                       color: colors.primary,
                       size: 20,
                     ),
-                    padding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
                   ),
                 ],
@@ -95,118 +94,39 @@ class BudgetCategoryCard extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Budget vs Spending
-              Column(
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildAmountTile(
-                          title: lang.translate('budget'),
-                          amount: currentBudget,
-                          theme: theme,
-                          isPrimary: true,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _buildAmountTile(
-                          title: lang.translate('spent'),
-                          amount: currentSpending,
-                          theme: theme,
-                          isExpense: true,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Expanded(
-                        child: _buildAmountTile(
-                          title: lang.translate('remaining'),
-                          amount: remaining,
-                          theme: theme,
-                          isPositive: isBudgetSet ? remaining >= 0 : null,
-                        ),
-                      ),
-                    ],
+                  _buildFluidAmountTile(
+                    context: context,
+                    title: lang.translate('budget'),
+                    amount: currentBudget,
+                    isPrimary: true,
                   ),
-                  
+                  _buildFluidAmountTile(
+                    context: context,
+                    title: lang.translate('spent'),
+                    amount: currentSpending,
+                    isExpense: true,
+                  ),
+                  _buildFluidAmountTile(
+                    context: context,
+                    title: lang.translate('remaining'),
+                    amount: remaining,
+                    isPositive: isBudgetSet ? remaining >= 0 : null,
+                  ),
                 ],
               ),
 
               const SizedBox(height: 12),
 
               // Progress bar
-              if (isBudgetSet)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0, end: _spendingPercentage),
-                          duration: const Duration(milliseconds: 700),
-                          builder: (context, value, child) {
-                            return Text(
-                              '${value.toStringAsFixed(0)}%',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: _progressColor,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            );
-                          },
-                        ),
-                        Text(
-                          '${currentSpending.toStringAsFixed(2)} / ${currentBudget.toStringAsFixed(2)}',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: colors.onSurface.withValues(alpha: 0.6),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: _spendingPercentage / 100),
-                      duration: const Duration(milliseconds: 700),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, value, child) {
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: LinearProgressIndicator(
-                            value: value,
-                            backgroundColor: colors.surfaceContainerHigh,
-                            color: _progressColor,
-                            minHeight: 6,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        );
-                      },
-                    )
-                  ],
-                )
-              else
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: colors.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: colors.primary,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        lang.translate('no_budget_set'),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: colors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              if (isBudgetSet) ...[
+                _buildProgressSection(theme, textScaler),
+              ] else ...[
+                _buildNoBudgetPlaceholder(colors, lang, theme),
+              ],
             ],
           ),
         ),
@@ -214,20 +134,18 @@ class BudgetCategoryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAmountTile({
+  Widget _buildFluidAmountTile({
+    required BuildContext context,
     required String title,
     required double amount,
-    required ThemeData theme,
     bool isExpense = false,
     bool isPrimary = false,
     bool? isPositive,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(10),
-      ),
+    final theme = Theme.of(context);
+    // Ensure the tile occupies at least 100px but expands to fill space in the Wrap
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -235,21 +153,80 @@ class BudgetCategoryCard extends StatelessWidget {
             title.toUpperCase(),
             style: theme.textTheme.labelSmall?.copyWith(
               color: colors.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.8,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           CurrencyDisplay(
             amount: amount,
             isExpense: isExpense,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: isPrimary ? FontWeight.w500 : FontWeight.w400,
-              color: isPositive != null
-                  ? (isPositive ? Colors.green : Colors.red)
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: isPrimary ? FontWeight.w900 : FontWeight.w600,
+              color: isPositive != null 
+                  ? (isPositive ? Colors.green : Colors.red) 
                   : colors.onSurface,
             ),
-            compact: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressSection(ThemeData theme, TextScaler textScaler) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '${_spendingPercentage.toStringAsFixed(0)}%',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: _progressColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            // Progress indicators often look better with "Compact" amounts in fluid bars
+            CurrencyDisplay(
+              amount: currentSpending,
+              compact: true,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: colors.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: (_spendingPercentage / 100).clamp(0.0, 1.0),
+            backgroundColor: colors.surfaceContainerHigh,
+            color: _progressColor,
+            minHeight: 8,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNoBudgetPlaceholder(ColorScheme colors, LanguageProvider lang, ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHigh.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.auto_graph_rounded, color: colors.primary.withValues(alpha: 0.6), size: 18),
+          const SizedBox(width: 8),
+          Text(
+            lang.translate('no_budget_set'),
+            style: theme.textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
           ),
         ],
       ),
