@@ -52,13 +52,13 @@ class SavingsViewContent extends StatelessWidget {
 
     if (vm.isLoading) return const Scaffold(body: Center(child: LoadingState()));
     if (vm.errorMessage != null) {
-      return Center(
-        child: EmptyState(
+      return Scaffold(
+        body: EmptyState(
           icon: Icons.error_outline,
           title: lang.translate('failed_to_load_goals'),
           message: vm.errorMessage ?? lang.translate('unknown_error'),
           actionText: lang.translate('retry'),
-          onAction: () => vm.retry(), 
+          onAction: vm.retry,
         ),
       );
     }
@@ -83,9 +83,12 @@ class SavingsViewContent extends StatelessWidget {
             ),
         ],
       ),
-      body: vm.goals.isEmpty 
+      body: RefreshIndicator(
+        onRefresh: vm.refresh,
+        child: vm.goals.isEmpty 
           ? _buildEmptyState(context, lang) 
           : _buildMainContent(context, vm, lang),
+      ),
       floatingActionButton: vm.goals.isNotEmpty
        ? FloatingActionButton.extended(
             onPressed: () => _addGoal(context),
@@ -170,111 +173,90 @@ class SavingsViewContent extends StatelessWidget {
   }
 
   Widget _buildMainContent(BuildContext context, SavingsViewModel vm, LanguageProvider lang) {
-    return RefreshIndicator(
-      onRefresh: vm.refresh,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildStatsCard(context, vm, lang),
-          const SizedBox(height: 20),
-          Text(lang.translate('your_goals'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          ...vm.goals.map((goal) {
-            return _goalTile(goal, context);
-          }),
-        ],
-      ),
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80), // Extra bottom padding for FAB
+      itemCount: vm.goals.length + 1, // +1 for the Stats Card header
+      separatorBuilder: (_, index) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return _buildStatsCard(context, vm, lang);
+        }
+
+        final goal = vm.goals[index - 1];
+        return GestureDetector(
+          onTap: () => _editGoal(goal, context),
+          child: ProgressChartWidget(goal: goal),
+        );
+      },
     );
   }
 
-  Widget _goalTile(SavingsGoal goal, BuildContext context) {
-    return GestureDetector(
-      onTap: () => _editGoal(goal, context),
-      child: Column(
-        children: [
-          ProgressChartWidget(goal: goal),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-    
-  }
 
   Widget _buildStatsCard(BuildContext context, SavingsViewModel vm, LanguageProvider lang) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(28), 
-        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header with Icon and Label
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: colors.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28), side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.3))),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            // Header with Icon and Label
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: colors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.insights_rounded, color: colors.primary, size: 18),
                   ),
-                  child: Icon(Icons.insights_rounded, color: colors.primary, size: 18),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  lang.translate('savings_overview'),
-                  style: textTheme.labelMedium?.copyWith( 
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
-                    color: colors.onSurfaceVariant,
+                  const SizedBox(width: 12),
+                  Text(
+                    lang.translate('savings_overview'),
+                    style: textTheme.labelMedium?.copyWith( 
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // Stats Row with Dividers
-          IntrinsicHeight( // Ensures vertical dividers match column height
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    _buildStatItem(lang.translate('goals'), Text(vm.goals.length.toString(), style: _valueStyle(textTheme)), theme),
-                    _buildVerticalDivider(colors), 
-                    _buildStatItem(lang.translate('progress'), Text('${(vm.overallProgress * 100).toStringAsFixed(0)}%', 
-                        style: _valueStyle(textTheme).copyWith(color: colors.primary)), theme),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Divider(color: colors.outlineVariant.withValues(alpha: 0.1)),
-                ),
-                Row(
-                  children: [
-                    _buildStatItem(lang.translate('target'), CurrencyDisplay(amount: vm.totalTarget, compact: true, style: _valueStyle(textTheme)), theme),
-                    _buildVerticalDivider(colors),
-                    _buildStatItem(lang.translate('saved'), CurrencyDisplay(amount: vm.totalSaved, compact: true, style: _valueStyle(textTheme)), theme),
-                  ],
-                ),
-              ],
-            )
-          ),
-        ],
+            // Stats Row with Dividers
+            IntrinsicHeight( // Ensures vertical dividers match column height             
+              child: Row(
+                children: [
+                  _buildStatItem(lang.translate('goals'), Text(vm.goals.length.toString(), style: _valueStyle(textTheme)), theme),
+                  _buildVerticalDivider(colors), 
+                  _buildStatItem(lang.translate('progress'), Text('${(vm.overallProgress * 100).toStringAsFixed(0)}%', 
+                      style: _valueStyle(textTheme).copyWith(color: colors.primary)), theme),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Divider(color: colors.outlineVariant.withValues(alpha: 0.1)),
+            ),
+            IntrinsicHeight(
+              child: Row(
+                children: [
+                  _buildStatItem(lang.translate('target'), CurrencyDisplay(amount: vm.totalTarget, compact: true, style: _valueStyle(textTheme)), theme),
+                  _buildVerticalDivider(colors),
+                  _buildStatItem(lang.translate('saved'), CurrencyDisplay(amount: vm.totalSaved, compact: true, style: _valueStyle(textTheme)), theme),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
