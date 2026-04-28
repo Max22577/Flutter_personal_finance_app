@@ -1,10 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/core/repositories/category_repository.dart';
-import 'package:personal_fin/core/utils/category_icon_helper.dart';
+import 'package:personal_fin/core/repositories/category_repository.dart'; 
 import 'package:personal_fin/core/widgets/custom_appbar.dart';
-import 'package:personal_fin/core/widgets/empty_state.dart';
 import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:personal_fin/features/category/widgets/predefined_chip.dart';
 import 'package:personal_fin/models/category.dart';
@@ -444,16 +442,18 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader(lang.translate('standard_categories'), theme, colors),
-            _buildPredefinedList(vm),
-            _buildSectionHeader(lang.translate('your_custom_categories'), theme, colors),
-            _buildCustomList(vm, lang, colors, textTheme),
-          ],
-        ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          _buildSectionHeader(lang.translate('standard_categories'), theme, colors),
+          SliverToBoxAdapter(
+            child: _buildPredefinedList(vm),
+          ),
+          _buildSectionHeader(lang.translate('your_custom_categories'), theme, colors),
+          _buildCustomList(vm, lang, colors, textTheme),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
+        
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddCategorySheet(vm),
@@ -465,13 +465,16 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
   }
 
   Widget _buildSectionHeader(String title, ThemeData theme, ColorScheme colors) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Text(
-        title,
-        style: theme.textTheme.labelLarge?.copyWith(
-          color: colors.outline,
-          letterSpacing: 1.1,
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+      sliver: SliverToBoxAdapter(
+        child: Text(
+          title.toUpperCase(),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.outline,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ),
     );
@@ -499,72 +502,57 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
     return StreamBuilder<List<Category>>(
       stream: vm.customCategoriesStream,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: LoadingState());
-        if (snapshot.hasError) {
-          return Center(
-            child: EmptyState(
-              icon: Icons.error_outline,
-              title:(lang.translate('error_loading')),
-              message: vm.errorMessage!,
-              actionText: lang.translate('retry'),
-              onAction: () => vm.refreshCategories(),
-            ),
+        if (snapshot.connectionState == ConnectionState.waiting) return const SliverToBoxAdapter(child: LoadingState());
+               
+        final categories = snapshot.data ?? [];
+        if (categories.isEmpty) {
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: Text(lang.translate('no_custom_categories'))),
           );
         }
-        
-        final categories = snapshot.data ?? [];
-        return ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: categories.length,
-          itemBuilder: (context, i) {
-            final category = categories[i];
-            return _buildCategoryTile(
-              category, 
-              colors, 
-              textTheme, 
-              vm,
-              key: ValueKey('${category.id}_${category.name}_${category.iconCode}'), // Forces rebuild if these change
-            );
-          },
+        return SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => _buildCategoryTile(categories[index], vm),
+              childCount: categories.length,
+            ),
+          ),
         );
       },
     );
   }
 
-  Widget _buildCategoryTile(Category category, ColorScheme colors, TextTheme textTheme, CategoryViewModel vm, {required Key key}) {
-    final icon = CategoryIconHelper.getIcon(category);
-    final color = CategoryIconHelper.getColor(category, colors);
+  Widget _buildCategoryTile(Category category, CategoryViewModel vm) {
+    final colors = Theme.of(context).colorScheme;
+    final iconColor = Color(category.colorValue ?? colors.primary.toARGB32());
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10.0, left: 16.0, right: 16.0),      
-      padding: const EdgeInsets.all(2.0),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.3)),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          radius: 24,
-          backgroundColor: color.withValues(alpha: 0.4),
-          child: Icon(icon, color: color, size: 28),
+        onTap: () => _showEditCategoryDialog(category, vm),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            IconData(category.iconCode ?? Icons.category.codePoint, fontFamily: 'MaterialIcons'),
+            color: iconColor,
+          ),
         ),
         title: Text(
           category.name,
-          style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, letterSpacing: 0.5,),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        trailing: Icon(Icons.chevron_right_rounded, color: colors.onSurfaceVariant,),
-        onTap: () => _showEditCategoryDialog(category, vm),
+        trailing: Icon(Icons.edit_outlined, size: 20, color: colors.outline),
       ),
     );
   }
