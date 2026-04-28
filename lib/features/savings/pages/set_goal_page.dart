@@ -227,16 +227,19 @@ class _SetGoalPageState extends State<SetGoalPage> {
     final goalName = _nameController.text.isEmpty ? lang.translate('new_goal') : _nameController.text;
 
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colors.outline.withValues(alpha: 0.3),
-        ),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
       ),
+      padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -255,7 +258,7 @@ class _SetGoalPageState extends State<SetGoalPage> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           ProgressChartWidget(
             goal: SavingsGoal(
               name: goalName,

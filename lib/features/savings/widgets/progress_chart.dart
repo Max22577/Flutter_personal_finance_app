@@ -21,41 +21,36 @@ class ProgressChartWidget extends StatelessWidget {
         ? (goal.currentAmount / goal.targetAmount).clamp(0.0, 1.0) 
         : 0.0;
     
-    // 2. Uniform colors for both chart and legend
     final Color progressColor = colors.primary;
-    final Color trackColor = colors.primary.withValues(alpha: 0.15); // Soft matching background track
+    final Color trackColor = colors.onSurfaceVariant.withValues(alpha: 0.1); 
     
     return Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: colors.surface,
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: colors.shadow.withValues(alpha: 0.04),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.3)),
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(theme, colors, lang),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // --- Doughnut Chart ---
                   Expanded(
-                    flex: 5,
-                    child: SizedBox(
-                      height: 140,
+                    flex: 4,
+                    child: AspectRatio(
+                      aspectRatio: 1,
                       child: Stack(
                         children: [
                           PieChart(
                             PieChartData(
                               sectionsSpace: 0,
-                              centerSpaceRadius: 50, // Increased for a thin ring look
+                              centerSpaceRadius: double.infinity, // Remove center space for a full pie
                               startDegreeOffset: -90,
                               sections: [
                                 PieChartSectionData(
@@ -63,12 +58,12 @@ class ProgressChartWidget extends StatelessWidget {
                                   gradient: LinearGradient(
                                     colors: [
                                       colors.primary, 
-                                      colors.secondary,
+                                      colors.primaryContainer,
                                     ],
-                                    begin: Alignment.bottomLeft,
-                                    end: Alignment.topRight,
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
                                   ),
-                                  radius: 16, // Thicker ring
+                                  radius: 12, 
                                   showTitle: false,
                                 ),
                                 PieChartSectionData(
@@ -83,50 +78,44 @@ class ProgressChartWidget extends StatelessWidget {
                             ),
                           ),
                           Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  '${(percentage * 100).toStringAsFixed(0)}%',
-                                  style: theme.textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                    color: colors.onSurface,
-                                  ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      '${(percentage * 100).toStringAsFixed(0)}%',
+                                      style: theme.textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.w900,
+                                        color: colors.onSurface,
+                                      ),
+                                    ),
+                                    Text(
+                                      lang.translate('saved').toUpperCase(),
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: colors.outline,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  lang.translate('saved').toUpperCase(),
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    letterSpacing: 1.0,
-                                    fontWeight: FontWeight.w800,
-                                    color: colors.outline,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 24),
+                  const SizedBox(width: 20),
                   
                   // --- Legend Section ---
                   Expanded(
                     flex: 6,
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          goal.name.toUpperCase(),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            letterSpacing: 1.0,
-                            fontWeight: FontWeight.w800,
-                            color: colors.outline,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 12),
                         // Saved (Shows current progress)
                         _buildLegendItem(
                           label: lang.translate('saved'), 
@@ -134,7 +123,10 @@ class ProgressChartWidget extends StatelessWidget {
                           color: progressColor, 
                           theme: theme
                         ),
-                        const SizedBox(height: 12),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: Divider(height: 1, thickness: 0.5),
+                        ),
 
                         // Remaining (Shows what's left)
                         _buildLegendItem(
@@ -143,10 +135,13 @@ class ProgressChartWidget extends StatelessWidget {
                           color: trackColor, 
                           theme: theme
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
 
                         // Add To Savings Button 
-                        AddToSavingsButton(goal: goal),
+                        SizedBox(
+                          width: double.infinity,
+                          child: AddToSavingsButton(goal: goal),
+                        ),
                       ],
                     ),
                   ),
