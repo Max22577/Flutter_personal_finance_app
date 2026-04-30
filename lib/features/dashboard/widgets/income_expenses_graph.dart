@@ -234,7 +234,6 @@ class IncomeExpensesGraph extends StatelessWidget {
 
   // Synchronous formatting helper using cached currency
   String _formatCurrencyValue(double value, CurrencyFormatter formatter, LanguageProvider lang, {bool compact = false}) {
-    // Use the built-in logic from your new CurrencyFormatter class
     if (compact) {
       return formatter.formatCompact(value, lang.localeCode);
     }

@@ -8,7 +8,6 @@ import 'package:personal_fin/features/budgeting/widgets/month_selector.dart';
 import 'package:personal_fin/core/widgets/empty_state.dart';
 import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:personal_fin/features/budgeting/widgets/small_stat_card.dart';
-import 'package:personal_fin/features/category/pages/category_management_page.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:provider/provider.dart';
 import '../view_models/budgeting_view_model.dart';
@@ -64,7 +63,7 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
               backgroundColor: Colors.white.withValues(alpha: 0.15),
               shape: const CircleBorder(),
             ),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryManagementPage())),
+            onPressed: () => Navigator.pushNamed(context, '/categories'),
           ),
         ),
       ]);

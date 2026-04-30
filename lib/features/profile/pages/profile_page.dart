@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
-import 'package:personal_fin/core/utils/ui_helpers.dart';
+import 'package:personal_fin/core/utils/app_feedback.dart';
 import 'package:provider/provider.dart';
 import '../view_models/profile_view_model.dart';
 
@@ -95,6 +95,7 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
     final lang = context.watch<LanguageProvider>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     // Sync controllers with VM data when it loads
     if (!vm.isLoading && _fullNameController.text.isEmpty) {
@@ -109,7 +110,7 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
         : SingleChildScrollView(
             child: Column(
               children: [
-                _buildHeader(colors, theme, vm),
+                _buildHeader(context, colors, theme, vm),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                   child: Form(
@@ -136,7 +137,7 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
                           isBio: true,
                         ),
                         const SizedBox(height: 30),
-                        _buildSaveButton(vm, lang),
+                        _buildSaveButton(context, vm, lang, colors, textTheme),
                         const SizedBox(height: 140),
                       ],
                     ),
@@ -149,7 +150,7 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
   }
 
   // 1. Beautiful Header with overlapping Avatar
-  Widget _buildHeader(ColorScheme colors, ThemeData theme, ProfileViewModel vm) {
+  Widget _buildHeader(BuildContext context, ColorScheme colors, ThemeData theme, ProfileViewModel vm) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 32),
@@ -166,7 +167,7 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
       ),
       child: Column(
         children: [
-          _buildAvatar(colors, vm),
+          _buildAvatar(context, colors, vm),
           const SizedBox(height: 16),
           Text(
             _fullNameController.text.isEmpty ? 'Your Profile' : _fullNameController.text,
@@ -187,7 +188,10 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
   }
 
   // 2. Refined Avatar with Edit Overlay
-  Widget _buildAvatar(ColorScheme colors, ProfileViewModel vm) {
+  Widget _buildAvatar(BuildContext context, ColorScheme colors, ProfileViewModel vm) {
+    final messenger = ScaffoldMessenger.of(context);
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
@@ -211,7 +215,7 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
               radius: 18,
               child: IconButton(
                 icon: const Icon(Icons.edit, size: 16, color: Colors.white),
-                onPressed: () => showFeedback(context, 'Image upload coming soon!', isError: false),
+                onPressed: () => AppFeedback.show(messenger, 'Image upload coming soon!', colors: colors, textTheme: textTheme, isError: false),
               ),
             ),
           ),
@@ -322,7 +326,8 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
     );
   }
 
-  Widget _buildSaveButton(ProfileViewModel vm, LanguageProvider lang) {
+  Widget _buildSaveButton(BuildContext context, ProfileViewModel vm, LanguageProvider lang, ColorScheme colors, TextTheme textTheme) {
+    final messenger = ScaffoldMessenger.of(context);
     return ElevatedButton(
       onPressed: vm.isLoading ? null : () async {
         try {
@@ -331,9 +336,9 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
             newBio: _bioController.text,
           );
           if (!mounted) return;
-          showFeedback(context, lang.translate('profile_updated'));
+          AppFeedback.show(messenger, lang.translate('profile_updated'), colors: colors, textTheme: textTheme, isError: false);
         } catch (e) {
-          showFeedback(context, e.toString(), isError: true);
+          AppFeedback.show(messenger, e.toString(), colors: colors, textTheme: textTheme, isError: true);
         }
       },
       child: vm.isLoading 

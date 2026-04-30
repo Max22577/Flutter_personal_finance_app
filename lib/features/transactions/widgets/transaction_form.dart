@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/utils/app_feedback.dart';
 import 'package:personal_fin/core/utils/currency_formatter.dart';
-import 'package:personal_fin/core/utils/ui_helpers.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:personal_fin/features/transactions/widgets/category_dropdown.dart';
 import 'package:personal_fin/features/transactions/widgets/type_selector.dart';
@@ -95,6 +95,10 @@ class _TransactionFormState extends State<TransactionForm> {
     if (_selectedCategory == null) return;
 
     final vm = context.read<TransactionViewModel>();
+    final messenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textTheme = theme.textTheme;
     
     try {
       final success = await vm.saveTransaction(
@@ -108,17 +112,21 @@ class _TransactionFormState extends State<TransactionForm> {
 
       if (success && mounted) { 
         Navigator.pop(context);
-        showFeedback(
-          context, 
-          lang.translate('saved'), 
+        AppFeedback.show(
+          messenger, 
+          lang.translate('saved'),
+          colors: colors,
+          textTheme: textTheme, 
           isError: false,
         );
       }
     } catch (e) {
       if (mounted) {
-        showFeedback(
-          context, 
-          '${lang.translate('error')}: ${e.toString()}', 
+        AppFeedback.show(
+          messenger, 
+          '${lang.translate('error')}: ${e.toString()}',
+          colors: colors,
+          textTheme: textTheme, 
           isError: true,
         );
       }
@@ -244,8 +252,7 @@ class _TransactionFormState extends State<TransactionForm> {
                     maxLength: 100,
                   ),
                   const SizedBox(height: 20),
-                  
-                  // 2. REUSED WIDGET: Category Dropdown
+
                   CategoryDropdown(
                     selectedCategory: _selectedCategory,
                     categories: vm.categories,

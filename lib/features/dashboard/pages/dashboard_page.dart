@@ -60,7 +60,7 @@ class DashboardViewContent extends StatelessWidget {
               SizedBox(height: textScaler.scale(24)),
               RecentTransactions(
                 maxItems: 5,
-                onViewAll: () { /* Navigate via NavProvider */ },
+                onViewAll: () => Navigator.pushNamed(context, '/transactions'),
               ),
 
               SizedBox(height: textScaler.scale(16)),

@@ -5,7 +5,6 @@ import 'package:personal_fin/core/widgets/empty_state.dart';
 import 'package:personal_fin/features/dashboard/widgets/transaction_item.dart';
 import 'package:provider/provider.dart';
 import '../view_models/recent_transactions_view_model.dart';
-
 class RecentTransactions extends StatelessWidget {
   final int maxItems;
   final VoidCallback? onViewAll;

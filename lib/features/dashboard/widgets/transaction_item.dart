@@ -51,6 +51,14 @@ class TransactionItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       width: double.infinity,
+      decoration: BoxDecoration(
+        color: colors.surface, 
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: colors.outlineVariant.withValues(alpha: 0.5), 
+          width: 1,
+        ),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
@@ -117,9 +125,7 @@ class TransactionItem extends StatelessWidget {
                   ],
                 ),
               ],
-            ),
-            
-          
+            ),         
         ),
       ),
     );

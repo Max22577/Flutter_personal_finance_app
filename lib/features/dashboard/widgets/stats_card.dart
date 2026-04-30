@@ -33,6 +33,7 @@ class StatCard extends StatelessWidget {
     final isLargeFont = textScaler.scale(1) > 1.3;
 
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -47,7 +48,6 @@ class StatCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Decorative background element for a "polished" look
           Positioned(
             right: -20,
             top: -20,
@@ -159,14 +159,26 @@ class StatCard extends StatelessWidget {
     final theme = Theme.of(context);
     final financialColors = theme.extension<FinancialColors>()!;
     
+    if (isLargeFont) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStatItem(lang.translate('income'), income, financialColors.income, Icons.arrow_upward, false, isLargeFont, textScaler),
+          const SizedBox(height: 12),
+          _buildStatItem(lang.translate('expense'), expenses, financialColors.expense, Icons.arrow_downward, true, isLargeFont, textScaler),
+        ],
+      );
+    }
 
-    return Wrap(
-      spacing: 16,
-      runSpacing: 12,
+    return Row(
       children: [
-        _buildStatItem(lang.translate('income'), income, financialColors.income, Icons.arrow_upward, false, isLargeFont, textScaler),
+        Expanded(
+          child: _buildStatItem(lang.translate('income'), income, financialColors.income, Icons.arrow_upward, false, isLargeFont, textScaler),
+        ),
         const SizedBox(width: 16),
-        _buildStatItem(lang.translate('expense'), expenses, financialColors.expense, Icons.arrow_downward, true, isLargeFont, textScaler),
+        Expanded(
+          child: _buildStatItem(lang.translate('expense'), expenses, financialColors.expense, Icons.arrow_downward, true, isLargeFont, textScaler),
+        ),
       ],
     );
   }
@@ -185,7 +197,7 @@ class StatCard extends StatelessWidget {
         color: isImproved ? financialColors.income.withValues(alpha: 0.1) : financialColors.expense.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Wrap( // Wrap ensures the currency doesn't clip if the text is long
+      child: Wrap( 
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Icon(

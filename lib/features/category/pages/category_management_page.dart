@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/core/repositories/category_repository.dart'; 
+import 'package:personal_fin/core/repositories/category_repository.dart';
+import 'package:personal_fin/core/utils/app_feedback.dart';
+import 'package:personal_fin/core/widgets/animated_empty_state.dart'; 
 import 'package:personal_fin/core/widgets/custom_appbar.dart';
 import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:personal_fin/features/category/widgets/predefined_chip.dart';
@@ -37,28 +39,14 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
   IconData _selectedIcon = Icons.category;
   Color _selectedColor = Colors.blue;
 
-
-  // Helper for Snackbars 
-  void _showFeedback(BuildContext context, String message, {bool isError = false}) {
-    final colors = Theme.of(context).colorScheme;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message,
-          style: TextStyle(color: isError ? colors.onErrorContainer : colors.onPrimaryContainer),
-        ),
-        backgroundColor: isError ? colors.errorContainer : colors.primaryContainer,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
   // --- Add New Category ---
   void _submitNewCategory(CategoryViewModel vm) async {
     if (_formKey.currentState!.validate()) {
       final lang = context.read<LanguageProvider>();
+      final messenger = ScaffoldMessenger.of(context);
+      final theme = Theme.of(context);
+      final colors = theme.colorScheme;
+      final textTheme = theme.textTheme; 
             
       try {
         final categoryName = _newCatController.text.trim();
@@ -70,12 +58,12 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
         );
 
         if (mounted) {
-          _showFeedback(context, '${lang.translate('category_added_success')}: "$categoryName"', isError: false);
+          AppFeedback.show(messenger, '${lang.translate('category_added_success')}: "$categoryName"', colors: colors, textTheme: textTheme, isError: false);
           _newCatController.clear(); // Clear the input field after success
         }
       } catch (e) {
         if (mounted) {
-          _showFeedback(context, '${lang.translate('error_adding_category')}: $e', isError: true);           
+          AppFeedback.show(messenger, '${lang.translate('error_adding_category')}: $e', colors: colors, textTheme: textTheme, isError: true);           
         }
       }
     }
@@ -199,6 +187,7 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
                     final updatedColor = selectedColorValue;
 
                     final navigator = Navigator.of(context);
+                    final messenger = ScaffoldMessenger.of(context);
 
                     await vm.updateCategory(
                       id: category.id,
@@ -208,7 +197,7 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
                       isCustom: true,
                     );
                     if (!context.mounted) return;
-                      _showFeedback(context, '${lang.translate('category_updated_to')} "$updatedName"', isError: false);
+                      AppFeedback.show(messenger, '${lang.translate('category_updated_to')} "$updatedName"', colors: colors, textTheme: theme.textTheme, isError: false);
                     
                     navigator.pop(); // Close the dialog
                     
@@ -508,7 +497,7 @@ class _CategoryManagementViewState extends State<CategoryManagementView> {
         if (categories.isEmpty) {
           return SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: Text(lang.translate('no_custom_categories'))),
+            child: Center(child: AnimatedEmptyChart(message: lang.translate('no_custom_categories'))),
           );
         }
         return SliverPadding(
