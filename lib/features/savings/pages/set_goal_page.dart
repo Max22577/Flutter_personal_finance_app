@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
+import 'package:personal_fin/core/utils/app_feedback.dart';
 import 'package:personal_fin/core/widgets/custom_appbar.dart';
 import 'package:personal_fin/features/savings/widgets/currency_input_field.dart';
 import 'package:personal_fin/features/savings/widgets/progress_chart.dart';
@@ -55,6 +56,10 @@ class _SetGoalPageState extends State<SetGoalPage> {
   Future<void> _deleteGoal(SetGoalViewModel vm) async {
     if (widget.existingGoal == null) return;
     final lang = context.read<LanguageProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -103,30 +108,13 @@ class _SetGoalPageState extends State<SetGoalPage> {
       try {
         final result = await vm.deleteGoal();
         if (mounted && result) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(lang.translate('goal_deleted_successfully')),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          );
+          AppFeedback.show(messenger, lang.translate('goal_deleted_successfully'), colors: colors, textTheme: textTheme, isError: false);         
           Navigator.of(context).pop(widget.existingGoal!.id!);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${lang.translate('delete_failed')} $e'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          );
+          AppFeedback.show(messenger, '${lang.translate('delete_failed')} $e', colors: colors, textTheme: textTheme, isError: true);
+          
         }
       }
     }
@@ -367,14 +355,28 @@ class _SetGoalPageState extends State<SetGoalPage> {
     );
   }
   Widget _buildSaveButton(BuildContext context, SetGoalViewModel vm, LanguageProvider lang, ColorScheme colors, TextTheme textTheme) {
-    final navigator = Navigator.of(context);
+    
     return ElevatedButton(
       onPressed: vm.isSaving ? null : () async {
         if (_formKey.currentState!.validate()) {
           final name = _nameController.text;
           final target = double.tryParse(_targetAmountController.text) ?? 0.0;
-          final success = await vm.saveGoal(name: name, target: target);
-          if (success && mounted) navigator.pop();
+          
+          final navigator = Navigator.of(context);
+          final messenger = ScaffoldMessenger.of(context);
+          try {
+            final success = await vm.saveGoal(name: name, target: target);
+            if (!mounted) return;
+            if (success) {
+              AppFeedback.show(messenger, lang.translate('goal_saved_successfully'), colors: colors, textTheme: textTheme, isError: false);
+              navigator.pop();
+            }
+          } catch (e) {
+            if (!mounted) return;
+            AppFeedback.show(messenger, '${lang.translate('Saving failed, please try again')} $e',  colors: colors, textTheme: textTheme, isError: true);
+              
+            
+          }
         }
       },
       style: ElevatedButton.styleFrom(

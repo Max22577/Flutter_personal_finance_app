@@ -28,14 +28,14 @@ class _AddToSavingsButtonState extends State<AddToSavingsButton> {
     super.dispose();
   }
 
-  void _handleSuccess(BuildContext context, double amount, String goalName, String successMsg) {
+  void _handleSuccess(BuildContext context, String goalName, String successMsg) {
     Navigator.pop(context); // Close Bottom sheet
     _amountController.clear();
     _noteController.clear();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: 
-        Text('\$$amount $successMsg $goalName',
+        Text('$successMsg $goalName',
           style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer),
         ),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
@@ -163,7 +163,7 @@ class _AddToSavingsButtonState extends State<AddToSavingsButton> {
                             if (!context.mounted) return;
 
                             if (success) {                   
-                              _handleSuccess(context, amount, widget.goal.name, lang.translate('added_to'));
+                              _handleSuccess(context, widget.goal.name, lang.translate('added_to'));
                             }
                           } catch (e) {
                             if (!mounted) return;

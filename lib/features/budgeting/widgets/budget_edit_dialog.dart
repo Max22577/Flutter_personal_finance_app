@@ -94,7 +94,7 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
         return Transform.scale(
           scale: 0.9 + (0.1 * value),
           child: Opacity(
-            opacity: value,
+            opacity: value.clamp(0.0, 1.0),
             child: child,
           ),
         );
@@ -149,23 +149,26 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
                   const SizedBox(height: 24),
 
                   // --- Input Section ---
-                  // Use a Wrap here instead of fixed SizedBox for the input
                   TextFormField(
                     controller: _amountController,
                     autofocus: true,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    style: theme.textTheme.headlineMedium?.copyWith(
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colors.onSurface,
                     ),
                     decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: colors.surfaceContainerHigh.withValues(alpha: 0.5),
                       prefixIcon: Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Text(symbol, style: theme.textTheme.headlineSmall?.copyWith(color: colors.primary)),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(symbol, style: theme.textTheme.titleMedium?.copyWith(color: colors.primary)),
                       ),
                       prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
                       hintText: '0.00',
-                      border: InputBorder.none, // "Glassy" input usually looks best without borders
                       contentPadding: EdgeInsets.zero,
                     ),
                     validator: (value) => (value == null || double.tryParse(value) == null) 

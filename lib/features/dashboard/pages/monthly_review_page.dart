@@ -147,6 +147,7 @@ class MonthlyReviewPage extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 16),
         // Pie Chart Card
         FadeInUp(
           duration: baseDuration,

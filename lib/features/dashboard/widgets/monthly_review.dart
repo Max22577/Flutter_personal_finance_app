@@ -227,15 +227,22 @@ class MonthlyReview extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween, 
           children: [
-            Text(lang.translate('savings_efficiency'), style: TextStyle(fontWeight: FontWeight.w500)),
-            const Spacer(),
+            Expanded( 
+              child: Text(
+                lang.translate('savings_efficiency'),
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+            ),
+            const SizedBox(width: 16), 
             Text(
               '${(clampedRatio * 100).toStringAsFixed(1)}%',
-              style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: colors.primary, 
+                fontWeight: FontWeight.bold
+              ),
             ),
           ],
         ),
