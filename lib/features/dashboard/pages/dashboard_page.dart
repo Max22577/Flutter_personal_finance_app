@@ -17,21 +17,18 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const DashboardViewContent();
+    return const _DashboardScaffold();
   }
 }
 
-class DashboardViewContent extends StatelessWidget {
-  const DashboardViewContent({super.key});
+class _DashboardScaffold extends StatelessWidget {
+  const _DashboardScaffold();
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<DashboardViewModel>();
-    final lang = context.watch<LanguageProvider>();
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final colors = Theme.of(context).colorScheme;
     final textScaler = MediaQuery.textScalerOf(context);
-    
+
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
       body: RefreshIndicator(
@@ -46,26 +43,18 @@ class DashboardViewContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Monthly Review Section
-              _buildMonthlyReview(vm, lang, context),
-
+              const _DashboardMonthlyReviewSection(),
               SizedBox(height: textScaler.scale(16)),
-
               const CategoryPieChart(),
-              
               SizedBox(height: textScaler.scale(16)),
-              
-              QuickStats(),
-
+              const QuickStats(),
               SizedBox(height: textScaler.scale(24)),
               RecentTransactions(
                 maxItems: 5,
                 onViewAll: () => Navigator.pushNamed(context, '/transactions'),
               ),
-
               SizedBox(height: textScaler.scale(16)),
-              _buildQuickActions(context, lang, textScaler),
-              
+              const _QuickActionsCard(),
               SizedBox(height: textScaler.scale(120)), // Space for FAB/BottomBar
             ],
           ),
@@ -73,8 +62,18 @@ class DashboardViewContent extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildMonthlyReview(DashboardViewModel vm, LanguageProvider lang, BuildContext context) {
+// REVIEW SECTION & CARDS
+
+class _DashboardMonthlyReviewSection extends StatelessWidget {
+  const _DashboardMonthlyReviewSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<DashboardViewModel>();
+    final lang = context.watch<LanguageProvider>();
+
     if (vm.isLoading) {
       return const Center(child: LoadingState());
     }
@@ -84,9 +83,9 @@ class DashboardViewContent extends StatelessWidget {
         child: EmptyState(
           icon: Icons.error_outline,
           title: lang.translate('error_loading_monthly_data'),
-          message: vm.errorMessage!,
+          message: vm.errorMessage ?? 'Unknown error',
           actionText: lang.translate('retry'),
-          onAction: () => vm.retry(), 
+          onAction: () => vm.retry(),
         ),
       );
     }
@@ -104,14 +103,20 @@ class DashboardViewContent extends StatelessWidget {
       ),
     );
   }
+}
 
+class _QuickActionsCard extends StatelessWidget {
+  const _QuickActionsCard();
 
-  Widget _buildQuickActions(BuildContext context, LanguageProvider lang, TextScaler textScaler) {
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+    final lang = context.watch<LanguageProvider>();
+    final textScaler = MediaQuery.textScalerOf(context);
+
     return Card(
       elevation: 0,
-      color: theme.colorScheme.surface, 
+      color: theme.colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(22.0),
       ),
@@ -121,31 +126,42 @@ class DashboardViewContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              lang.translate('quick_actions'), 
+              lang.translate('quick_actions'),
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             SizedBox(height: textScaler.scale(12)),
-            
-            // ListTile is naturally fluid, but we ensure density is adaptive
-            _actionTile(
-              icon: Icons.add_to_photos, 
-              label: lang.translate('set_next_budget'), 
+            _ActionTile(
+              icon: Icons.add_to_photos,
+              label: lang.translate('set_next_budget'),
               onTap: () {},
-              textScaler: textScaler,
             ),
-            _actionTile(
-              icon: Icons.star_border, 
-              label: lang.translate('review_savings_goals'), 
+            _ActionTile(
+              icon: Icons.star_border,
+              label: lang.translate('review_savings_goals'),
               onTap: () {},
-              textScaler: textScaler,
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _actionTile({required IconData icon, required String label, required VoidCallback onTap, required TextScaler textScaler}) {
+class _ActionTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ActionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textScaler = MediaQuery.textScalerOf(context);
+
     return ListTile(
       leading: Icon(icon, size: textScaler.scale(24)),
       title: Text(label),

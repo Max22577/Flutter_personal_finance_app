@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/features/dashboard/widgets/recent_transactions.dart';
-import 'package:personal_fin/features/dashboard/widgets/transaction_item.dart';
+import 'package:personal_fin/features/dashboard/widgets/recent_transactions/transaction_item.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
