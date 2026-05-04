@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:personal_fin/features/dashboard/widgets/stats_card.dart';
+import 'package:personal_fin/features/dashboard/widgets/quick_stats/stats_card.dart';
 import 'package:personal_fin/models/monthly_data.dart';
 import 'package:provider/provider.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';

@@ -3,7 +3,7 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:provider/provider.dart';
-import '../../../core/widgets/currency_display.dart';
+import '../../../../core/widgets/currency_display.dart';
 
 class TransactionItem extends StatelessWidget {
   final Transaction transaction;

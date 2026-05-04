@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/widgets/empty_state.dart';
-import 'package:personal_fin/features/dashboard/widgets/transaction_item.dart';
+import 'package:personal_fin/features/dashboard/widgets/recent_transactions/transaction_item.dart';
 import 'package:provider/provider.dart';
 import '../view_models/recent_transactions_view_model.dart';
 class RecentTransactions extends StatelessWidget {
@@ -54,8 +54,6 @@ class RecentTransactions extends StatelessWidget {
   }
 
   Widget _buildHeader(ThemeData theme, LanguageProvider lang, TextScaler textScaler) {
-    // Using Wrap instead of Row prevents the "View All" button from disappearing
-    // or squashing the title when the system font is large.
     return Wrap(
       alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.center,
