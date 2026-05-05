@@ -17,13 +17,134 @@ class MainBudgetStat extends StatelessWidget {
     final colors = theme.colorScheme;
     final textScaler = MediaQuery.textScalerOf(context);
 
+    return Hero(
+      tag: 'main_budget_hero',
+      child: GlassStatCard(
+        colors: colors,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _StatHeader(
+              label: label,
+              textScaler: textScaler,
+              textTheme: theme.textTheme,
+            ),
+            const SizedBox(height: 16),
+            
+            _StatAmount(
+              amount: amount,
+              displayStyle: theme.textTheme.displaySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatHeader extends StatelessWidget {
+  final String label;
+  final TextScaler textScaler;
+  final TextTheme textTheme;
+
+  const _StatHeader({
+    required this.label,
+    required this.textScaler,
+    required this.textTheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _IconBadge(textScaler: textScaler),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label.toUpperCase(),
+            style: textTheme.labelLarge?.copyWith(
+              color: Colors.white.withValues(alpha: 0.8),
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _IconBadge extends StatelessWidget {
+  final TextScaler textScaler;
+
+  const _IconBadge({required this.textScaler});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        Icons.account_balance_wallet_rounded,
+        color: Colors.white,
+        size: textScaler.scale(20).clamp(18, 28),
+      ),
+    );
+  }
+}
+
+class _StatAmount extends StatelessWidget {
+  final double amount;
+  final TextStyle? displayStyle;
+
+  const _StatAmount({
+    required this.amount,
+    required this.displayStyle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: CurrencyDisplay(
+        amount: amount,
+        compact: false,
+        style: displayStyle?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -1,
+        ),
+      ),
+    );
+  }
+}
+
+class GlassStatCard extends StatelessWidget {
+  final Widget child;
+  final ColorScheme colors;
+  final double minHeight;
+
+  const GlassStatCard({
+    super.key,
+    required this.child,
+    required this.colors,
+    this.minHeight = 160,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textScaler = MediaQuery.textScalerOf(context);
+
     return Container(
       width: double.infinity,
-      constraints: BoxConstraints(minHeight: textScaler.scale(160)),
-      padding: const EdgeInsets.all(24),
+      constraints: BoxConstraints(minHeight: textScaler.scale(minHeight)),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        // Gradient background
+        borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -40,81 +161,27 @@ class MainBudgetStat extends StatelessWidget {
           ),
         ],
       ),
-
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
-            /// Decorative highlight (glass reflection effect)
-           _buildDecorations(colors),
-
-            /// Card content
+            const _CardDecorativeBubbles(),
             Padding(
               padding: EdgeInsets.all(textScaler.scale(24)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Header Row
-                  Row(
-                    children: [
-                      _buildIconBadge(textScaler),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          label.toUpperCase(),
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 16),
-
-                  // Currency Display
-                  // FittedBox prevents text from wrapping or clipping if it's too long
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: CurrencyDisplay(
-                      amount: amount,
-                      compact: false,
-                      style: theme.textTheme.displaySmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -1,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              child: child,
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildIconBadge(TextScaler textScaler) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(
-        Icons.account_balance_wallet_rounded,
-        color: Colors.white,
-        size: textScaler.scale(20).clamp(18, 28),
-      ),
-    );
-  }
+class _CardDecorativeBubbles extends StatelessWidget {
+  const _CardDecorativeBubbles();
 
-  Widget _buildDecorations(ColorScheme colors) {
+  @override
+  Widget build(BuildContext context) {
     return Positioned.fill(
       child: LayoutBuilder(
         builder: (context, constraints) {
