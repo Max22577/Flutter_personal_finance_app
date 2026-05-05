@@ -243,8 +243,10 @@ class _EmptyChartState extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AnimatedEmptyChart(
+        AnimatedEmptyState(
           message: lang.translate('No data recorded').toUpperCase(),
+          imagePath: 'assets/images/empty_wallet_light.svg',
+          darkImagePath: 'assets/images/empty_wallet_dark1.svg',
         ),
         const SizedBox(height: 16),
         Text(
