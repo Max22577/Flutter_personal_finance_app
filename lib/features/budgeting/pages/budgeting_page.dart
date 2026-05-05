@@ -8,8 +8,8 @@ import 'package:personal_fin/features/budgeting/widgets/month_selector.dart';
 import 'package:personal_fin/core/widgets/empty_state.dart';
 import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:personal_fin/features/budgeting/widgets/small_stat_card.dart';
-import 'package:personal_fin/models/category.dart';
 import 'package:provider/provider.dart';
+import 'package:sliver_tools/sliver_tools.dart';
 import '../view_models/budgeting_view_model.dart';
 import '../widgets/main_budget_stat.dart';
 
@@ -38,211 +38,255 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
     super.didChangeDependencies();
     _navProvider = context.read<NavigationProvider>();
     _navProvider.addListener(_onNavChanged);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-      _onNavChanged(); 
-    });
+    
+    // Initial sync of the AppBar
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onNavChanged());
   }
 
   void _onNavChanged() {
-    if (!mounted) return;
+    if (!mounted || _navProvider.selectedIndex != 2) return;
     
-    if (_navProvider.selectedIndex == 2 && _navProvider.currentActions.isEmpty) {
+    if (_navProvider.currentActions.isEmpty) {
       _updateAppBar();
     }
   }
 
   void _updateAppBar() {
-    if (!mounted) return;
-    if (_navProvider.selectedIndex == 2) {
-      _navProvider.setActions([
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: IconButton(
-            icon: const Icon(Icons.category),
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.15),
-              shape: const CircleBorder(),
-            ),
-            onPressed: () => Navigator.pushNamed(context, '/categories'),
-          ),
-        ),
-      ]);
-    }
-     
+    _navProvider.setActions([
+      _CategoryActionButton(onPressed: () => Navigator.pushNamed(context, '/categories')),
+    ]);
   }
 
   @override
   void dispose() {
+    _navProvider.removeListener(_onNavChanged);
+    _scrollController.dispose(); 
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _navProvider.setActions([]);
-  
     });
-    _navProvider.removeListener(_onNavChanged);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<BudgetingViewModel>();
-    final lang = context.watch<LanguageProvider>();
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final textTheme = theme.textTheme;
+    final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
-        child: _buildMainContent(vm, lang, textTheme, colors),
+        child: _buildStatefulBody(vm),
       ),
     );
   }
 
-  Widget _buildMainContent(BudgetingViewModel vm, LanguageProvider lang, TextTheme textTheme, ColorScheme colors) {
+  Widget _buildStatefulBody(BudgetingViewModel vm) {
+    final lang = context.read<LanguageProvider>();
+    final state = vm.currentState;
+
     // Error State
     if (vm.errorMessage != null) {
-      return Center(
-        child: EmptyState(
-          icon: Icons.error_outline,
-          title: lang.translate('error_loading_budgets'),
-          message: vm.errorMessage!,
-          actionText: lang.translate('retry'),
-          onAction: () => vm.retry(), 
-        ),
+      return _FullPageError(
+        message: vm.errorMessage!,
+        onRetry: vm.retry,
+        lang: lang,
       );
     }
 
     // Loading State
-    // Since currentState is null until the first stream emission
-    final state = vm.currentState;
     if (state == null) {
       return const Center(child: LoadingState());
     }
 
+    // Main Content
     return RefreshIndicator(
-      onRefresh: () async => await vm.refreshData(), 
+      onRefresh: vm.refreshData,
       child: CustomScrollView(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  MonthSelectorCard(
-                    selectedDate: vm.selectedDate,
-                    onTap: () async {
-                      final date = await MonthPickerSheet.show(context, vm.selectedDate);
-                      // This triggers _updateRepos inside the VM automatically
-                      if (date != null) vm.setDate(date); 
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _buildStatsOverview(context, state),
-                ],
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Text(
-                lang.translate('categories').toUpperCase(),
-                style: textTheme.labelSmall?.copyWith(
-                  letterSpacing: 1.5,
-                  fontWeight: FontWeight.bold,
-                  color: colors.outline,
-                ),
-              ),
-            ),
-          ),
-          _buildBudgetList(context, state),
+          // Header Section (Month Picker & Total Stat)
+          _BudgetingHeader(vm: vm, state: state),
+
+          // Categorized List Section
+          _BudgetListSection(state: state, vm: vm),
+
+          // Bottom Spacing for FAB/Navbar
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
         ],
       ),
     );
   }
+}
+class _BudgetingHeader extends StatelessWidget {
+  final BudgetingViewModel vm;
+  final BudgetingState state;
 
-  Widget _buildStatsOverview(BuildContext context, BudgetingState state) {
+  const _BudgetingHeader({required this.vm, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
-    final totalBudget = state.totalBudget;
-    final activeBudgets = state.activeBudgetsCount;
-    final categoryCount = state.totalCategoryCount;
 
-    return Column(
-      children: [
-        /// MAIN STAT (TOTAL BUDGET)
-        MainBudgetStat(
-          label: lang.translate('total_budget'),
-          amount: totalBudget,
-        ),
-        const SizedBox(height: 16),
-        /// SECONDARY STATS
-        Row(
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      sliver: SliverToBoxAdapter(
+        child: Column(
           children: [
-            Expanded(
-              child: SmallStatCard(
-                icon: Icons.check_circle_outline,
-                iconColor: Colors.blue,
-                label: lang.translate('active'),
-                value: activeBudgets.toDouble(),
-              ),
+            MonthSelectorCard(
+              selectedDate: vm.selectedDate,
+              onTap: () async {
+                final date = await MonthPickerSheet.show(context, vm.selectedDate);
+                if (date != null) vm.setDate(date);
+              },
             ),
-
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: SmallStatCard(
-                icon: Icons.category_outlined,
-                iconColor: Colors.orange,
-                label: lang.translate('categories_count'),
-                value: categoryCount.toDouble(),
-              ),
+            const SizedBox(height: 16),
+            MainBudgetStat(
+              label: lang.translate('total_budget'),
+              amount: state.totalBudget,
             ),
+            const SizedBox(height: 16),
+            _SecondaryStatsRow(state: state, lang: lang),
           ],
         ),
-      ],
-    );   
-  }
-
-  
-  Widget _buildBudgetList(BuildContext context, BudgetingState state) {
-    final vm = context.read<BudgetingViewModel>();
-
-    return SliverList(
-      delegate: SliverChildBuilderDelegate((context, index) {
-        final category = state.categories[index];
-        final currentBudget = state.budgetMap[category.id] ?? 0.0;
-        final spending = state.spendingMap[category.id] ?? 0.0;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: BudgetCategoryCard(
-            colors: Theme.of(context).colorScheme,
-            category: category,
-            currentBudget: currentBudget,
-            currentSpending: spending,
-            onEditPressed: () => _showEditDialog(context, category, currentBudget, state.monthYear, vm),
-          ),
-        );
-      }, childCount: state.categories.length),
-    );
-  }
-
-  void _showEditDialog(BuildContext context, Category cat, double amount, String my, BudgetingViewModel vm) {
-    showDialog(
-      context: context,
-      builder: (context) => BudgetEditDialog(
-        category: cat,
-        currentBudget: amount,
-        monthYear: my,
-        onSave: (id, newAmount, month) => vm.updateBudget(id, newAmount),
       ),
     );
   }
-
 }
 
+class _SecondaryStatsRow extends StatelessWidget {
+  final BudgetingState state;
+  final LanguageProvider lang;
 
+  const _SecondaryStatsRow({required this.state, required this.lang});
 
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: SmallStatCard(
+            icon: Icons.check_circle_outline,
+            iconColor: Colors.blue,
+            label: lang.translate('active'),
+            value: state.activeBudgetsCount.toDouble(),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: SmallStatCard(
+            icon: Icons.category_outlined,
+            iconColor: Colors.orange,
+            label: lang.translate('categories_count'),
+            value: state.totalCategoryCount.toDouble(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BudgetListSection extends StatelessWidget {
+  final BudgetingState state;
+  final BudgetingViewModel vm;
+
+  const _BudgetListSection({required this.state, required this.vm});
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return MultiSliver( 
+      children: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+            child: Text(
+              lang.translate('categories').toUpperCase(),
+              style: theme.textTheme.labelSmall?.copyWith(
+                letterSpacing: 1.5,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.outline,
+              ),
+            ),
+          ),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final category = state.categories[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                child: BudgetCategoryCard(
+                  colors: colors,
+                  category: category,
+                  currentBudget: state.budgetMap[category.id] ?? 0.0,
+                  currentSpending: state.spendingMap[category.id] ?? 0.0,
+                  onEditPressed: () => _openEdit(context, category, state),
+                ),
+              );
+            },
+            childCount: state.categories.length,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _openEdit(BuildContext context, dynamic category, BudgetingState state) {
+    showDialog(
+      context: context,
+      builder: (context) => BudgetEditDialog(
+        category: category,
+        currentBudget: state.budgetMap[category.id] ?? 0.0,
+        monthYear: state.monthYear,
+        onSave: (id, newAmount, _) => vm.updateBudget(id, newAmount),
+      ),
+    );
+  }
+}
+
+class _CategoryActionButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  const _CategoryActionButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: IconButton(
+        icon: const Icon(Icons.category),
+        style: IconButton.styleFrom(
+          backgroundColor: Colors.white.withValues(alpha: 0.15),
+          shape: const CircleBorder(),
+        ),
+        onPressed: onPressed,
+      ),
+    );
+  }
+}
+
+class _FullPageError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  final LanguageProvider lang;
+
+  const _FullPageError({required this.message, required this.onRetry, required this.lang});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: EmptyState(
+        icon: Icons.error_outline,
+        title: lang.translate('error_loading_budgets'),
+        message: message,
+        actionText: lang.translate('retry'),
+        onAction: onRetry,
+      ),
+    );
+  }
+}

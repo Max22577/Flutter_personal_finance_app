@@ -22,6 +22,7 @@ class SmallStatCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
+      margin: EdgeInsets.zero, 
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.4)),
@@ -30,55 +31,113 @@ class SmallStatCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Icon Badge
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle, 
-              ),
-              child: Icon(
-                icon, 
-                color: iconColor, 
-                size: textScaler.scale(20).clamp(18, 24),
-              ),
+            // Adaptive Icon Badge
+            CircularIconBadge(
+              icon: icon,
+              color: iconColor,
+              textScaler: textScaler,
             ),
 
             const SizedBox(height: 12),
 
-            // Value Display
-            // FittedBox ensures the number never breaks the card width
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                value.toInt().toString(),
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                  color: colors.onSurface,
-                ),
-              ),
+            // Scalable Value
+            _StatValue(
+              value: value,
+              style: theme.textTheme.titleLarge,
             ),
 
             const SizedBox(height: 4),
 
-            // Adaptive Label
-            // We use a fixed number of lines to keep card heights consistent in a grid
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: colors.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
-                fontSize: textScaler.scale(12).clamp(10, 14),
-              ),
+            // Constrained Label
+            _StatLabel(
+              label: label,
+              textScaler: textScaler,
+              style: theme.textTheme.labelMedium,
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StatValue extends StatelessWidget {
+  final double value;
+  final TextStyle? style;
+
+  const _StatValue({required this.value, this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        value.toInt().toString(),
+        style: style?.copyWith(
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.5,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatLabel extends StatelessWidget {
+  final String label;
+  final TextScaler textScaler;
+  final TextStyle? style;
+
+  const _StatLabel({
+    required this.label,
+    required this.textScaler,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Text(
+      label,
+      textAlign: TextAlign.center,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style?.copyWith(
+        color: colors.onSurfaceVariant,
+        fontWeight: FontWeight.w500,
+        fontSize: textScaler.scale(12).clamp(10, 14),
+      ),
+    );
+  }
+}
+
+class CircularIconBadge extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final TextScaler textScaler;
+  final double baseSize;
+
+  const CircularIconBadge({
+    super.key,
+    required this.icon,
+    required this.color,
+    required this.textScaler,
+    this.baseSize = 20,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        icon,
+        color: color,
+        size: textScaler.scale(baseSize).clamp(18, 24),
       ),
     );
   }
