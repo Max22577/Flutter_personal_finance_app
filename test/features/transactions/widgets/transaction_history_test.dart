@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:personal_fin/core/widgets/empty_state.dart';
+import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:provider/provider.dart';
 import 'package:personal_fin/features/transactions/widgets/transaction_history.dart';
-import 'package:personal_fin/features/transactions/widgets/state/loading_state.dart';
-import 'package:personal_fin/features/transactions/widgets/state/error_state.dart';
-import 'package:personal_fin/features/transactions/widgets/state/empty_state.dart';
-import 'package:personal_fin/features/transactions/widgets/transaction_group.dart';
+import 'package:personal_fin/features/transactions/widgets/transaction_history/state/error_state.dart';
+import 'package:personal_fin/features/transactions/widgets/transaction_history/transaction_group.dart';
 import 'package:personal_fin/features/transactions/view_models/transactions_view_model.dart';
 import 'package:personal_fin/models/transaction.dart';
 import '../../../helpers/test_helpers.dart';

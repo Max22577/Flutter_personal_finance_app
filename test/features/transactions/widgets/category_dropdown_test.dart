@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/features/transactions/widgets/category_dropdown.dart';
+import 'package:personal_fin/features/transactions/widgets/transaction_form/category_dropdown.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:provider/provider.dart';
 import '../../../helpers/test_helpers.dart';
