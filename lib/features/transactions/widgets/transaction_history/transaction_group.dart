@@ -5,7 +5,7 @@ import 'package:personal_fin/features/transactions/widgets/transaction_form.dart
 import 'package:personal_fin/models/transaction.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:provider/provider.dart';
-import 'transaction_tile.dart';
+import 'transaction_group/transaction_tile.dart';
 
 class TransactionGroupWidget extends StatelessWidget {
   final DateTime date;

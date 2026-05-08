@@ -6,8 +6,8 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/utils/app_feedback.dart';
 import 'package:personal_fin/core/utils/currency_formatter.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
-import 'package:personal_fin/features/transactions/widgets/category_dropdown.dart';
-import 'package:personal_fin/features/transactions/widgets/type_selector.dart';
+import 'package:personal_fin/features/transactions/widgets/transaction_form/category_dropdown.dart';
+import 'package:personal_fin/features/transactions/widgets/transaction_form/type_selector.dart';
 import 'package:personal_fin/features/transactions/view_models/transactions_view_model.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:personal_fin/models/transaction.dart' show Transaction;
@@ -64,11 +64,9 @@ class _TransactionFormState extends State<TransactionForm> {
 
   double? _parseAmount(String input) {
     if (input.isEmpty) return null;
-    
     try {
       String cleaned = input.replaceAll(_currencySymbol ?? '', '');
       cleaned = cleaned.replaceAll(',', '').trim();
-      
       return double.tryParse(cleaned);
     } catch (e) {
       debugPrint('Error parsing amount: $e');
@@ -141,15 +139,16 @@ class _TransactionFormState extends State<TransactionForm> {
     final textTheme = theme.textTheme;
     final lang = context.watch<LanguageProvider>();
     final cf = context.watch<CurrencyProvider>().formatter;
-    final financialColors = theme.extension<FinancialColors>() ?? FinancialColors(income: Colors.green, expense: Colors.red);
+    
+    final financialColors = theme.extension<FinancialColors>() ?? 
+        FinancialColors(income: Colors.green, expense: Colors.red);
     final isIncome = _selectedType == 'Income';
     final typeColor = isIncome ? financialColors.income : financialColors.expense;
-    final textScaler = MediaQuery.textScalerOf(context);
     
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(25.0)),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0), // The "Frosted" intensity
+        filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
         child: Container(
           decoration: BoxDecoration(
             color: colors.surface.withValues(alpha: 0.7), 
@@ -168,7 +167,9 @@ class _TransactionFormState extends State<TransactionForm> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Text(
-                    widget.transactionToEdit != null ? lang.translate('edit_transaction') : lang.translate('new_transaction'),
+                    widget.transactionToEdit != null 
+                        ? lang.translate('edit_transaction') 
+                        : lang.translate('new_transaction'),
                     style: textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colors.primary,
@@ -190,69 +191,29 @@ class _TransactionFormState extends State<TransactionForm> {
                   ),
                   const SizedBox(height: 20),
 
-                  // --- Amount Field with Currency Symbol ---
-                  TextFormField(
+                  // Amount Field
+                  _AmountField(
                     controller: _amountController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: lang.translate('amount'),
-                      prefixIcon: Icon(Icons.money, color: typeColor),
-                      prefixText: _currencySymbol != null ? '$_currencySymbol ' : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: colors.surfaceContainerHigh.withValues(alpha: 0.5),
-                      labelStyle: TextStyle(color: typeColor),
-                      hintStyle: TextStyle(color: colors.onSurface.withValues(alpha: 0.5)),
-                    ),
-                    style: textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: colors.onSurface,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return lang.translate('err_amount_empty');
-                      }
-                      
-                      final amount = _parseAmount(value);
-                      if (amount == null) {
-                        return lang.translate('err_amount_invalid');
-                      }
-                      if (amount <= 0) {
-                        return lang.translate('err_amount_zero');
-                      }
-                      return null;
-                    },
-                    onChanged: (value) {
-                      // Optional: Format as user types
-                    },
+                    currencySymbol: _currencySymbol,
+                    typeColor: typeColor,
+                    colors: colors,
+                    textTheme: textTheme,
+                    lang: lang,
+                    parseAmount: _parseAmount,
+                    onChanged: (_) => setState(() {}), // Force rebuild to update the live preview
                   ),
                   const SizedBox(height: 20),
 
-                  // --- Title / Description ---
-                  TextFormField(
+                  // Title Field
+                  _TitleField(
                     controller: _titleController,
-                    decoration: InputDecoration(
-                      labelText: lang.translate('title_desc'),
-                      hintText: lang.translate('title_hint'),
-                      prefixIcon: Icon(Icons.description, color: colors.primary),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: colors.surfaceContainerHigh.withValues(alpha: 0.5),
-                      labelStyle: TextStyle(color: colors.primary),
-                      hintStyle: TextStyle(color: colors.onSurface.withValues(alpha: 0.5)),
-                    ),
-                    style: textTheme.bodyLarge?.copyWith(
-                      color: colors.onSurface,
-                    ),
-                    validator: (value) => value == null || value.isEmpty ? lang.translate('err_title_empty') : null,
-                    maxLength: 100,
+                    colors: colors,
+                    textTheme: textTheme,
+                    lang: lang,
                   ),
                   const SizedBox(height: 20),
 
+                  // Category Selector
                   CategoryDropdown(
                     selectedCategory: _selectedCategory,
                     categories: vm.categories,
@@ -264,74 +225,40 @@ class _TransactionFormState extends State<TransactionForm> {
                   ),
                   const SizedBox(height: 20),
 
-                  // --- Date Picker ---
-                  GestureDetector(
+                  // Date Picker
+                  CustomDatePickerField(
+                    selectedDate: _selectedDate,
+                    localeCode: lang.localeCode,
+                    labelText: lang.translate('date'),
+                    colors: colors,
+                    textTheme: textTheme,
                     onTap: () => _selectDate(context),
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: lang.translate('date'),
-                        prefixIcon: Icon(Icons.calendar_today, color: colors.primary),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: colors.surfaceContainerHigh.withValues(alpha: 0.5),
-                        labelStyle: TextStyle(color: colors.primary),
-                      ),
-                      child: Row(
-                        children: <Widget>[
-                          Expanded( // Allows text to wrap or shrink if font is huge
-                            child: Text(
-                              DateFormat('MMMM d, yyyy', lang.localeCode).format(_selectedDate),
-                              style: textTheme.bodyLarge,
-                            ),
-                          ),
-                          Icon(Icons.arrow_drop_down, color: colors.primary),
-                        ],
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 20),
 
-                  // --- Save Button ---
-                  ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: textScaler.scale(48)),
-                    child: ElevatedButton(
-                      onPressed: vm.isSaving ? null : () => _handleSubmit(lang),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isIncome ? financialColors.income : financialColors.expense,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                        shadowColor: colors.shadow,
-                      ),
-                      child: vm.isSaving
-                          ? SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 3,
-                              ),
-                            )
-                          : Text(
-                              widget.transactionToEdit != null ? lang.translate('update_transaction') : lang.translate('save_transaction'),
-                              style: textTheme.labelLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
+                  // Action Button
+                  _SaveButton(
+                    isSaving: vm.isSaving,
+                    buttonColor: typeColor,
+                    buttonText: widget.transactionToEdit != null 
+                        ? lang.translate('update_transaction') 
+                        : lang.translate('save_transaction'),
+                    textTheme: textTheme,
+                    colors: colors,
+                    onPressed: () => _handleSubmit(lang),
                   ),
-
                   const SizedBox(height: 50),
                   
-                  // preview 
-                  if (_amountController.text.isNotEmpty)
-                    _buildPreview(cf, lang, textTheme, typeColor, isIncome),
+                  // Live Preview
+                  _TransactionPreview(
+                    amountText: _amountController.text,
+                    cf: cf,
+                    lang: lang,
+                    textTheme: textTheme,
+                    typeColor: typeColor,
+                    isIncome: isIncome,
+                    parseAmount: _parseAmount,
+                  ),
                 ],
               ),
             ),
@@ -340,11 +267,236 @@ class _TransactionFormState extends State<TransactionForm> {
       ),
     );
   }
+}
 
-  Widget _buildPreview(CurrencyFormatter cf, LanguageProvider lang, TextTheme textTheme, Color typeColor, bool isIncome) {
+class CustomDatePickerField extends StatelessWidget {
+  final DateTime selectedDate;
+  final String localeCode;
+  final String labelText;
+  final ColorScheme colors;
+  final TextTheme textTheme;
+  final VoidCallback onTap;
+
+  const CustomDatePickerField({
+    super.key,
+    required this.selectedDate,
+    required this.localeCode,
+    required this.labelText,
+    required this.colors,
+    required this.textTheme,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: labelText,
+          prefixIcon: Icon(Icons.calendar_today, color: colors.primary),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          filled: true,
+          fillColor: colors.surfaceContainerHigh.withValues(alpha: 0.5),
+          labelStyle: TextStyle(color: colors.primary),
+        ),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                DateFormat('MMMM d, yyyy', localeCode).format(selectedDate),
+                style: textTheme.bodyLarge,
+              ),
+            ),
+            Icon(Icons.arrow_drop_down, color: colors.primary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AmountField extends StatelessWidget {
+  final TextEditingController controller;
+  final String? currencySymbol;
+  final Color typeColor;
+  final ColorScheme colors;
+  final TextTheme textTheme;
+  final LanguageProvider lang;
+  final double? Function(String) parseAmount;
+  final ValueChanged<String> onChanged;
+
+  const _AmountField({
+    required this.controller,
+    required this.currencySymbol,
+    required this.typeColor,
+    required this.colors,
+    required this.textTheme,
+    required this.lang,
+    required this.parseAmount,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: InputDecoration(
+        labelText: lang.translate('amount'),
+        prefixIcon: Icon(Icons.money, color: typeColor),
+        prefixText: currencySymbol != null ? '$currencySymbol ' : null,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: colors.surfaceContainerHigh.withValues(alpha: 0.5),
+        labelStyle: TextStyle(color: typeColor),
+        hintStyle: TextStyle(color: colors.onSurface.withValues(alpha: 0.5)),
+      ),
+      style: textTheme.bodyLarge?.copyWith(
+        fontWeight: FontWeight.w500,
+        color: colors.onSurface,
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return lang.translate('err_amount_empty');
+        }
+        final amount = parseAmount(value);
+        if (amount == null) {
+          return lang.translate('err_amount_invalid');
+        }
+        if (amount <= 0) {
+          return lang.translate('err_amount_zero');
+        }
+        return null;
+      },
+      onChanged: onChanged,
+    );
+  }
+}
+
+class _TitleField extends StatelessWidget {
+  final TextEditingController controller;
+  final ColorScheme colors;
+  final TextTheme textTheme;
+  final LanguageProvider lang;
+
+  const _TitleField({
+    required this.controller,
+    required this.colors,
+    required this.textTheme,
+    required this.lang,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: lang.translate('title_desc'),
+        hintText: lang.translate('title_hint'),
+        prefixIcon: Icon(Icons.description, color: colors.primary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: colors.surfaceContainerHigh.withValues(alpha: 0.5),
+        labelStyle: TextStyle(color: colors.primary),
+        hintStyle: TextStyle(color: colors.onSurface.withValues(alpha: 0.5)),
+      ),
+      style: textTheme.bodyLarge?.copyWith(
+        color: colors.onSurface,
+      ),
+      validator: (value) => value == null || value.isEmpty ? lang.translate('err_title_empty') : null,
+      maxLength: 100,
+    );
+  }
+}
+
+class _SaveButton extends StatelessWidget {
+  final bool isSaving;
+  final Color buttonColor;
+  final String buttonText;
+  final TextTheme textTheme;
+  final ColorScheme colors;
+  final VoidCallback onPressed;
+
+  const _SaveButton({
+    required this.isSaving,
+    required this.buttonColor,
+    required this.buttonText,
+    required this.textTheme,
+    required this.colors,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textScaler = MediaQuery.textScalerOf(context);
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: textScaler.scale(48)),
+      child: ElevatedButton(
+        onPressed: isSaving ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: buttonColor,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 2,
+          shadowColor: colors.shadow,
+        ),
+        child: isSaving
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 3,
+                ),
+              )
+            : Text(
+                buttonText,
+                style: textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+      ),
+    );
+  }
+}
+
+class _TransactionPreview extends StatelessWidget {
+  final String amountText;
+  final CurrencyFormatter cf;
+  final LanguageProvider lang;
+  final TextTheme textTheme;
+  final Color typeColor;
+  final bool isIncome;
+  final double? Function(String) parseAmount;
+
+  const _TransactionPreview({
+    required this.amountText,
+    required this.cf,
+    required this.lang,
+    required this.textTheme,
+    required this.typeColor,
+    required this.isIncome,
+    required this.parseAmount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (amountText.isEmpty) return const SizedBox.shrink();
+
     return FutureBuilder<String>(
       future: () async {
-        final amount = _parseAmount(_amountController.text);
+        final amount = parseAmount(amountText);
         if (amount == null || amount <= 0) return '';
         return cf.formatNumber(amount, lang.localeCode);
       }(),

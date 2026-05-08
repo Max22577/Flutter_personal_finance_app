@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme/app_theme.dart';
 
 class AppDrawer extends StatelessWidget {
   final String userName;
   final String userEmail;
   final void Function(String routeName) onNavigate;
   final VoidCallback onLogout;
-  
+
   const AppDrawer({
     required this.onNavigate,
-    required this.onLogout, 
+    required this.onLogout,
     required this.userName,
     required this.userEmail,
     super.key,
@@ -20,280 +19,247 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final textTheme = theme.textTheme;
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = Theme.of(context).colorScheme;
     final lang = context.watch<LanguageProvider>();
-    
+
     return Drawer(
       backgroundColor: colors.surface,
       child: Column(
-        children: <Widget>[
-          UserAccountsDrawerHeader(
-            accountName: Text(
-              userName, 
-              style: textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colors.onPrimary,
-              ),
-            ),
-            accountEmail: Text(
-              userEmail,
-              style: textTheme.bodyMedium?.copyWith(
-                color: colors.onPrimary.withValues(alpha: 0.8),
-              ),
-            ),
-            decoration: BoxDecoration(
-              color: isDark ? colors.surfaceContainerHigh : colors.primary,
-              image: DecorationImage(
-                image: const AssetImage('assets/images/user_header.jpg'), 
-                fit: BoxFit.cover,
-                opacity: isDark ? 0.3 : 0.5,
-                alignment: Alignment.center,
-              ),
-            ),
-            currentAccountPicture: CircleAvatar(
-              backgroundColor: colors.primaryContainer,
-              child: Icon(
-                Icons.account_balance_wallet, 
-                color: colors.onPrimaryContainer, 
-                size: 40,
-              ),
-            ),
-          ),
-          
+        children: [
+          _DrawerHeader(userName: userName, userEmail: userEmail),
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
-              children: <Widget>[
-                // --- Dashboard Menu Item ---
-                _buildDrawerItem(
-                  context: context,
+              children: [
+                _DrawerItem(
                   icon: Icons.dashboard_rounded,
                   title: lang.translate('dashboard'),
                   onTap: () => onNavigate('/dashboard'),
                 ),
-                
-                // --- Profile Expansion ---
-                _buildExpansionTile(
-                  context: context,
-                  icon: Icons.person_outline,
-                  title: lang.translate('profile'),
-                  children: [
-                    _buildSubMenuItem(
-                      context: context,
-                      icon: Icons.account_circle,
-                      title: lang.translate('user_profile'),
-                      color: colors.primary,
-                      onTap: () => onNavigate('/profile'),
-                    ),
-                    _buildSubMenuItem(
-                      context: context,
-                      icon: Icons.logout,
-                      title: lang.translate('logout'),
-                      color: colors.error,
-                      onTap: onLogout,
-                      
-                    ),
-                  ],
+                _AccountGroup(
+                  onNavigate: onNavigate,
+                  onLogout: onLogout,
                 ),
-                
-                // --- Financial Tools Expansion ---
-                _buildExpansionTile(
-                  context: context,
-                  icon: Icons.calculate_rounded,
-                  title: 'Financial Tools',
-                  children: [
-                    _buildSubMenuItem(
-                      context: context,
-                      icon: Icons.trending_up,
-                      title: 'Savings Calculator',
-                      color: AppColors.incomeGreen, 
-                      onTap: () => onNavigate('/tools/savings'),
-                    ),
-                    _buildSubMenuItem(
-                      context: context,
-                      icon: Icons.analytics_rounded,
-                      title: 'Monthly Report',
-                      color: colors.secondary,
-                      onTap: () => onNavigate('/tools/report'),
-                    ),
-                  ],
-                ),
-
-                // --- Settings ---
-                _buildDrawerItem(
-                  context: context,
+                _FinancialToolsGroup(onNavigate: onNavigate),
+                _TransactionGroup(onNavigate: onNavigate),
+                _BudgetingGroup(onNavigate: onNavigate),
+                _SavingsGroup(onNavigate: onNavigate),
+                _DrawerItem(
                   icon: Icons.settings,
                   title: lang.translate('settings'),
                   onTap: () => onNavigate('/settings'),
                 ),
-
-                Divider(color: colors.outlineVariant.withValues(alpha: 0.3)),
-
-                _buildExpansionTile(
-                  context: context,
-                  icon: Icons.category_rounded,
-                  title: lang.translate('transactions'),
-                  children: [
-                    _buildSubMenuItem(
-                      context: context,
-                      icon: Icons.label_important_outline,
-                      title: lang.translate('manage_categories'),
-                      color: colors.primary,
-                      onTap: () => onNavigate('/categories'),
-                    ),
-                    _buildSubMenuItem(
-                      context: context,
-                      icon: Icons.attach_money,
-                      title: lang.translate('view_transactions'),
-                      color: colors.primary,
-                      onTap: () => onNavigate('/transactions'),
-                    ),                    
-                  ],
-                ),
-                
-                _buildExpansionTile(
-                  context: context,
-                  icon: Icons.attach_money,
-                  title: lang.translate('budgeting'),
-
-                  children: [
-                    _buildSubMenuItem(
-                      context: context,
-                      icon: Icons.attach_money,
-                      title: lang.translate('set_budgets'),
-                      color: colors.primary,
-                      onTap: () => onNavigate('/budgeting'),
-                    ),
-                  ],
-                ),
-                
-                _buildExpansionTile(
-                  context: context,
-                  icon: Icons.wallet_travel,
-                  title: lang.translate('savings'),
-                  children: [
-                    _buildSubMenuItem(
-                      context: context,
-                      icon: Icons.attach_money,
-                      title: lang.translate('savings_progress'),
-                      color: AppColors.lightPrimary, 
-                      onTap: () => onNavigate('/savings'),
-                    ),
-                    _buildSubMenuItem(
-                      context: context,
-                      icon: Icons.wallet_travel,
-                      title: lang.translate('set_savings_goal'),
-                      color: AppColors.lightPrimary,
-                      onTap: () => onNavigate('/savings/goal'),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
-          Divider(color: colors.outlineVariant.withValues(alpha: 0.3), indent: 16, endIndent: 16),
-
-          _buildThemeToggle(context: context),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20, top: 10),
-            child: Text(
-              "App Version 1.0.2",
-              style: theme.textTheme.labelSmall?.copyWith(color: colors.onSurfaceVariant),
-            ),
-          ),          
+          const Divider(indent: 16, endIndent: 16),
+          const _ThemeToggleTile(),
+          const _DrawerFooter(),
         ],
       ),
     );
   }
+}
 
-  // Helper method for drawer items
-  Widget _buildDrawerItem({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
+class _DrawerHeader extends StatelessWidget {
+  final String userName;
+  final String userEmail;
+
+  const _DrawerHeader({required this.userName, required this.userEmail});
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: colors.primary,
+    final isDark = theme.brightness == Brightness.dark;
+
+    return UserAccountsDrawerHeader(
+      accountName: Text(userName, 
+        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: colors.onPrimary)),
+      accountEmail: Text(userEmail, 
+        style: theme.textTheme.bodyMedium?.copyWith(color: colors.onPrimary.withValues(alpha: 0.8))),
+      currentAccountPicture: CircleAvatar(
+        backgroundColor: colors.primaryContainer,
+        child: Icon(Icons.account_balance_wallet, color: colors.onPrimaryContainer, size: 40),
       ),
-      title: Text(
-        title,
-        style: theme.textTheme.bodyLarge?.copyWith(
-          color: colors.onSurface,
-          fontWeight: FontWeight.w600
+      decoration: BoxDecoration(
+        color: isDark ? colors.surfaceContainerHigh : colors.primary,
+        image: const DecorationImage(
+          image: AssetImage('assets/images/user_header.jpg'),
+          fit: BoxFit.cover,
+          opacity: 0.4,
         ),
       ),
+    );
+  }
+}
+
+class _DrawerItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  const _DrawerItem({required this.icon, required this.title, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListTile(
+      leading: Icon(icon, color: theme.colorScheme.primary),
+      title: Text(title, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
       onTap: onTap,
     );
   }
+}
 
-  // Helper method for expansion tiles
-  Widget _buildExpansionTile({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required List<Widget> children,
-  }) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    
+class _DrawerGroup extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final List<Widget> children;
+
+  const _DrawerGroup({required this.icon, required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return ExpansionTile(
-      leading: Icon(
-        icon,
-        color: colors.primary,
-      ),
-      title: Text(
-        title,
-        style: theme.textTheme.bodyLarge?.copyWith(
-          color: colors.onSurface,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-      collapsedIconColor: colors.onSurfaceVariant,
-      iconColor: colors.primary,
-      shape: const Border(),
+      leading: Icon(icon, color: colors.primary),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       children: children,
     );
   }
+}
 
-  // Helper method for submenu items
-  Widget _buildSubMenuItem({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: color,
-        size: 20,
-      ),
-      title: Text(
-        title,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+class _FinancialToolsGroup extends StatelessWidget {
+  final Function(String) onNavigate;
+  const _FinancialToolsGroup({required this.onNavigate});
+
+  @override
+  Widget build(BuildContext context) {
+    // You can access LangProvider here via context.watch
+    return _DrawerGroup(
+      icon: Icons.calculate_rounded,
+      title: 'Financial Tools',
+      children: [
+        _DrawerItem(
+          icon: Icons.trending_up, 
+          title: 'Savings Calculator', 
+          onTap: () => onNavigate('/tools/savings')
         ),
-      ),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.only(left: 30),
+      ],
     );
   }
+}
 
-  // Helper method for theme toggle
-  Widget _buildThemeToggle({required BuildContext context}) {
+class _AccountGroup extends StatelessWidget {
+  final Function(String) onNavigate;
+  final VoidCallback onLogout;
+
+  const _AccountGroup({required this.onNavigate, required this.onLogout});
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
+    return _DrawerGroup(
+      icon: Icons.person_outline, 
+      title: lang.translate('profile'), 
+      children: [
+        _DrawerItem(
+          icon: Icons.account_circle, 
+          title: lang.translate('user_profile'), 
+          onTap: () => onNavigate('/profile'),
+        ),
+        _DrawerItem(
+          icon: Icons.logout, 
+          title: lang.translate('logout'), 
+          onTap: onLogout
+        ),
+      ]
+    );
+  }
+}
+
+class _TransactionGroup extends StatelessWidget {
+  final Function(String) onNavigate;
+
+  const _TransactionGroup({required this.onNavigate});
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
+    return _DrawerGroup(
+      icon: Icons.category_rounded,
+      title: lang.translate('transactions'),
+      children: [
+        _DrawerItem(
+          icon: Icons.label_important_outline,
+          title: lang.translate('manage_categories'),
+          onTap: () => onNavigate('/categories'),
+        ),
+        _DrawerItem(
+          icon: Icons.attach_money,
+          title: lang.translate('view_transactions'),
+          onTap: () => onNavigate('/transactions'),
+        ),                    
+      ],
+    );
+  }
+}
+
+class _BudgetingGroup extends StatelessWidget {
+  final Function(String) onNavigate;
+
+  const _BudgetingGroup({required this.onNavigate});
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
+    return _DrawerGroup(
+      icon: Icons.attach_money,
+      title: lang.translate('budgeting'),
+      children: [
+        _DrawerItem(
+          icon: Icons.attach_money,
+          title: lang.translate('set_budgets'),
+          onTap: () => onNavigate('/budgeting'),
+        ),                   
+      ],
+    );
+  }
+}
+
+class _SavingsGroup extends StatelessWidget {
+  final Function(String) onNavigate;
+
+  const _SavingsGroup({required this.onNavigate});
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
+    return _DrawerGroup(
+      icon: Icons.wallet_travel,
+      title: lang.translate('savings'),
+      children: [
+        _DrawerItem(
+          icon: Icons.attach_money,
+          title: lang.translate('savings_progress'),
+          onTap: () => onNavigate('/savings'),
+        ),
+        _DrawerItem(
+          icon: Icons.wallet_travel,
+          title: lang.translate('set_savings_goal'),
+          onTap: () => onNavigate('/savings/goal'),
+        ),                    
+      ],
+    );
+  }
+}
+
+class _ThemeToggleTile extends StatelessWidget {
+  const _ThemeToggleTile();
+
+  @override
+  Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -328,6 +294,23 @@ class AppDrawer extends StatelessWidget {
             themeProvider.changeTheme('Light');
           }
         },
+      ),
+    );
+  }
+}
+
+class _DrawerFooter extends StatelessWidget {
+  const _DrawerFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20, top: 10),
+      child: Text(
+        "App Version 1.0.2",
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant
+        ),
       ),
     );
   }

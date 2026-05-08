@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 
 class TransactionsPage extends StatefulWidget {
   final bool isActive;
-  
+
   const TransactionsPage({required this.isActive, super.key});
 
   @override
@@ -17,77 +17,62 @@ class TransactionsPage extends StatefulWidget {
 }
 
 class _TransactionsPageState extends State<TransactionsPage> {
-  late NavigationProvider _navigationProvider;
+  late NavigationProvider _navProvider;
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _updateAppBar(context);
-    });
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initAppBar());
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _navigationProvider = context.read<NavigationProvider>();
-    _navigationProvider.addListener(_onNavChanged);
+    _navProvider = context.read<NavigationProvider>();
+    _navProvider.removeListener(_onNavChanged);
+    _navProvider.addListener(_onNavChanged);
   }
 
   void _onNavChanged() {
     if (!mounted) return;
-    
-    if (_navigationProvider.selectedIndex == 1 && _navigationProvider.currentActions.isEmpty) {
-      _updateAppBar(context);
-    } 
+    if (_navProvider.selectedIndex == 1 && _navProvider.currentActions.isEmpty) {
+      _updateAppBar();
+    }
   }
 
-  void _updateAppBar(BuildContext context) {
-      if (!mounted) return;
-      
-      if (_navigationProvider.selectedIndex == 1) {
-        _navigationProvider.setActions([
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: IconButton(
-              key: const ValueKey('_transaction_add'), 
-              icon: const Icon(Icons.add),
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.15),
-                shape: const CircleBorder(),
-              ),
-              onPressed: () => _showTransactionForm(context),
-            ),
-          ),
-        ]);
-      }
+  void _initAppBar() {
+    if (mounted && _navProvider.selectedIndex == 1) {
+      _updateAppBar();
+    }
   }
 
-  void _showTransactionForm(BuildContext context, {Transaction? transaction}) {   
+  void _updateAppBar() {
+    _navProvider.setActions([
+      _AppBarAddButton(onPressed: () => _showTransactionForm(context)),
+    ]);
+  }
+
+  void _showTransactionForm(BuildContext context, {Transaction? transaction}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent, 
-      elevation: 0,                       
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
-      ),
-      builder: (context) => TransactionForm(transactionToEdit: transaction),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      builder: (_) => TransactionForm(transactionToEdit: transaction),
     );
   }
 
   @override
   void dispose() {
+    _navProvider.removeListener(_onNavChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _navigationProvider.setActions([]);
+      _navProvider.setActions([]);
     });
-    _navigationProvider.removeListener(_onNavChanged);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final lang = context.watch<LanguageProvider>();
@@ -95,21 +80,60 @@ class _TransactionsPageState extends State<TransactionsPage> {
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
       body: TransactionHistory(isActive: widget.isActive),
-      
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'transaction_add',
+      floatingActionButton: _AddTransactionFAB(
         onPressed: () => _showTransactionForm(context),
-        icon:  Icon(Icons.add, key: const ValueKey('add_transaction'), color: colors.onSurface),
-        label: Text(lang.translate('new_transaction'), style: theme.textTheme.labelLarge),
-        elevation: 4, 
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.2)), 
-        ),
-        backgroundColor: colors.primaryContainer,
-        foregroundColor: Colors.white,
+        label: lang.translate('new_transaction'),
       ),
       floatingActionButtonLocation: const RaisedFloatingActionButtonLocation(),
+    );
+  }
+}
+
+
+class _AppBarAddButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _AppBarAddButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: IconButton(
+        icon: const Icon(Icons.add),
+        style: IconButton.styleFrom(
+          backgroundColor: Colors.white.withValues(alpha: 0.15),
+          shape: const CircleBorder(),
+        ),
+        onPressed: onPressed,
+      ),
+    );
+  }
+}
+
+class _AddTransactionFAB extends StatelessWidget {
+  final VoidCallback onPressed;
+  final String label;
+
+  const _AddTransactionFAB({required this.onPressed, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return FloatingActionButton.extended(
+      heroTag: 'transaction_add',
+      onPressed: onPressed,
+      icon: const Icon(Icons.add),
+      label: Text(label, style: theme.textTheme.labelLarge),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.2)),
+      ),
+      backgroundColor: colors.primaryContainer,
+      foregroundColor: colors.onPrimaryContainer, // Fixed: Use theme-appropriate color
     );
   }
 }

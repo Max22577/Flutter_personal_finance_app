@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:personal_fin/core/utils/app_feedback.dart';
+import 'package:personal_fin/features/profile/view_models/profile_view_model.dart';
 import 'package:provider/provider.dart';
-import '../view_models/profile_view_model.dart';
 
 class ProfilePage extends StatelessWidget {
   final ProfileViewModel? viewModel;
@@ -26,64 +26,41 @@ class ProfileViewContent extends StatefulWidget {
 }
 
 class _ProfileViewContentState extends State<ProfileViewContent> {
-  final _fullNameController = TextEditingController();
-  final _bioController = TextEditingController();
+  late final TextEditingController _fullNameController;
+  late final TextEditingController _bioController;
   final _formKey = GlobalKey<FormState>();
-  late NavigationProvider? _navigationProvider;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _updateAppBar();
-    });
+    final vm = context.read<ProfileViewModel>();
+    _fullNameController = TextEditingController(text: vm.fullName);
+    _bioController = TextEditingController(text: vm.bio);
+
+    // Initial setup of AppBar
+    WidgetsBinding.instance.addPostFrameCallback((_) => _setupNavigationListeners());
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    try {
-      _navigationProvider = context.read<NavigationProvider>();
-      _navigationProvider?.addListener(_onNavChanged); 
-    } catch (e) {
-      debugPrint('NavigationProvider not found: $e');
-    }
-  }
-
-  void _onNavChanged() {
-    if (!mounted || _navigationProvider == null) return;
+  void _setupNavigationListeners() {
+    if (!mounted) return;
+    final nav = context.read<NavigationProvider>();
     
-    if (_navigationProvider!.selectedIndex == 3 && _navigationProvider!.currentActions.isEmpty) {
-      _updateAppBar();
-    } 
+    nav.addListener(_updateAppBarLogic);
+    _updateAppBarLogic(); 
   }
 
-  void _updateAppBar() {
-    if (!mounted || _navigationProvider == null) return;
-
-    if (_navigationProvider!.selectedIndex == 3) {
-      _navigationProvider!.setActions([
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.15),
-              shape: const CircleBorder(),
-            ),
-            onPressed: () => context.read<ProfileViewModel>().signOut(),
-          ),
-        )
-      ]);
+  void _updateAppBarLogic() {
+    final nav = context.read<NavigationProvider>();
+    final vm = context.read<ProfileViewModel>();
+    
+    if (nav.selectedIndex == 3) {
+      _ProfileActionsHandler.setProfileActions(context, nav, vm);
     }
-
   }
 
   @override
   void dispose() {
-    if (_navigationProvider != null) {
-      _navigationProvider!.removeListener(_onNavChanged);
-    }
+    context.read<NavigationProvider>().removeListener(_updateAppBarLogic);
     _fullNameController.dispose();
     _bioController.dispose();
     super.dispose();
@@ -92,65 +69,73 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ProfileViewModel>();
+    final colors = Theme.of(context).colorScheme;
     final lang = context.watch<LanguageProvider>();
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
-    // Sync controllers with VM data when it loads
-    if (!vm.isLoading && _fullNameController.text.isEmpty) {
-      _fullNameController.text = vm.fullName ?? '';
-      _bioController.text = vm.bio ?? '';
-    }
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
       body: vm.isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
-            child: Column(
+          ? const Center(child: CircularProgressIndicator())
+          : ListView( // Changed to ListView for better scroll physics
               children: [
-                _buildHeader(context, colors, theme, vm),
+                _ProfileHeader(
+                  fullName: _fullNameController.text,
+                  email: vm.authEmail,
+                  photoUrl: vm.photoUrl,
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                   child: Form(
                     key: _formKey,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildSectionHeader(theme, lang.translate('account_security')),
-                        _buildInfoTile(Icons.email, lang.translate('email'), vm.authEmail, theme.colorScheme),
+                        _SectionHeader(title: lang.translate('account_security')),
+                        _InfoSection(email: vm.authEmail),
                         const SizedBox(height: 24),
-                        _buildSectionHeader(theme, lang.translate('public_details')),
-                        _buildTextField(
-                          controller: _fullNameController,
-                          label: lang.translate('display_name'),
-                          icon: Icons.badge,
-                          theme: theme,
+                        _PublicDetailsSection(
+                          nameController: _fullNameController,
+                          bioController: _bioController,
                         ),
-                        const SizedBox(height: 20),
-                        _buildTextField(
-                          controller: _bioController,
-                          label: lang.translate('short_bio'),
-                          icon: Icons.auto_awesome,
-                          theme: theme,
-                          isBio: true,
+                        const SizedBox(height: 32),
+                        _SaveProfileButton(
+                          vm: vm,
+                          name: _fullNameController,
+                          bio: _bioController,
                         ),
-                        const SizedBox(height: 30),
-                        _buildSaveButton(context, vm, lang, colors, textTheme),
-                        const SizedBox(height: 140),
+                        const SizedBox(height: 100),
                       ],
                     ),
                   ),
                 ),
               ],
             ),
-          ),
     );
   }
+}
 
-  // 1. Beautiful Header with overlapping Avatar
-  Widget _buildHeader(BuildContext context, ColorScheme colors, ThemeData theme, ProfileViewModel vm) {
+class _ProfileActionsHandler {
+  static void setProfileActions(BuildContext context, NavigationProvider nav, ProfileViewModel vm) {
+    nav.setActions([
+      IconButton(
+        icon: const Icon(Icons.logout_rounded),
+        onPressed: () => vm.signOut(),
+      ),
+    ]);
+  }
+}
+
+class _ProfileHeader extends StatelessWidget {
+  final String fullName;
+  final String email;
+  final String? photoUrl;
+
+  const _ProfileHeader({required this.fullName, required this.email, this.photoUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 32),
@@ -167,17 +152,17 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
       ),
       child: Column(
         children: [
-          _buildAvatar(context, colors, vm),
+          _AvatarStack(photoUrl),
           const SizedBox(height: 16),
           Text(
-            _fullNameController.text.isEmpty ? 'Your Profile' : _fullNameController.text,
+            fullName.isEmpty ? 'Your Profile' : fullName,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               letterSpacing: -0.5,
             ),
           ),
           Text(
-            vm.authEmail,
+            email,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.onSurfaceVariant,
             ),
@@ -186,11 +171,19 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
       ),
     );
   }
+}
 
-  // 2. Refined Avatar with Edit Overlay
-  Widget _buildAvatar(BuildContext context, ColorScheme colors, ProfileViewModel vm) {
+class _AvatarStack extends StatelessWidget {
+  final String? photoUrl;
+
+  const _AvatarStack(this.photoUrl);
+
+  @override
+  Widget build(BuildContext context) {
     final messenger = ScaffoldMessenger.of(context);
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return Container(
       padding: const EdgeInsets.all(4),
@@ -200,10 +193,10 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
           CircleAvatar(
             radius: 65,
             backgroundColor: colors.surfaceContainerHigh,
-            backgroundImage: vm.photoUrl != null 
-                ? NetworkImage(vm.photoUrl!) 
+            backgroundImage: photoUrl != null 
+                ? NetworkImage(photoUrl!) 
                 : null,
-            child: vm.photoUrl == null 
+            child: photoUrl == null 
                 ? Icon(Icons.person_rounded, size: 70, color: colors.outline) 
                 : null,
           ),
@@ -223,22 +216,43 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
       ),
     );
   }
+}
 
-  Widget _buildSectionHeader(ThemeData theme, String title) {
+class _SectionHeader extends StatelessWidget {
+  final String title;
+
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textTheme = theme.textTheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, left: 4),
       child: Text(
         title.toUpperCase(),
-        style: theme.textTheme.labelLarge?.copyWith(
-          color: theme.colorScheme.onSurface,
+        style: textTheme.labelLarge?.copyWith(
+          color: colors.onSurface,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
         ),
       ),
     );
   }
+}
 
-  Widget _buildInfoTile(IconData icon, String label, String value, ColorScheme colors) {
+class _InfoSection extends StatelessWidget {
+  final String email;
+
+  const _InfoSection({required this.email});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final lang = context.watch<LanguageProvider>();
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -254,14 +268,14 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
       ),
       child: Row(
         children: [
-          Icon(icon, color: colors.primary.withValues(alpha: 0.7)),
+          Icon(Icons.email, color: colors.primary.withValues(alpha: 0.7)),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  label,
+                  lang.translate('email'),
                   style: TextStyle(
                     fontSize: 12,
                     color: colors.onSurfaceVariant,
@@ -269,7 +283,7 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
                   ),
                 ),
                 Text(
-                  value,
+                  email,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -284,14 +298,19 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
       ),
     );
   }
+}
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    required ThemeData theme,
-    bool isBio = false,
-  }) {
+class _PublicDetailsSection extends StatelessWidget {
+  final TextEditingController nameController;
+  final TextEditingController? bioController;
+
+  const _PublicDetailsSection({required this.nameController, this.bioController});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final lang = context.watch<LanguageProvider>();
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       decoration: BoxDecoration(
@@ -306,11 +325,11 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
         ],
       ),
       child: TextFormField(
-        controller: controller,
-        maxLines: isBio ? 4 : 1,
+        controller: nameController,
+        maxLines: bioController != null ? 4 : 1,
         decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: theme.colorScheme.primary),
+          labelText: lang.translate('display_name'),
+          prefixIcon: Icon(Icons.badge, color: theme.colorScheme.primary),
           filled: true,
           fillColor: theme.colorScheme.surface,
           border: OutlineInputBorder(
@@ -325,26 +344,20 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
       ),
     );
   }
+}
 
-  Widget _buildSaveButton(BuildContext context, ProfileViewModel vm, LanguageProvider lang, ColorScheme colors, TextTheme textTheme) {
-    final messenger = ScaffoldMessenger.of(context);
+class _SaveProfileButton extends StatelessWidget {
+  final ProfileViewModel vm;
+  final TextEditingController name;
+  final TextEditingController bio;
+
+  const _SaveProfileButton({required this.vm, required this.name, required this.bio});
+
+  @override
+  Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: vm.isLoading ? null : () async {
-        try {
-          await vm.updateProfile(
-            name: _fullNameController.text, 
-            newBio: _bioController.text,
-          );
-          if (!mounted) return;
-          AppFeedback.show(messenger, lang.translate('profile_updated'), colors: colors, textTheme: textTheme, isError: false);
-        } catch (e) {
-          AppFeedback.show(messenger, e.toString(), colors: colors, textTheme: textTheme, isError: true);
-        }
-      },
-      child: vm.isLoading 
-        ? const CircularProgressIndicator() 
-        : Text(lang.translate('save_changes')),
+      onPressed: vm.isLoading ? null : () => vm.updateProfile(name: name.text, newBio: bio.text),
+      child: vm.isLoading ? CircularProgressIndicator() : Text('Save'),
     );
   }
-
 }
