@@ -29,6 +29,7 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
   late final TextEditingController _fullNameController;
   late final TextEditingController _bioController;
   final _formKey = GlobalKey<FormState>();
+  late NavigationProvider _navProvider;
 
   @override
   void initState() {
@@ -38,29 +39,41 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
     _bioController = TextEditingController(text: vm.bio);
 
     // Initial setup of AppBar
-    WidgetsBinding.instance.addPostFrameCallback((_) => _setupNavigationListeners());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initAppBar());
   }
 
-  void _setupNavigationListeners() {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _navProvider = context.read<NavigationProvider>();
+    _navProvider.removeListener(_onNavChanged);
+    _navProvider.addListener(_onNavChanged);
+  }
+
+  void _onNavChanged() {
     if (!mounted) return;
-    final nav = context.read<NavigationProvider>();
-    
-    nav.addListener(_updateAppBarLogic);
-    _updateAppBarLogic(); 
+    if (_navProvider.selectedIndex == 3 && _navProvider.currentActions.isEmpty) {
+      _updateAppBarLogic();
+    }
+  }
+
+  void _initAppBar() {
+    if (mounted && _navProvider.selectedIndex == 3) {   
+      _updateAppBarLogic();
+    }
   }
 
   void _updateAppBarLogic() {
-    final nav = context.read<NavigationProvider>();
     final vm = context.read<ProfileViewModel>();
-    
-    if (nav.selectedIndex == 3) {
-      _ProfileActionsHandler.setProfileActions(context, nav, vm);
-    }
+    _ProfileActionsHandler.setProfileActions(context, _navProvider, vm); 
   }
 
   @override
   void dispose() {
-    context.read<NavigationProvider>().removeListener(_updateAppBarLogic);
+    _navProvider.removeListener(_onNavChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navProvider.setActions([]);
+    });
     _fullNameController.dispose();
     _bioController.dispose();
     super.dispose();
