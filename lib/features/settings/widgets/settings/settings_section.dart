@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../models/setting_item.dart';
-import 'settings_tile.dart';
-import 'switch_tile.dart';
-import 'slider_tile.dart';
-import 'destructive_tile.dart';
+import '../../../../models/setting_item.dart';
+import 'settings_section/settings_tile.dart';
+import 'settings_section/switch_tile.dart';
+import 'settings_section/slider_tile.dart';
+import 'settings_section/destructive_tile.dart';
 
 class SettingsSection extends StatelessWidget {
   final String title;
