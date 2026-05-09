@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Represents a monthly budget limit set for a specific category.
 class Budget {
   final String id; // This will typically be a combination of userId_categoryId_monthYear
   final String userId;

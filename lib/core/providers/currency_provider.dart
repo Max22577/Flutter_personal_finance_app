@@ -16,12 +16,16 @@ class CurrencyProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Create a formatter instance that updates whenever the code changes
-  CurrencyFormatter get formatter => CurrencyFormatter(currency);
+  CurrencyFormatter? _cachedFormatter;
 
-  // The method your Settings page will call
+  CurrencyFormatter get formatter {
+    _cachedFormatter ??= CurrencyFormatter(currency);
+    return _cachedFormatter!;
+  }
+
   Future<void> updateCurrency(String newCode) async {
     _currentCurrency = newCode;
+    _cachedFormatter = null;
     await _prefs.setCurrency(newCode);
     
     notifyListeners(); 

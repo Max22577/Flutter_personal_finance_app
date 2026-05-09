@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/utils/app_feedback.dart';
 import 'package:personal_fin/core/widgets/custom_appbar.dart';
-import 'package:personal_fin/features/settings/widgets/currency_picker.dart';
 import 'package:personal_fin/features/settings/view_models/general_settings_view_model.dart';
+import 'package:personal_fin/features/settings/widgets/general_settings/currency_picker.dart';
+import 'package:personal_fin/features/settings/widgets/general_settings/hero_header.dart';
 import 'package:personal_fin/models/currency.dart';
 import 'package:personal_fin/models/setting_item.dart';
 import 'package:provider/provider.dart';
@@ -11,7 +13,175 @@ import 'package:provider/provider.dart';
 class GeneralSettingsPage extends StatelessWidget {
   const GeneralSettingsPage({super.key});
 
-  Future<void> _showCurrencyPicker(BuildContext context, GeneralSettingsViewModel vm) async {
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => GeneralSettingsViewModel()..loadSettings(),
+      child: Consumer<GeneralSettingsViewModel>(
+        builder: (context, vm, _) {
+          final theme = Theme.of(context);
+
+          return Scaffold(
+            backgroundColor: theme.colorScheme.surfaceContainerLow,
+            appBar: const CustomAppBar(
+              title: 'general_settings',
+              isRootNav: false,
+            ),
+            body: vm.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : const _SettingsBody(),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Main Body of the settings
+class _SettingsBody extends StatelessWidget {
+  const _SettingsBody();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SingleChildScrollView(
+      physics: BouncingScrollPhysics(),
+      child: Column(
+        children: [
+          HeroHeader(),
+          _SettingsList(),
+          SizedBox(height: 32),
+          _DangerZone(),
+          SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+}
+
+/// The list of settings tiles
+class _SettingsList extends StatelessWidget {
+  const _SettingsList();
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<GeneralSettingsViewModel>();
+    final lang = context.watch<LanguageProvider>();
+
+    final items = [
+      SettingItem(id: 'currency', title: lang.translate('currency'), subtitle: vm.currency, icon: Icons.attach_money, type: SettingType.selection),
+      SettingItem(id: 'language', title: lang.translate('language'), subtitle: vm.language, icon: Icons.language, type: SettingType.selection),
+      SettingItem(id: 'date_format', title: lang.translate('date_format'), subtitle: vm.dateFormat, icon: Icons.calendar_today, type: SettingType.selection),
+      SettingItem(id: 'number_format', title: lang.translate('number_format'), subtitle: vm.numberFormat, icon: Icons.numbers, type: SettingType.selection),
+    ];
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: .3)),
+      ),
+      child: Column(
+        children: items.map((item) => _CustomSettingsTile(item: item)).toList(),
+      ),
+    );
+  }
+}
+
+/// Individual Tile class
+class _CustomSettingsTile extends StatelessWidget {
+  final SettingItem item;
+  const _CustomSettingsTile({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final vm = context.read<GeneralSettingsViewModel>();
+
+    return InkWell(
+      onTap: () => _handleTap(context, vm),
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: colors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(item.icon, color: colors.primary, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                item.title,
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+              ),
+            ),
+            Text(
+              item.subtitle ?? '',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_right, color: colors.outline, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleTap(BuildContext context, GeneralSettingsViewModel vm) {
+    // Logic for pickers stays here or moves to a mixin/controller
+    if (item.id == 'currency') _DialogUtils.currencyPicker(context, vm);
+    if (item.id == 'language') _DialogUtils.showLanguagePicker(context, vm);
+  }
+}
+
+/// Danger Zone section
+class _DangerZone extends StatelessWidget {
+  const _DangerZone();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final lang = context.watch<LanguageProvider>();
+    final vm = context.read<GeneralSettingsViewModel>();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            lang.translate('danger_zone'),
+            style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.error),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: () => _DialogUtils.showResetDialog(context, vm),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: theme.colorScheme.error,
+              minimumSize: const Size(double.infinity, 50),
+              side: BorderSide(color: theme.colorScheme.error.withValues(alpha: 0.5)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(lang.translate('reset_all')),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Helper class to hold static dialog logic to keep UI classes clean
+class _DialogUtils {
+  static Future<void> currencyPicker(BuildContext context, GeneralSettingsViewModel vm) async {
     final currentCurrency = Currency.getCurrency(vm.currency);
     final messenger = ScaffoldMessenger.of(context);
     final lang = context.read<LanguageProvider>();
@@ -59,7 +229,7 @@ class GeneralSettingsPage extends StatelessWidget {
     }
   }
 
-  Future<void> _showLanguagePicker(BuildContext context, GeneralSettingsViewModel vm) async {
+  static Future<void> showLanguagePicker(BuildContext context, GeneralSettingsViewModel vm) async {
     final languages = ['English', 'Swahili', 'French', 'Spanish'];
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -90,193 +260,14 @@ class GeneralSettingsPage extends StatelessWidget {
     );
 
     if (selected != null && selected != vm.language && context.mounted) {
-      // 1. Update the Provider
       await vm.updateLanguage(context, selected);
 
       if (!context.mounted) return;
-
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('${lang.translate('lang_changed')} $selected',
-            style: TextStyle(color: colors.onPrimaryContainer)
-          ),
-          backgroundColor: theme.colorScheme.primaryContainer,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          margin: const EdgeInsets.all(20),
-          duration: const Duration(seconds: 3),
-          behavior: SnackBarBehavior.floating,
-          
-        ),
-      );
+      AppFeedback.show(messenger, '${lang.translate('lang_changed')} $selected', colors: colors, textTheme: theme.textTheme, isError: false);     
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => GeneralSettingsViewModel()..loadSettings(),
-      child: Consumer<GeneralSettingsViewModel>(
-        builder: (context, vm, _) {
-          final lang = context.watch<LanguageProvider>();
-          final theme = Theme.of(context);
-
-          return Scaffold(
-            backgroundColor: theme.colorScheme.surfaceContainerLow,
-            appBar: CustomAppBar(
-              title: 'general_settings',
-              isRootNav: false, // Tells the widget to use the passed title 
-            ),
-            body: vm.isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  children: [
-                    _buildHeroHeader(context, theme, lang),
-                    _buildSettingsList(context, vm, lang),
-                    const SizedBox(height: 32),
-                    _buildDangerZone(theme, lang, context, vm),
-                  ],
-                ),
-              ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildHeroHeader(BuildContext context, ThemeData theme, LanguageProvider lang) {
-    final cf = context.watch<CurrencyProvider>().formatter;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          Text(
-            cf.formatNumber(1234.56, lang.localeCode),
-            style: theme.textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            lang.translate('format_preview'),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSettingsList(BuildContext context, GeneralSettingsViewModel vm, LanguageProvider lang) {
-    final items = [
-      SettingItem(id: 'currency', title: lang.translate('currency'), subtitle: vm.currency, icon: Icons.attach_money, type: SettingType.selection,),
-      SettingItem(id: 'language', title: lang.translate('language'), subtitle: vm.language, icon: Icons.language, type: SettingType.selection,),
-      SettingItem(id: 'date_format', title: lang.translate('date_format'), subtitle: vm.dateFormat, icon: Icons.calendar_today, type: SettingType.selection,),
-      SettingItem(id: 'number_format', title: lang.translate('number_format'), subtitle: vm.numberFormat, icon: Icons.numbers, type: SettingType.selection,),
-    ];
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: .3)),
-      ),
-      child: Column(
-        children: items.map((item) => _customSettingsTile(
-          item,
-          context,
-          vm         
-        )).toList(),
-      ),
-    );
-  }
-
-  Widget _customSettingsTile(SettingItem item, BuildContext context, GeneralSettingsViewModel vm) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return InkWell(
-      onTap: () => _onTileTapped(context, vm, item.id),
-      borderRadius: BorderRadius.circular(20), 
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: colors.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(item.icon, color: colors.primary, size: 22),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    item.title,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
-                  ),
-                ),
-                // Value display - more prominent than subtitle
-                Text(
-                  item.subtitle ?? '',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colors.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(Icons.chevron_right, color: colors.outline, size: 20),
-              ],
-            ),
-          ),
-          
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDangerZone(ThemeData theme, LanguageProvider lang, BuildContext context, GeneralSettingsViewModel vm) {
-  
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            lang.translate('danger_zone'),
-            style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.error),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () => _resetToDefaults(context, vm),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: theme.colorScheme.error,
-              minimumSize: const Size(double.infinity, 50),
-              side: BorderSide(color: theme.colorScheme.error.withValues(alpha: 0.5)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text(lang.translate('reset_all')),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _onTileTapped(BuildContext context, GeneralSettingsViewModel vm, String id) {
-    if (id == 'currency') _showCurrencyPicker(context, vm);
-    if (id == 'language') _showLanguagePicker(context, vm);
-    // ... add other pickers here
-  }
-
-  Future<void> _resetToDefaults(BuildContext context, GeneralSettingsViewModel vm) async {
+  static Future<void> showResetDialog(BuildContext context, GeneralSettingsViewModel vm) async {
     final messenger = ScaffoldMessenger.of(context);
     final theme = Theme.of(context);
     final lang = context.read<LanguageProvider>();
@@ -299,20 +290,9 @@ class GeneralSettingsPage extends StatelessWidget {
     );
 
     if (confirmed == true) {
-      vm.resetAll();
-      
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(lang.translate('reset_done'),         
-            style: TextStyle(color: theme.colorScheme.onPrimaryContainer)
-          ),
-          duration: const Duration(seconds: 3),
-          backgroundColor: theme.colorScheme.primaryContainer,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          margin: const EdgeInsets.all(20),             
-        ),
-      );
+      vm.resetAll();      
+      AppFeedback.show(messenger,lang.translate('reset_done'), colors: theme.colorScheme, textTheme: theme.textTheme, isError: false);         
+
     }
   }
 }

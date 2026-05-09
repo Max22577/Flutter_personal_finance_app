@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../models/currency.dart';
-
+import '../../../../models/currency.dart';
 
 typedef CurrencySelectedCallback = void Function(Currency currency);
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../models/setting_item.dart';
+import '../../../../../models/setting_item.dart';
 
 class SliderTile extends StatelessWidget {
   final SettingItem item;

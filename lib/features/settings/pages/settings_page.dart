@@ -2,8 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/widgets/custom_appbar.dart';
-import 'package:personal_fin/features/settings/widgets/profile_card.dart';
-import 'package:personal_fin/features/settings/widgets/settings_section.dart';
+import 'package:personal_fin/features/settings/widgets/settings/profile_card.dart';
+import 'package:personal_fin/features/settings/widgets/settings/settings_section.dart';
 import 'package:personal_fin/features/settings/pages/general_settings_page.dart';
 import 'package:personal_fin/features/settings/view_models/settings_view_model.dart';
 import 'package:personal_fin/models/setting_item.dart';
@@ -13,7 +13,6 @@ import 'package:provider/provider.dart';
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
-  // Define all settings items for main hub
   List<SettingItem>  _getgeneralSettings(LanguageProvider lang) => [
     SettingItem(
       id: 'appearance',
@@ -172,7 +171,7 @@ class SettingsPage extends StatelessWidget {
             backgroundColor: colors.surfaceContainerLow,
             appBar: CustomAppBar(
               title: 'settings',
-              isRootNav: false, // Tells the widget to use the passed title
+              isRootNav: false, 
               actions: [
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
@@ -197,7 +196,6 @@ class SettingsPage extends StatelessWidget {
                     onTap: () => _showEditProfileSheet(context, vm),
                   ),
 
-                  // Settings Sections (Using your existing SettingSection widget)
                   SettingsSection(
                     title: lang.translate('personalization'),
                     items: _getgeneralSettings(lang),

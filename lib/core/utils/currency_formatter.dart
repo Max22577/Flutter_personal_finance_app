@@ -6,24 +6,39 @@ class CurrencyFormatter {
 
   CurrencyFormatter(this.currency);
 
-  // 1. Standard Format: $1,234.56
+  // Standard Format: $1,234.56
   String formatNumber(double amount, String locale) {
-    final format = NumberFormat.decimalPattern(locale);
+    final format = NumberFormat.currency(
+      locale: locale,
+      symbol: currency.symbol, 
+      decimalDigits: 2,
+    );
     return format.format(amount);
   }
 
-  // 2. Compact Format: $1.2K or $2.5M
+  // Compact Format: $1.2K or $2.5M
+  String formatDisplay(double amount, String locale) {
+    final symbol = currency.symbol;
+    if (amount == amount.toInt()) {
+      // Formats as $1,234
+      return NumberFormat.currency(
+        locale: locale, 
+        symbol: symbol, 
+        decimalDigits: 0
+      ).format(amount);
+    }
+    // Formats as $1,234.56
+    return NumberFormat.currency(
+      locale: locale, 
+      symbol: symbol, 
+      decimalDigits: 2
+    ).format(amount);
+  }
+
   String formatCompact(double amount, String locale) {
     final format = NumberFormat.compact(locale: locale);
-    return format.format(amount);
+    return '${currency.symbol}${format.format(amount)}';
   }
-
-  // 3. Simple Display: No decimals for whole numbers
-  String formatDisplay(double amount, String locale) {
-    if (amount == amount.toInt()) {
-      return NumberFormat.decimalPattern(locale).format(amount);
-    }
-    return NumberFormat("#,##0.00", locale).format(amount);
-  }
+ 
   
 }
