@@ -21,10 +21,12 @@ class BudgetRepository {
     );
   }
 
-  Future<void> updateBudget(String categoryId, double amount, String monthYear) async {
+  Future<void> updateBudget(String categoryId, double amount, double baseAmount, String currency, String monthYear) async {
     await _service.setBudget(
       categoryId: categoryId,
       amount: amount,
+      baseAmount: baseAmount,
+      currency: currency,
       monthYear: monthYear,
     );
   }

@@ -92,15 +92,15 @@ class MonthlyDataService {
   
   // Calculate monthly data from transactions
   MonthlyData _calculateMonthlyData(List<Transaction> transactions, DateTime month) {
-    double income = 0;
-    double expenses = 0;
+    double baseIncome = 0;
+    double baseExpenses = 0;
     final categoryBreakdown = <String, double>{};
     
     for (var transaction in transactions) {
       if (transaction.type == 'Income') {
-        income += transaction.amount;
+        baseIncome += transaction.baseAmount;
       } else {
-        expenses += transaction.amount;
+        baseExpenses += transaction.baseAmount;
         
         // Add to category breakdown
         final categoryId = transaction.categoryId;
@@ -108,8 +108,8 @@ class MonthlyDataService {
         if (categoryName.isNotEmpty) {
           categoryBreakdown.update(
             categoryName,
-            (value) => value + transaction.amount,
-            ifAbsent: () => transaction.amount,
+            (value) => value + transaction.baseAmount,
+            ifAbsent: () => transaction.baseAmount,
           );
         }
       }
@@ -117,8 +117,8 @@ class MonthlyDataService {
     
     return MonthlyData(
       month: month,
-      income: income,
-      expenses: expenses,
+      income: baseIncome,
+      expenses: baseExpenses,
       transactionCount: transactions.length,
       categoryBreakdown: categoryBreakdown,
     );
@@ -127,14 +127,14 @@ class MonthlyDataService {
   double _calculateTotalIncome(List<Transaction> transactions) {
     return transactions
         .where((t) => t.type == 'Income')
-        .map((t) => t.amount)
+        .map((t) => t.baseAmount)
         .fold(0.0, (sum, amount) => sum + amount);
   }
   
   double _calculateTotalExpenses(List<Transaction> transactions) {
     return transactions
         .where((t) => t.type != 'Income')
-        .map((t) => t.amount)
+        .map((t) => t.baseAmount)
         .fold(0.0, (sum, amount) => sum + amount);
   }
   
@@ -146,12 +146,11 @@ class MonthlyDataService {
       if (categoryName.isNotEmpty) {
         breakdown.update(
           categoryName,
-          (value) => value + transaction.amount,
-          ifAbsent: () => transaction.amount,
+          (value) => value + transaction.baseAmount,
+          ifAbsent: () => transaction.baseAmount,
         );
       }
-    }
-    
+    }    
     return breakdown;
   }
   

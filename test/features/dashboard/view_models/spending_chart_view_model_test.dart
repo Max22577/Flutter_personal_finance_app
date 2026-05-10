@@ -57,14 +57,14 @@ void main() {
 
       final now = DateTime.now();
       final transactions = [
-        Transaction(id: '1', userId: 'u1', title: 'Lunch', amount: 15.0, date: now, type: 'Expense', categoryId: 'cat_food'),
-        Transaction(id: '2', userId: 'u1', title: 'Dinner', amount: 25.0, date: now, type: 'Expense', categoryId: 'cat_food'),
+        Transaction(id: '1', userId: 'u1', title: 'Lunch', currency: 'USD', amount: 2000, baseAmount: 2000, date: now, type: 'Expense', categoryId: 'cat_food'),
+        Transaction(id: '2', userId: 'u1', title: 'Dinner', currency: 'USD', amount: 25.0, baseAmount: 25.0, date: now, type: 'Expense', categoryId: 'cat_food'),
         
         // One bill expense
-        Transaction(id: '3', userId: 'u1', title: 'Power', amount: 100.0, date: now, type: 'Expense', categoryId: 'cat_bills'),
+        Transaction(id: '3', userId: 'u1', title: 'Power', currency: 'USD', amount: 100.0, baseAmount: 100.0, date: now, type: 'Expense', categoryId: 'cat_bills'),
         
         // One income transaction (SHOULD BE IGNORED)
-        Transaction(id: '4', userId: 'u1', title: 'Paycheck', amount: 2000.0, date: now, type: 'Income', categoryId: 'cat_food'),
+        Transaction(id: '4', userId: 'u1', title: 'Paycheck', currency: 'USD', amount: 2000.0, baseAmount: 2000.0, date: now, type: 'Income', categoryId: 'cat_food'),
       ];
 
       // 2. ACT
@@ -97,10 +97,10 @@ void main() {
 
       final transactions = [
         // Known category
-        Transaction(id: '1', userId: 'u1', title: 'Lunch', amount: 15.0, date: DateTime.now(), type: 'Expense', categoryId: 'cat_food'),
+        Transaction(id: '1', userId: 'u1', title: 'Lunch', currency: 'USD', amount: 15.0, baseAmount: 15.0, date: DateTime.now(), type: 'Expense', categoryId: 'cat_food'),
         
         // Unknown category ID (not in categories list above)
-        Transaction(id: '2', userId: 'u1', title: 'Some Mystery Purchase', amount: 50.0, date: DateTime.now(), type: 'Expense', categoryId: 'cat_unknown'),
+        Transaction(id: '2', userId: 'u1', title: 'Some Mystery Purchase', currency: 'USD', amount: 50.0, baseAmount: 50.0, date: DateTime.now(), type: 'Expense', categoryId: 'cat_unknown'),
       ];
 
       // 2. ACT

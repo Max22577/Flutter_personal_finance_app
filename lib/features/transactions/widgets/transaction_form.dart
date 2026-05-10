@@ -93,6 +93,8 @@ class _TransactionFormState extends State<TransactionForm> {
     if (_selectedCategory == null) return;
 
     final vm = context.read<TransactionViewModel>();
+    final currencyProvider = context.read<CurrencyProvider>();
+    final code = currencyProvider.currency.code;
     final messenger = ScaffoldMessenger.of(context);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -102,6 +104,7 @@ class _TransactionFormState extends State<TransactionForm> {
       final success = await vm.saveTransaction(
         title: _titleController.text,
         amount: double.parse(_amountController.text.replaceAll(RegExp(r'[^0-9.]'), '')),
+        currency: code,
         type: _selectedType,
         categoryId: _selectedCategory!.id,
         date: _selectedDate,

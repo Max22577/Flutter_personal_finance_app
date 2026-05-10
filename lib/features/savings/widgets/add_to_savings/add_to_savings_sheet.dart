@@ -33,6 +33,7 @@ class AddSavingsSheetContentState extends State<AddSavingsSheetContent> {
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
     final currencySymbol = context.watch<CurrencyProvider>().currency.symbol;
+    final currencyCode = context.watch<CurrencyProvider>().currency.code;
 
     return ChangeNotifierProvider(
       create: (context) => AddToSavingsViewModel(context.read<SavingsRepository>()),
@@ -74,7 +75,7 @@ class AddSavingsSheetContentState extends State<AddSavingsSheetContent> {
                   
                   _SubmitButton(
                     isProcessing: vm.isProcessing,
-                    onPressed: () => _handleSave(vm, context),
+                    onPressed: () => _handleSave(vm, context, currencyCode),
                   ),
                 ],
               ),
@@ -93,7 +94,7 @@ class AddSavingsSheetContentState extends State<AddSavingsSheetContent> {
     return null;
   }
 
-  Future<void> _handleSave(AddToSavingsViewModel vm, BuildContext context) async {
+  Future<void> _handleSave(AddToSavingsViewModel vm, BuildContext context, String currencyCode) async {
     if (!_formKey.currentState!.validate()) return;
 
     final lang = context.read<LanguageProvider>();
@@ -106,6 +107,7 @@ class AddSavingsSheetContentState extends State<AddSavingsSheetContent> {
       final success = await vm.addToGoal(
         goalId: widget.goal.id!,
         amount: double.parse(_amountController.text),
+        currency: currencyCode,
         note: _noteController.text,
         defaultNote: '${lang.translate('added_to')} ${widget.goal.name}',
       );

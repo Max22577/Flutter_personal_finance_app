@@ -100,7 +100,7 @@ class TransactionItem extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     CurrencyDisplay(
-                      amount: transaction.amount,
+                      baseAmount: transaction.amount,
                       isExpense: !isIncome,
                       style: textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.bold,

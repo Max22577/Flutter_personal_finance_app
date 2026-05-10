@@ -61,7 +61,7 @@ void main() {
       expect(viewModel.errorMessage, isNull);
 
       // Emit valid data
-      final t1 = Transaction(id: '1', userId: 'u1', title: 'T1', amount: 10, date: DateTime.now(), type: 'Expense', categoryId: 'c1');
+      final t1 = Transaction(id: '1', userId: 'u1', title: 'T1', currency: 'USD', amount: 2000, baseAmount: 2000, date: DateTime.now(), type: 'Expense', categoryId: 'c1');
       transactionsSubject.add([t1]);
       await Future.delayed(Duration.zero);
 
@@ -76,7 +76,7 @@ void main() {
       // ARRANGE: Repository fails when fetching the name
       when(() => mockRepo.getCategoryName(any())).thenThrow(Exception('Metadata fetch failed'));
       
-      final t1 = Transaction(id: '1', userId: 'u1', title: 'T1', amount: 10, date: DateTime.now(), type: 'Expense', categoryId: 'c1');
+      final t1 = Transaction(id: '1', userId: 'u1', title: 'T1', currency: 'USD', amount: 2000, baseAmount: 2000, date: DateTime.now(), type: 'Expense', categoryId: 'c1');
 
       // ACT
       transactionsSubject.add([t1]);
@@ -94,7 +94,7 @@ void main() {
     test('sorts transactions and fetches category names', () async {
       viewModel = RecentTransactionsViewModel(repo: mockRepo);
 
-      final t1 = Transaction(id: '1', userId: 'u1', title: 'T1', amount: 10, date: now, type: 'Expense', categoryId: 'c1');
+      final t1 = Transaction(id: '1', userId: 'u1', title: 'T1', currency: 'USD', amount: 2000, baseAmount: 2000, date: now, type: 'Expense', categoryId: 'c1');
       
       // ACT
       transactionsSubject.add([t1]);

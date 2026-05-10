@@ -26,8 +26,8 @@ void main() {
 
   testWidgets('renders a list of TransactionItem when data is emitted', (tester) async {
     final transactions = [
-      Transaction(id: '1', userId: 'u1', title: 'Coffee', amount: 5, date: DateTime.now(), type: 'Expense', categoryId: 'c1'),
-      Transaction(id: '2', userId: 'u1', title: 'Salary', amount: 5000, date: DateTime.now(), type: 'Income', categoryId: 'c2'),
+      Transaction(id: '1', userId: 'u1', title: 'Coffee', currency: 'USD', amount: 2000, baseAmount: 2000, date: DateTime.now(), type: 'Expense', categoryId: 'c1'),
+      Transaction(id: '2', userId: 'u1', title: 'Salary', currency: 'USD', amount: 2000, baseAmount: 2000, date: DateTime.now(), type: 'Income', categoryId: 'c2'),
     ];
 
     await tester.pumpWidget(deps.wrap(
@@ -43,6 +43,6 @@ void main() {
     expect(find.byType(TransactionItem), findsNWidgets(2));
     expect(find.text('Coffee'), findsOneWidget);
 
-    expect(find.text('Ksh 5000.00'), findsOneWidget); 
+    expect(find.text('USD 2000.00'), findsOneWidget); 
   });
 }

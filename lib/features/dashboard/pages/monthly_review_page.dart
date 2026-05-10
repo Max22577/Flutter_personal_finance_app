@@ -593,7 +593,7 @@ class _SpendingBarItem extends StatelessWidget {
                 ],
               ),
               CurrencyDisplay(
-                amount: amount,
+                baseAmount: amount,
                 isExpense: true,
                 compact: true,
                 style: text.bodyMedium?.copyWith(
@@ -689,7 +689,7 @@ class _DetailRow extends StatelessWidget {
         children: [
           Text(label),
           CurrencyDisplay(
-            amount: value,
+            baseAmount: value,
             isExpense: isExpense,
             compact: false,
             style: TextStyle(fontWeight: FontWeight.bold, color: color),

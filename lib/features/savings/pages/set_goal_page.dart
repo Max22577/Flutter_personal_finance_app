@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
 import 'package:personal_fin/core/utils/app_feedback.dart';
@@ -120,6 +121,7 @@ class _GoalPreviewCard extends StatelessWidget {
     final lang = context.watch<LanguageProvider>();
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final currencyCode = context.watch<CurrencyProvider>().currency.code;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -143,8 +145,11 @@ class _GoalPreviewCard extends StatelessWidget {
             goal: SavingsGoal(
               name: name.isEmpty ? lang.translate('new_goal') : name,
               targetAmount: double.tryParse(amount) ?? 0,
+              targetBaseAmount: 0,
               currentAmount: 0,
+              currentBaseAmount: 0,
               deadline: deadline,
+              currency: currencyCode,
             ),
           ),
         ],
@@ -390,11 +395,12 @@ class _SaveGoalButton extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final lang = context.watch<LanguageProvider>();
+    final currencyCode = context.watch<CurrencyProvider>().currency.code;
 
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: vm.isSaving ? null : () => _handleSave(context),
+        onPressed: vm.isSaving ? null : () => _handleSave(context, currencyCode),
         style: ElevatedButton.styleFrom(
           backgroundColor: colors.primary,
           foregroundColor: colors.onPrimary,
@@ -427,7 +433,7 @@ class _SaveGoalButton extends StatelessWidget {
     );
   }
 
-  Future<void> _handleSave(BuildContext context) async {
+  Future<void> _handleSave(BuildContext context, String currencyCode) async {
     if (!formKey.currentState!.validate()) return;
 
     final lang = context.read<LanguageProvider>();
@@ -435,7 +441,7 @@ class _SaveGoalButton extends StatelessWidget {
     final theme = Theme.of(context);
 
     try {
-      final success = await vm.saveGoal(name: name, target: target);
+      final success = await vm.saveGoal(name: name, target: target, currency: currencyCode);
 
       if (success && context.mounted) {
         AppFeedback.show(

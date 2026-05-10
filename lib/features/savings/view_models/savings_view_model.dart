@@ -22,9 +22,16 @@ class SavingsViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   // Computed Stats
-  double get totalTarget => _goals.fold(0.0, (sum, g) => sum + g.targetAmount);
-  double get totalSaved => _goals.fold(0.0, (sum, g) => sum + g.currentAmount);
-  double get overallProgress => totalTarget == 0 ? 0 : (totalSaved / totalTarget).clamp(0.0, 1.0);
+  double get totalTargetBase => _goals.fold(0.0, (sum, g) => sum + g.targetBaseAmount);
+  double get totalSavedBase => _goals.fold(0.0, (sum, g) => sum + g.currentBaseAmount);
+
+  // Remaining amount in Base Currency
+  double get remainingBase => (totalTargetBase - totalSavedBase).clamp(0.0, double.infinity);
+
+  // Overall Progress remains accurate regardless of exchange rates
+  double get overallProgress => totalTargetBase == 0 
+    ? 0 
+    : (totalSavedBase / totalTargetBase).clamp(0.0, 1.0);
 
   void _init() {
     _subscription = _repository.goalsStream.listen(

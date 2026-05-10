@@ -77,8 +77,8 @@ void main() {
     ]);
     
     budgetsSubject.add([
-      Budget(id: 'budget_1', userId: testUserId, categoryId: '1', amount: 200.0, monthYear: 'April 2026'),
-      Budget(id: 'budget_2', userId: testUserId, categoryId: '2', amount: 150.0, monthYear: 'April 2026'),
+      Budget(id: 'budget_1', userId: testUserId, categoryId: '1', currency: 'USD', amount: 200.0, baseAmount: 200.0, monthYear: 'April 2026'),
+      Budget(id: 'budget_2', userId: testUserId, categoryId: '2', currency: 'USD', amount: 150.0, baseAmount: 150.0, monthYear: 'April 2026'),
     ]);
     
     transactionsSubject.add([]);

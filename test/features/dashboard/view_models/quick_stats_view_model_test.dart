@@ -51,8 +51,8 @@ void main() {
       viewModel = QuickStatsViewModel(mockRepo); 
 
       final transactions = [
-        Transaction(id: '1', userId: 'u1', title: 'Paycheck', amount: 1000, date: currentMonthDate, type: 'Income', categoryId: 'c1'),
-        Transaction(id: '2', userId: 'u1', title: 'Groceries', amount: 500, date: currentMonthDate, type: 'Expense', categoryId: 'c2'),
+        Transaction(id: '1', userId: 'u1', title: 'Paycheck',currency: 'USD', amount: 1000, baseAmount: 1000, date: currentMonthDate, type: 'Income', categoryId: 'c1'),
+        Transaction(id: '2', userId: 'u1', title: 'Groceries', currency: 'USD', amount: 500, baseAmount: 500, date: currentMonthDate, type: 'Expense', categoryId: 'c2'),
       ];
 
       // 2. ACT
@@ -72,8 +72,8 @@ void main() {
       viewModel = QuickStatsViewModel(mockRepo);
 
       final transactions = [
-        Transaction(id: '3', userId: 'u1', title: 'Last Month Paycheck', amount: 2000, date: lastMonthDate, type: 'Income', categoryId: 'c1'),
-        Transaction(id: '4', userId: 'u1', title: 'Last Month Rent', amount: 1200, date: lastMonthDate, type: 'Expense', categoryId: 'c2'),
+        Transaction(id: '3', userId: 'u1', title: 'Last Month Paycheck', currency: 'USD', amount: 2000, baseAmount: 2000, date: lastMonthDate, type: 'Income', categoryId: 'c1'),
+        Transaction(id: '4', userId: 'u1', title: 'Last Month Rent', currency: 'USD', amount: 1200, baseAmount: 1200, date: lastMonthDate, type: 'Expense', categoryId: 'c2'),
       ];
 
       // 2. ACT

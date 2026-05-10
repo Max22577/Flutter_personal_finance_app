@@ -1,4 +1,3 @@
-// lib/features/dashboard/models/daily_finance_data.dart
 class DailyFinanceData {
   final DateTime date;
   final double income;

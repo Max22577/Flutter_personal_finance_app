@@ -178,7 +178,7 @@ class AppearancePage extends StatelessWidget {
               ),
               title: Text(lang.translate('groceries'), style: theme.textTheme.titleMedium),
               subtitle: Text("${lang.translate('today')} - 3:45 PM", style: theme.textTheme.bodyMedium),
-              trailing: CurrencyDisplay(amount: 45.69, isExpense: true,)
+              trailing: CurrencyDisplay(baseAmount: 45.69, isExpense: true,)
             ),
             const SizedBox(height: 12),
             ElevatedButton(

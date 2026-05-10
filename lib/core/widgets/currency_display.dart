@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../providers/currency_provider.dart';
 
 class CurrencyDisplay extends StatelessWidget {
-  final double amount;
+  final double baseAmount;
   final TextStyle? style;
   final bool compact;
   final Color? positiveColor;
@@ -15,7 +16,7 @@ class CurrencyDisplay extends StatelessWidget {
 
   const CurrencyDisplay({
     super.key,
-    required this.amount,
+    required this.baseAmount,
     this.style,
     this.compact = false,
     this.positiveColor,
@@ -30,16 +31,21 @@ class CurrencyDisplay extends StatelessWidget {
     final financialColors = theme.extension<FinancialColors>();
     final lang = context.watch<LanguageProvider>();
     final currencyProvider = context.watch<CurrencyProvider>();
+    final rateService = context.watch<ExchangeRateService>();
+
+    final double displayAmount = rateService.fromBase(
+      baseAmount, 
+      currencyProvider.currency.code,
+    );
 
     final cf = currencyProvider.formatter;
-    final symbol = currencyProvider.currency.symbol;
 
-    final bool actsAsNegative = amount < 0 || isExpense;
-    final bool actsAsPositive = amount > 0 && !isExpense;
+    final bool actsAsNegative = displayAmount < 0 || isExpense;
+    final bool actsAsPositive = displayAmount > 0 && !isExpense;
 
     String formattedAmount = compact
-        ? cf.formatCompact(amount.abs(), lang.localeCode)
-        : cf.formatDisplay(amount.abs(), lang.localeCode);
+        ? cf.formatCompact(displayAmount.abs(), lang.localeCode)
+        : cf.formatDisplay(displayAmount.abs(), lang.localeCode);
 
     if (showSign) {
       if (actsAsPositive) formattedAmount = '+$formattedAmount';
@@ -58,13 +64,7 @@ class CurrencyDisplay extends StatelessWidget {
 
     return Text.rich(
       TextSpan(
-        children: [
-          TextSpan(
-            text: "$symbol ",
-            style: baseStyle.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+        children: [         
           TextSpan(
             text: formattedAmount,
             style: baseStyle.copyWith(
@@ -76,3 +76,10 @@ class CurrencyDisplay extends StatelessWidget {
     );
   }
 }
+
+//TextSpan(
+  //text: "$symbol ",
+  //style: baseStyle.copyWith(
+    //fontWeight: FontWeight.w500,
+  //),
+//),
