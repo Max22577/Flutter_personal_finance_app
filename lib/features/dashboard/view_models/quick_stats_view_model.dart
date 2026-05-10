@@ -33,9 +33,9 @@ class QuickStatsViewModel extends ChangeNotifier {
     for (final t in transactions) {
       final tMonth = DateTime(t.date.year, t.date.month);
       if (tMonth.isAtSameMomentAs(current)) {
-        t.type == 'Income' ? currentMonthIncome += t.amount : currentMonthExpenses += t.amount;
+        t.type == 'Income' ? currentMonthIncome += t.baseAmount : currentMonthExpenses += t.baseAmount;
       } else if (tMonth.isAtSameMomentAs(last)) {
-        t.type == 'Income' ? lastMonthIncome += t.amount : lastMonthExpenses += t.amount;
+        t.type == 'Income' ? lastMonthIncome += t.baseAmount : lastMonthExpenses += t.baseAmount;
       }
     }
   }

@@ -33,7 +33,6 @@ class SavingsViewContent extends StatelessWidget {
     final lang = context.watch<LanguageProvider>();
     final theme = Theme.of(context);
 
-    // 1. High-level State Handling
     if (vm.isLoading) return const Scaffold(body: Center(child: LoadingState()));
     
     if (vm.errorMessage != null) {
@@ -66,8 +65,6 @@ class SavingsViewContent extends StatelessWidget {
     );
   }
 }
-
-// --- Sub-Widgets to keep the main build method clean ---
 
 class _SavingsAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool hasGoals;

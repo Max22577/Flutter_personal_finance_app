@@ -5,6 +5,8 @@ class Transaction {
   final String userId;
   final String title;
   final double amount;
+  final double baseAmount;    // Converted amount in USD (e.g., 7.69)
+  final String currency;      // The currency code at time of entry (e.g., 'KSH')
   final String type; // 'Income' or 'Expense'
   final String categoryId;
   final DateTime? updatedAt;
@@ -16,6 +18,8 @@ class Transaction {
     required this.userId,
     required this.title,
     required this.amount,
+    required this.baseAmount,
+    required this.currency,
     required this.type,
     required this.categoryId,
     required this.date,
@@ -26,6 +30,8 @@ class Transaction {
     String? id,
     String? title,
     double? amount,
+    double? baseAmount,
+    String? currency,
     String? type,
     String? categoryId,
     DateTime? date,
@@ -36,6 +42,8 @@ class Transaction {
       userId: userId,
       title: title ?? this.title,
       amount: amount ?? this.amount,
+      baseAmount: baseAmount ?? this.baseAmount,
+      currency: currency ?? this.currency,
       type: type ?? this.type,
       categoryId: categoryId ?? this.categoryId,
       date: date ?? this.date,
@@ -51,9 +59,10 @@ class Transaction {
       userId: data['userId'] ?? '',
       title: data['title'] ?? '',
       amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
+      baseAmount: (data['baseAmount'] as num?)?.toDouble() ?? 0.0,
+      currency: data['currency'] ?? 'USD',
       type: data['type'] ?? 'Expense',
       categoryId: data['categoryId'] ?? '',
-      // Removed: accountId: data['accountId'] ?? '',
       date: (data['date'] as Timestamp).toDate(),
 
       updatedAt: data['updatedAt'] != null 
@@ -68,6 +77,8 @@ class Transaction {
       'userId': userId,
       'title': title,
       'amount': amount,
+      'baseAmount': baseAmount,
+      'currency': currency,
       'type': type,
       'categoryId': categoryId,
       'date': Timestamp.fromDate(date),

@@ -5,12 +5,15 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/budget_repository.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
+import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/models/budget.dart';
 import 'package:rxdart/rxdart.dart'; 
 import 'package:personal_fin/models/category.dart';
 import 'package:personal_fin/models/transaction.dart';
 
 class BudgetingViewModel extends ChangeNotifier {
+  final exchangeService = ExchangeRateService(FirestoreService.instance);
   final BudgetRepository _budgetRepo;
   final MonthlyTransactionRepository _txRepo;
   final CategoryRepository _catRepo;
@@ -30,7 +33,7 @@ class BudgetingViewModel extends ChangeNotifier {
   BudgetingViewModel(this._budgetRepo, this._txRepo, this._catRepo, this._langRepo) {
     _init();
   }
-
+  
   void _init() {
     // Tell repos to fetch initial data
     _updateRepos();
@@ -62,7 +65,7 @@ class BudgetingViewModel extends ChangeNotifier {
     for (var t in transactions) {
       if (t.type == 'Expense') {
         // Add the amount to the existing total for this categoryId
-        spendingMap[t.categoryId] = (spendingMap[t.categoryId] ?? 0.0) + t.amount;
+        spendingMap[t.categoryId] = (spendingMap[t.categoryId] ?? 0.0) + t.baseAmount;
       }
     }
     
@@ -71,15 +74,15 @@ class BudgetingViewModel extends ChangeNotifier {
     }).toList();
 
     // Map budgets for O(1) lookup
-    final budgetMap = {for (var b in budgets) b.categoryId: b.amount};
+    final budgetMap = {for (var b in budgets) b.categoryId: b.baseAmount};
 
     return BudgetingState(
       categories: filteredCategories,
       budgetMap: budgetMap,
       spendingMap: spendingMap, 
       transactions: transactions,
-      totalBudget: budgets.fold(0.0, (sum, b) => sum + b.amount),
-      activeBudgetsCount: budgets.where((b) => b.amount > 0).length,
+      totalBudget: budgets.fold(0.0, (sum, b) => sum + b.baseAmount),
+      activeBudgetsCount: budgets.where((b) => b.baseAmount > 0).length,
       monthYear: formattedMonthYear(locale),
       totalCategoryCount: budgets.length,
     );
@@ -96,9 +99,11 @@ class BudgetingViewModel extends ChangeNotifier {
     _txRepo.fetchForMonth(formattedMonthYear(_langRepo.localeCode));
   }
 
-  Future<void> updateBudget(String categoryId, double amount) async {
+  Future<void> updateBudget(String categoryId, double amount, String currency) async {
     try {
-      await _budgetRepo.updateBudget(categoryId, amount, formattedMonthYear(_langRepo.localeCode));
+      // Convert the amount to the base currency (USD)
+      final baseAmount = exchangeService.toBase(amount, currency);
+      await _budgetRepo.updateBudget(categoryId, amount, baseAmount, currency, formattedMonthYear(_langRepo.localeCode));
       // No need to manually update state here, the stream will emit new data
     } catch (e) {
       errorMessage = 'Failed to update budget: ${e.toString()}';

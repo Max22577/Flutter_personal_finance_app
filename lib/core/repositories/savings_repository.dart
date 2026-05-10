@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/services/savings_service.dart';
 import 'package:rxdart/subjects.dart';
 import '../../models/savings.dart';
@@ -7,6 +8,7 @@ import '../services/firestore_service.dart';
 class SavingsRepository {
   final FirestoreService _firestore;
   final SavingsService _savingsService;
+  final exchangeService = ExchangeRateService(FirestoreService.instance);
   final _savingsSubject = BehaviorSubject<List<SavingsGoal>>();
   StreamSubscription? _savingsSub;
 
@@ -34,13 +36,16 @@ class SavingsRepository {
   Future<bool> addToGoal({
     required String goalId,
     required double amount,
+    required String currency,
     required String note,
     required String defaultNote,
   }) async {
-    
+    final baseAmount = exchangeService.toBase(amount, currency);
     await _savingsService.addToSavingsGoal(
       goalId: goalId,
       amount: amount,
+      baseAmount: baseAmount,
+      currency: currency,
       transactionNote: note.isNotEmpty ? note : defaultNote,
     );
     return true;

@@ -14,14 +14,18 @@ class SavingsService {
   Future<void> addToSavingsGoal({
     required String goalId,
     required double amount,
+    required double baseAmount,
+    required String currency,
     String? transactionNote,
   }) async {
     try {
-      // 1. Create a dedicated savings transaction
+      // savings transaction
       final transaction = Transaction(
         userId:  _firestore.currentUid,
         title: transactionNote ?? 'Savings Contribution',
         amount: amount,
+        baseAmount: baseAmount,
+        currency: currency,
         type: 'Expense', 
         categoryId: 'cat_savings', 
         date: DateTime.now(),
@@ -33,6 +37,7 @@ class SavingsService {
           .doc(goalId)
           .update({
             'currentAmount': FieldValue.increment(amount),
+            'currentBaseAmount': FieldValue.increment(baseAmount),
             'lastContributionAt': FieldValue.serverTimestamp(),
           });
       
@@ -47,6 +52,7 @@ class SavingsService {
   Future<void> withdrawFromSavingsGoal({
     required String goalId,
     required double amount,
+    required String currency,
     String? reason,
   }) async {
     try {
@@ -54,6 +60,8 @@ class SavingsService {
         userId:  _firestore.currentUid,
         title: reason ?? 'Savings Withdrawal',
         amount: amount,
+        baseAmount: amount, // Assuming base amount is the same as the withdrawal amount
+        currency: currency,
         type: 'Income', 
         categoryId: 'cat_savings',
         date: DateTime.now(),

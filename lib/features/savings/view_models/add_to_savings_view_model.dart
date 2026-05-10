@@ -11,6 +11,7 @@ class AddToSavingsViewModel extends ChangeNotifier {
   Future<bool> addToGoal({
     required String goalId,
     required double amount,
+    required String currency,
     required String note,
     required String defaultNote,
   }) async {
@@ -23,6 +24,7 @@ class AddToSavingsViewModel extends ChangeNotifier {
       await _repository.addToGoal(
         goalId: goalId,
         amount: amount,
+        currency: currency,
         note: note,
         defaultNote: defaultNote,
       );

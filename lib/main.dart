@@ -4,6 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
+import 'package:personal_fin/core/providers/rate_sync_provider.dart';
 import 'package:personal_fin/core/providers/theme_provider.dart';
 import 'package:personal_fin/core/repositories/budget_repository.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
@@ -11,9 +12,11 @@ import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/core/theme/app_theme.dart'; 
 import 'package:personal_fin/features/auth/pages/sign_in_page.dart';
+import 'package:personal_fin/features/auth/pages/sign_up_page.dart';
 import 'package:personal_fin/features/auth/view_models/sign_in_view_model.dart';
 import 'package:personal_fin/features/budgeting/pages/budgeting_page.dart';
 import 'package:personal_fin/features/budgeting/view_models/budgeting_view_model.dart';
@@ -57,16 +60,19 @@ void main() async {
 
   final languageProvider = LanguageProvider();
   await languageProvider.init();
+
+  final firestoreService = await FirestoreService.initialize();
   
   runApp(
     MultiProvider(
       providers: [
+        Provider<FirestoreService>.value(value: firestoreService),
         Provider(create: (_) => TransactionRepository()),
         Provider(create: (_) => MonthlyDataRepository()),
         Provider(create: (_) => CategoryRepository()),
         Provider(create: (_) => BudgetRepository()),
         Provider(create: (_) => MonthlyTransactionRepository()),
-        Provider(create: (_) => SavingsRepository()),
+        Provider(create: (_) => SavingsRepository()),       
         ChangeNotifierProvider.value( 
           value: themeProvider, 
         ),
@@ -78,6 +84,12 @@ void main() async {
         ),
         ChangeNotifierProvider.value(
           value: languageProvider, 
+        ),
+        ChangeNotifierProvider(
+          create: (context) => RateSyncProvider(firestoreService)
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ExchangeRateService(firestoreService),
         ),
         ChangeNotifierProvider(
           create: (context) => HomeViewModel(),
@@ -139,7 +151,7 @@ class MyApp extends StatelessWidget {
           locale: Locale(langProvider.localeCode),
           routes: {
             '/login': (context) => SignInPage(),
-            '/signup': (context) => SignInPage(),
+            '/signup': (context) => SignUpPage(),
             '/home': (context) => const HomePage(),
             '/categories': (context) => const CategoryManagementPage(),
             '/settings': (context) => const SettingsPage(),

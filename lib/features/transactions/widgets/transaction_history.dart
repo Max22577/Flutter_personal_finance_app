@@ -22,11 +22,13 @@ class TransactionHistory extends StatelessWidget {
     if (vm.isLoading) return const LoadingState();
     if (vm.errorMessage != null) return ErrorState(message: vm.errorMessage!);
     if (vm.transactions.isEmpty) {
-      return AnimatedEmptyState(
-        message: 'No transactions yet'.toUpperCase(),
-        imagePath: 'assets/images/trans_wallet_light1.svg',
-        darkImagePath: 'assets/images/trans_wallet_dark.svg',
-        animationType: EmptyStateAnimation.scale
+      return Center(
+        child: AnimatedEmptyState(
+          message: 'No transactions yet'.toUpperCase(),
+          imagePath: 'assets/images/trans_wallet_light1.svg',
+          darkImagePath: 'assets/images/trans_wallet_dark.svg',
+          animationType: EmptyStateAnimation.bounce,
+        ),
       );
     }
 

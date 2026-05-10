@@ -49,8 +49,8 @@ class SpendingChartViewModel extends ChangeNotifier {
           // Add amount to that category
           aggregatedData.update(
             category.name, 
-            (existingValue) => existingValue + t.amount, 
-            ifAbsent: () => t.amount,
+            (existingValue) => existingValue + t.baseAmount, 
+            ifAbsent: () => t.baseAmount,
           );
         }
         return aggregatedData;

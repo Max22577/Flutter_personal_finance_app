@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:personal_fin/features/budgeting/widgets/budget_category_card.dart';
@@ -197,6 +198,8 @@ class _BudgetListSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
+    final currencyProvider = context.read<CurrencyProvider>();
+    final code = currencyProvider.currency.code;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -226,7 +229,7 @@ class _BudgetListSection extends StatelessWidget {
                   category: category,
                   currentBudget: state.budgetMap[category.id] ?? 0.0,
                   currentSpending: state.spendingMap[category.id] ?? 0.0,
-                  onEditPressed: () => _openEdit(context, category, state),
+                  onEditPressed: () => _openEdit(context, category, state, code),
                 ),
               );
             },
@@ -237,14 +240,14 @@ class _BudgetListSection extends StatelessWidget {
     );
   }
 
-  void _openEdit(BuildContext context, dynamic category, BudgetingState state) {
+  void _openEdit(BuildContext context, dynamic category, BudgetingState state, String currencyCode) {
     showDialog(
       context: context,
       builder: (context) => BudgetEditDialog(
         category: category,
         currentBudget: state.budgetMap[category.id] ?? 0.0,
         monthYear: state.monthYear,
-        onSave: (id, newAmount, _) => vm.updateBudget(id, newAmount),
+        onSave: (id, newAmount, _) => vm.updateBudget(id, newAmount, currencyCode),
       ),
     );
   }

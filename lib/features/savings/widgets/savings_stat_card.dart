@@ -78,9 +78,9 @@ class SavingsStatCard extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    _StatItem(label: lang.translate('target'), valueWidget: CurrencyDisplay(amount: vm.totalTarget, compact: true, style: _valueStyle(textTheme)), theme: theme),
+                    _StatItem(label: lang.translate('target'), valueWidget: CurrencyDisplay(baseAmount: vm.totalTargetBase, compact: true, style: _valueStyle(textTheme)), theme: theme),
                     _VerticalDivider(colors: colors),
-                    _StatItem(label: lang.translate('saved'), valueWidget: CurrencyDisplay(amount: vm.totalSaved, compact: true, style: _valueStyle(textTheme)), theme: theme),
+                    _StatItem(label: lang.translate('saved'), valueWidget: CurrencyDisplay(baseAmount: vm.totalSavedBase, compact: true, style: _valueStyle(textTheme)), theme: theme),
                   ],
                 ),
               ],

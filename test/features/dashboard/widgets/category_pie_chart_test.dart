@@ -56,8 +56,10 @@ void main() {
         Transaction(
           id: 'tx1', 
           userId: 'u1', 
-          title: 'Lunch', 
+          title: 'Lunch',
+          currency: 'USD', 
           amount: 50.0, 
+          baseAmount: 50.0,   
           date: DateTime.now(), 
           type: 'Expense', 
           categoryId: '1'
@@ -92,7 +94,9 @@ void main() {
           id: 'tx1', 
           userId: 'u1', 
           title: 'Misc', 
+          currency: 'USD', 
           amount: 100.0, 
+          baseAmount: 100.0, 
           date: DateTime.now(), 
           type: 'Expense', 
           categoryId: 'non_existent'
@@ -119,8 +123,10 @@ void main() {
         Transaction(
           id: 'tx1', 
           userId: 'u1', 
-          title: 'Salary', 
+          title: 'Salary',
+          currency: 'USD',
           amount: 5000.0, 
+          baseAmount: 5000.0,
           date: DateTime.now(), 
           type: 'Income', 
           categoryId: '1'

@@ -143,6 +143,12 @@ class FirestoreService {
     return _db!.doc(await _getUserBasePath());
   }
 
+  // Path: /artifacts/{appId}/global_data/rates
+  Future<CollectionReference> ratesCollectionRef() async {
+    await isReady;
+    return _db!.collection('artifacts/$_appId/global_data/rates');
+  }
+
   // CATEGORY COLLECTION REFERENCE**
   // Path: /artifacts/{appId}/users/{userId}/transaction_categories
   Future<CollectionReference> categoriesCollectionRef() async {
@@ -413,6 +419,8 @@ class FirestoreService {
   Future<void> setBudget({
     required String categoryId,
     required double amount,
+    required double baseAmount,
+    required String currency,
     required String monthYear,
   }) async {
     await isReady; 
@@ -427,6 +435,8 @@ class FirestoreService {
       userId: await getUserId(), 
       categoryId: categoryId,
       amount: amount,
+      baseAmount: baseAmount,
+      currency: currency,
       monthYear: monthYear,
     );
     

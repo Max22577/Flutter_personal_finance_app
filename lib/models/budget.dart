@@ -5,6 +5,8 @@ class Budget {
   final String userId;
   final String categoryId;
   final double amount;
+  final double baseAmount;    // Converted amount in USD (e.g., 7.69)
+  final String currency;
   final String monthYear; // Format: YYYY-MM (e.g., 2025-12)
 
   Budget({
@@ -12,6 +14,8 @@ class Budget {
     required this.userId,
     required this.categoryId,
     required this.amount,
+    required this.baseAmount,
+    required this.currency,
     required this.monthYear,
   });
 
@@ -23,6 +27,8 @@ class Budget {
       userId: data['userId'] as String,
       categoryId: data['categoryId'] as String,
       amount: (data['amount'] as num).toDouble(),
+      baseAmount: (data['baseAmount'] as num?)?.toDouble() ?? 0.0,
+      currency: data['currency'] ?? 'USD',
       monthYear: data['monthYear'] as String,
     );
   }
@@ -33,6 +39,8 @@ class Budget {
       'userId': userId,
       'categoryId': categoryId,
       'amount': amount,
+      'baseAmount': baseAmount,
+      'currency': currency,
       'monthYear': monthYear,
     };
   }

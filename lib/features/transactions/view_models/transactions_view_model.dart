@@ -2,11 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
+import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:personal_fin/models/category.dart';
 
 
 class TransactionViewModel extends ChangeNotifier {
+  final exchangeService = ExchangeRateService(FirestoreService.instance);
   StreamSubscription? _txsub;
   StreamSubscription? _catSub;
   final TransactionRepository _txrepo;
@@ -70,6 +73,7 @@ class TransactionViewModel extends ChangeNotifier {
   Future<bool> saveTransaction({
     required String title,
     required double amount,
+    required String currency,
     required String type,
     required String categoryId,
     required DateTime date,
@@ -85,6 +89,8 @@ class TransactionViewModel extends ChangeNotifier {
         userId: uid,
         title: title.trim(),
         amount: amount,
+        currency: currency,
+        baseAmount: exchangeService.toBase(amount, currency),
         type: type,
         categoryId: categoryId,
         date: date,

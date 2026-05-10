@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
+import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/models/savings.dart';
 
 class SetGoalViewModel extends ChangeNotifier {
   final SavingsRepository _repository;
   final SavingsGoal? existingGoal;
+  final exchangeService = ExchangeRateService(FirestoreService.instance);
 
   SetGoalViewModel(this._repository, {this.existingGoal}) {
     if (existingGoal != null) {
@@ -39,17 +42,24 @@ class SetGoalViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> saveGoal({required String name, required double target}) async {
+  Future<bool> saveGoal({required String name, required double target, required String currency}) async {
     isSaving = true;
     notifyListeners();
 
     try {
+      final baseTargetAmount = exchangeService.toBase(target, currency);
+      final baseCurrentAmount = existingGoal != null 
+        ? exchangeService.toBase(existingGoal!.currentAmount, currency)
+        : 0.0;
       final goal = SavingsGoal(
         id: existingGoal?.id,
         name: name,
         targetAmount: target,
         currentAmount: existingGoal?.currentAmount ?? 0.0,
         deadline: deadline,
+        currency: currency,
+        targetBaseAmount: baseTargetAmount, 
+        currentBaseAmount: baseCurrentAmount,
       );
 
       if (isEditing) {
