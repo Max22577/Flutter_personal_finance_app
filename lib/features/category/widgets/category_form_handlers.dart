@@ -145,11 +145,10 @@ class CategoryFormHandlers {
     final textTheme = theme.textTheme;
     final colors = theme.colorScheme;
 
-    await vm.addCategory(
+    await vm.saveCategory(
       name: controller.text.trim(),
       iconCode: icon.codePoint,
       colorValue: color.toARGB32(),
-      isCustom: true,
     );
     if (context.mounted) { 
       AppFeedback.show(messenger, 'Catgegory successfully added', colors: colors, textTheme: textTheme, isError: false);
@@ -163,12 +162,11 @@ class CategoryFormHandlers {
     final textTheme = theme.textTheme;
     final colors = theme.colorScheme;
 
-    await vm.updateCategory(
+    await vm.saveCategory(
       id: id,
       name: controller.text.trim(),
       iconCode: icon,
       colorValue: color,
-      isCustom: true,
     );
     if (context.mounted) {
       AppFeedback.show(messenger, 'Catgegory successfully updated', colors: colors, textTheme: textTheme, isError: true);

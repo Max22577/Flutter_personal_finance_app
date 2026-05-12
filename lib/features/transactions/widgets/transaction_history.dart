@@ -19,31 +19,44 @@ class TransactionHistory extends StatelessWidget {
     final vm = context.watch<TransactionViewModel>();
     final lang = context.read<LanguageProvider>();
 
-    if (vm.isLoading) return const LoadingState();
-    if (vm.errorMessage != null) return ErrorState(message: vm.errorMessage!);
-    if (vm.transactions.isEmpty) {
-      return Center(
-        child: AnimatedEmptyState(
-          message: 'No transactions yet'.toUpperCase(),
-          imagePath: 'assets/images/trans_wallet_light1.svg',
-          darkImagePath: 'assets/images/trans_wallet_dark.svg',
-          animationType: EmptyStateAnimation.bounce,
-        ),
-      );
-    }
+    return StreamBuilder<List<Transaction>>(
+      stream: vm.transactions, // The reactive stream from our Repo
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return ErrorState(message: snapshot.error.toString());
+        }
 
-    final dateGroups = vm.groupedTransactions;
-    final sortedDates = dateGroups.keys.toList()..sort((a, b) => b.compareTo(a));
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const LoadingState();
+        }
 
-    return ListView.builder(
-      itemCount: sortedDates.length,
-      itemBuilder: (context, index) {
-        final date = sortedDates[index];
-        return TransactionGroupWidget(
-          date: date,
-          transactions: dateGroups[date]!,
-          categories: vm.categories,
-          onDelete: (tx) => _confirmDelete(context, vm, tx, lang),
+        final transactions = snapshot.data ?? [];
+
+        if (transactions.isEmpty) {
+          return Center(
+            child: AnimatedEmptyState(
+              message: 'No transactions yet'.toUpperCase(),
+              imagePath: 'assets/images/trans_wallet_light1.svg',
+              darkImagePath: 'assets/images/trans_wallet_dark.svg',
+              animationType: EmptyStateAnimation.bounce,
+            ),
+          );
+        }
+
+        final dateGroups = vm.groupTransactions(transactions);
+        final sortedDates = dateGroups.keys.toList()..sort((a, b) => b.compareTo(a));
+
+        return ListView.builder(
+          itemCount: sortedDates.length,
+          itemBuilder: (context, index) {
+            final date = sortedDates[index];
+            return TransactionGroupWidget(
+              date: date,
+              transactions: dateGroups[date]!,
+              categories: vm.categories, 
+              onDelete: (tx) => _confirmDelete(context, vm, tx, lang),
+            );
+          },
         );
       },
     );

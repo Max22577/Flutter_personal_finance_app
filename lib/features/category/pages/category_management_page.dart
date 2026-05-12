@@ -122,7 +122,7 @@ class _CustomCategorySliverList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<Category>>(
-      stream: vm.customCategoriesStream,
+      stream: vm.customCategoriesOnly,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SliverToBoxAdapter(child: LoadingState());

@@ -109,7 +109,6 @@ class AddSavingsSheetContentState extends State<AddSavingsSheetContent> {
         amount: double.parse(_amountController.text),
         currency: currencyCode,
         note: _noteController.text,
-        defaultNote: '${lang.translate('added_to')} ${widget.goal.name}',
       );
 
       if (success && context.mounted) {

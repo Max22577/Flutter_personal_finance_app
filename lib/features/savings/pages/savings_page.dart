@@ -29,39 +29,50 @@ class SavingsViewContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<SavingsViewModel>();
+    final vm = context.read<SavingsViewModel>();
     final lang = context.watch<LanguageProvider>();
     final theme = Theme.of(context);
 
-    if (vm.isLoading) return const Scaffold(body: Center(child: LoadingState()));
-    
-    if (vm.errorMessage != null) {
-      return Scaffold(
-        body: Center(
-          child: EmptyState(
-            icon: Icons.error_outline,
-            title: lang.translate('failed_to_load_goals'),
-            message: vm.errorMessage ?? lang.translate('unknown_error'),
-            actionText: lang.translate('retry'),
-            onAction: vm.retry,
-          ),
-        ),
-      );
-    }
+    return StreamBuilder<SavingsState>(
+      stream: vm.stateStream,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Scaffold(
+            body: Center(
+              child: EmptyState(
+                icon: Icons.error_outline,
+                title: lang.translate('failed_to_load_goals'),
+                message: snapshot.error.toString(),
+                actionText: lang.translate('retry'),
+                onAction: vm.refresh, // Re-triggers the stream
+              ),
+            ),
+          );
+        }
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surfaceContainerLow,
-      appBar: _SavingsAppBar(hasGoals: vm.goals.isNotEmpty),
-      body: vm.goals.isEmpty
-          ? AnimatedEmptyState(
-              message: lang.translate('No data recorded').toUpperCase(),
-              imagePath: 'assets/images/savings_light.svg',
-              darkImagePath: 'assets/images/savings_dark.svg',
-              animationType: EmptyStateAnimation.bounce,
-            )
-          : _SavingsList(vm: vm),
-      floatingActionButton: vm.goals.isNotEmpty ? const _AddGoalFAB() : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+        if (!snapshot.hasData) {
+          return const Scaffold(body: Center(child: LoadingState()));
+        }
+
+        final state = snapshot.data!;
+
+        return Scaffold(
+          backgroundColor: theme.colorScheme.surfaceContainerLow,
+          appBar: _SavingsAppBar(hasGoals: state.goals.isNotEmpty),
+          body: state.goals.isEmpty
+              ? Center(
+                  child: AnimatedEmptyState(
+                    message: lang.translate('No data recorded').toUpperCase(),
+                    imagePath: 'assets/images/savings_light.svg',
+                    darkImagePath: 'assets/images/savings_dark.svg',
+                    animationType: EmptyStateAnimation.bounce,
+                  )
+                )
+              : _SavingsList(state: state, vm: vm),
+          floatingActionButton: state.goals.isNotEmpty ? const _AddGoalFAB() : null,
+          floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+        );
+      },
     );
   }
 }
@@ -76,7 +87,7 @@ class _SavingsAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: 'savings_goals',
       isRootNav: false,
       actions: [
-        if (hasGoals)
+        if (!hasGoals)
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () => _NavigationHelper.addGoal(context),
@@ -90,8 +101,13 @@ class _SavingsAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class _SavingsList extends StatelessWidget {
+  final SavingsState state; // Receive the calculated state
   final SavingsViewModel vm;
-  const _SavingsList({required this.vm});
+  
+  const _SavingsList({
+    required this.state,
+    required this.vm,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -101,15 +117,27 @@ class _SavingsList extends StatelessWidget {
       onRefresh: vm.refresh,
       child: ListView(
         padding: const EdgeInsets.all(16),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         children: [
-          SavingsStatCard(vm: vm),
+          // Pass the state to the stat card for pre-calculated numbers
+          SavingsStatCard(state: state), 
+          
           const SizedBox(height: 24),
           Text(
             lang.translate('your_goals'),
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 16),
-          ...vm.goals.map((goal) => _GoalListItem(goal: goal)),
+          
+          // Render the list from state
+          ...state.goals.map((goal) => _GoalListItem(goal: goal)),
+          
+          // Added spacing for FAB
+          const SizedBox(height: 80), 
         ],
       ),
     );

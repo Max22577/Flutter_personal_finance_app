@@ -4,8 +4,8 @@ class AddToSavingsViewModel extends ChangeNotifier {
   final SavingsRepository _repository;
 
   AddToSavingsViewModel(this._repository);
-  bool _isProcessing = false;
 
+  bool _isProcessing = false;
   bool get isProcessing => _isProcessing;
 
   Future<bool> addToGoal({
@@ -13,28 +13,30 @@ class AddToSavingsViewModel extends ChangeNotifier {
     required double amount,
     required String currency,
     required String note,
-    required String defaultNote,
   }) async {
     if (amount <= 0) return false;
 
-    _isProcessing = true;
-    notifyListeners();
+    _setProcessing(true);
 
     try {
-      await _repository.addToGoal(
+      // Call the consolidated logic in the Repository
+      await _repository.contributeToGoal(
         goalId: goalId,
         amount: amount,
         currency: currency,
         note: note,
-        defaultNote: defaultNote,
       );
       return true;
     } catch (e) {
-      rethrow;
+      debugPrint("Add to Savings Error: $e");
+      return false;
     } finally {
-      _isProcessing = false;
-      notifyListeners();
+      _setProcessing(false);
     }
   }
-  
+
+  void _setProcessing(bool val) {
+    _isProcessing = val;
+    notifyListeners();
+  }
 }

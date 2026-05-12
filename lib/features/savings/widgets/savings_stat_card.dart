@@ -5,9 +5,9 @@ import 'package:personal_fin/features/savings/view_models/savings_view_model.dar
 import 'package:provider/provider.dart';
 
 class SavingsStatCard extends StatelessWidget {
-  final SavingsViewModel vm;
+  final SavingsState state;
 
-  const SavingsStatCard({super.key, required this.vm});
+  const SavingsStatCard({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -66,9 +66,9 @@ class SavingsStatCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    _StatItem(label: lang.translate('goals'), valueWidget: Text(vm.goals.length.toString(), style: _valueStyle(textTheme)), theme: theme),
+                    _StatItem(label: lang.translate('goals'), valueWidget: Text(state.goals.length.toString(), style: _valueStyle(textTheme)), theme: theme),
                     _VerticalDivider(colors: colors),
-                    _StatItem(label: lang.translate('progress'), valueWidget: Text('${(vm.overallProgress * 100).toStringAsFixed(0)}%', 
+                    _StatItem(label: lang.translate('progress'), valueWidget: Text('${(state.overallProgress * 100).toStringAsFixed(0)}%', 
                         style: _valueStyle(textTheme).copyWith(color: colors.primary)), theme: theme),
                   ],
                 ),
@@ -78,9 +78,9 @@ class SavingsStatCard extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    _StatItem(label: lang.translate('target'), valueWidget: CurrencyDisplay(baseAmount: vm.totalTargetBase, compact: true, style: _valueStyle(textTheme)), theme: theme),
+                    _StatItem(label: lang.translate('target'), valueWidget: CurrencyDisplay(baseAmount: state.totalTargetBase, compact: true, style: _valueStyle(textTheme)), theme: theme),
                     _VerticalDivider(colors: colors),
-                    _StatItem(label: lang.translate('saved'), valueWidget: CurrencyDisplay(baseAmount: vm.totalSavedBase, compact: true, style: _valueStyle(textTheme)), theme: theme),
+                    _StatItem(label: lang.translate('saved'), valueWidget: CurrencyDisplay(baseAmount: state.totalSavedBase, compact: true, style: _valueStyle(textTheme)), theme: theme),
                   ],
                 ),
               ],

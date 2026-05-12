@@ -9,6 +9,7 @@ import 'package:personal_fin/features/budgeting/widgets/month_selector.dart';
 import 'package:personal_fin/core/widgets/empty_state.dart';
 import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:personal_fin/features/budgeting/widgets/small_stat_card.dart';
+import 'package:personal_fin/models/budgeting_state.dart';
 import 'package:provider/provider.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import '../view_models/budgeting_view_model.dart';
@@ -84,42 +85,44 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
   }
 
   Widget _buildStatefulBody(BudgetingViewModel vm) {
-    final lang = context.read<LanguageProvider>();
-    final state = vm.currentState;
+  final lang = context.read<LanguageProvider>();
 
-    // Error State
-    if (vm.errorMessage != null) {
-      return _FullPageError(
-        message: vm.errorMessage!,
-        onRetry: vm.retry,
-        lang: lang,
+  return StreamBuilder<BudgetingState>(
+    stream: vm.stateStream, 
+    builder: (context, snapshot) {
+      if (snapshot.hasError) {
+        return _FullPageError(
+          message: snapshot.error.toString(),
+          onRetry: () => vm.setDate(vm.selectedDate), 
+          lang: lang,
+        );
+      }
+
+      if (!snapshot.hasData) {
+        return const Center(child: LoadingState());
+      }
+
+      final state = snapshot.data!;
+
+      return RefreshIndicator(
+        onRefresh: vm.refreshData,
+        child: CustomScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          slivers: [
+            _BudgetingHeader(vm: vm, state: state),
+
+            _BudgetListSection(state: state, vm: vm),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 120)),
+          ],
+        ),
       );
-    }
-
-    // Loading State
-    if (state == null) {
-      return const Center(child: LoadingState());
-    }
-
-    // Main Content
-    return RefreshIndicator(
-      onRefresh: vm.refreshData,
-      child: CustomScrollView(
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-        slivers: [
-          // Header Section (Month Picker & Total Stat)
-          _BudgetingHeader(vm: vm, state: state),
-
-          // Categorized List Section
-          _BudgetListSection(state: state, vm: vm),
-
-          // Bottom Spacing for FAB/Navbar
-          const SliverToBoxAdapter(child: SizedBox(height: 120)),
-        ],
-      ),
-    );
-  }
+    },
+  );
+}
 }
 class _BudgetingHeader extends StatelessWidget {
   final BudgetingViewModel vm;

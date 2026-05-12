@@ -1,159 +1,108 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/budget_repository.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
-import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
+import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
-import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/models/budget.dart';
+import 'package:personal_fin/models/budgeting_state.dart';
 import 'package:rxdart/rxdart.dart'; 
 import 'package:personal_fin/models/category.dart';
 import 'package:personal_fin/models/transaction.dart';
 
 class BudgetingViewModel extends ChangeNotifier {
-  final exchangeService = ExchangeRateService(FirestoreService.instance);
   final BudgetRepository _budgetRepo;
-  final MonthlyTransactionRepository _txRepo;
+  final TransactionRepository _txRepo; 
   final CategoryRepository _catRepo;
-  final LanguageProvider _langRepo ;
+  final ExchangeRateService _exchangeService;
 
-  StreamSubscription? _combinedSub;
-  BudgetingState? currentState;
   DateTime _selectedDate = DateTime.now();
   DateTime get selectedDate => _selectedDate;
 
-  String? errorMessage; 
-  bool isLoading = true;
-
-  // Centralized way to get the current monthYear string
-  String formattedMonthYear(String locale) => DateFormat('MMMM yyyy', locale).format(_selectedDate);
-
-  BudgetingViewModel(this._budgetRepo, this._txRepo, this._catRepo, this._langRepo) {
-    _init();
+  BudgetingViewModel(this._budgetRepo, this._txRepo, this._catRepo)
+      : _exchangeService = ExchangeRateService() {
+    // Set initial date
+    _syncDateToRepos();
   }
-  
-  void _init() {
-    // Tell repos to fetch initial data
-    _updateRepos();
 
-    // Combine all streams into one state listener
-    _combinedSub = Rx.combineLatest4(
-      _catRepo.categoriesStream,
+  // THE MASTER STATE STREAM
+  Stream<BudgetingState> get stateStream {
+    return Rx.combineLatest3(
+      _catRepo.allCategoriesStream,
       _budgetRepo.budgetsStream,
-      _txRepo.stream,
-      _langRepo.localeStream,
-      (categories, budgets, transactions, locale) => _calculateState(categories, budgets, transactions, locale),
-    ).listen((state) {
-        currentState = state;
-        errorMessage = null; 
-        isLoading = false;
-        notifyListeners();
-      },
-      onError: (e) {
-        errorMessage = e.toString(); 
-        isLoading = false;
-        notifyListeners();
-      },
+      _txRepo.transactionsStream, 
+      (categories, budgets, transactions) => _calculateState(categories, budgets, transactions),
     );
   }
 
-  BudgetingState _calculateState(List<Category> categories, List<Budget> budgets, List<Transaction> transactions, String locale) {
+  BudgetingState _calculateState(List<Category> categories, List<Budget> budgets, List<Transaction> transactions) {
     final Map<String, double> spendingMap = {};
-
-    for (var t in transactions) {
-      if (t.type == 'Expense') {
-        // Add the amount to the existing total for this categoryId
-        spendingMap[t.categoryId] = (spendingMap[t.categoryId] ?? 0.0) + t.baseAmount;
-      }
-    }
     
-    final filteredCategories = categories.where((c) {
-      return !['income', 'salary', 'revenue'].any((term) => c.name.toLowerCase().contains(term));
-    }).toList();
+    for (var t in transactions.where((tx) => tx.type == 'Expense')) {
+      spendingMap[t.categoryId] = (spendingMap[t.categoryId] ?? 0.0) + t.baseAmount;
+    }
 
-    // Map budgets for O(1) lookup
-    final budgetMap = {for (var b in budgets) b.categoryId: b.baseAmount};
+    // Filter out non-expense categories
+    final filteredCats = categories.where((c) => 
+      !['income', 'salary', 'revenue'].any((term) => c.name.toLowerCase().contains(term))
+    ).toList();
 
     return BudgetingState(
-      categories: filteredCategories,
-      budgetMap: budgetMap,
-      spendingMap: spendingMap, 
+      categories: filteredCats,
       transactions: transactions,
+      budgetMap: {for (var b in budgets) b.categoryId: b.baseAmount},
+      spendingMap: spendingMap,
       totalBudget: budgets.fold(0.0, (sum, b) => sum + b.baseAmount),
       activeBudgetsCount: budgets.where((b) => b.baseAmount > 0).length,
-      monthYear: formattedMonthYear(locale),
-      totalCategoryCount: budgets.length,
+      monthYear: DateFormat('MMMM yyyy').format(_selectedDate),
+      totalCategoryCount: filteredCats.length,
     );
   }
 
   void setDate(DateTime date) {
     _selectedDate = date;
-    _updateRepos(); // Repos handle the stream switch
+    
+    // We handle the formatting internally so the UI doesn't have to
+    _syncDateToRepos(); 
+    
     notifyListeners();
   }
 
-  void _updateRepos() {
-    _budgetRepo.fetchBudgets(formattedMonthYear(_langRepo.localeCode));
-    _txRepo.fetchForMonth(formattedMonthYear(_langRepo.localeCode));
+  void _syncDateToRepos() {
+    // Ensure we use a consistent format across the app (usually 'MMMM yyyy')
+    final formatted = DateFormat('MMMM yyyy').format(_selectedDate);
+    
+    _budgetRepo.updateMonthYear(formatted);
+    // If your TransactionRepo is also month-dependent:
+    // _txRepo.updateMonthYear(formatted); 
   }
 
   Future<void> updateBudget(String categoryId, double amount, String currency) async {
-    try {
-      // Convert the amount to the base currency (USD)
-      final baseAmount = exchangeService.toBase(amount, currency);
-      await _budgetRepo.updateBudget(categoryId, amount, baseAmount, currency, formattedMonthYear(_langRepo.localeCode));
-      // No need to manually update state here, the stream will emit new data
-    } catch (e) {
-      errorMessage = 'Failed to update budget: ${e.toString()}';
-      notifyListeners();
-    }
-  }
-
-  void retry() {
-    errorMessage = null;
-    isLoading = true;
-    notifyListeners();
-    _updateRepos(); 
+    final formatted = DateFormat('MMMM yyyy').format(_selectedDate);
+    final uid = _budgetRepo.uid;
+    final budget = Budget(
+      id: '${categoryId}_$formatted', 
+      userId: uid,
+      categoryId: categoryId,
+      amount: amount,
+      baseAmount: _exchangeService.toBase(amount, currency),
+      currency: currency,
+      monthYear: formatted,
+    );
+    await _budgetRepo.setBudget(budget);
   }
 
   Future<void> refreshData() async {
-    await Future.wait([
-      _budgetRepo.refresh(),
-      _txRepo.refresh(),
-      _catRepo.refresh(),
-    ]);
-    // No notifyListeners needed here because the 
-    // streams will automatically emit new values!
-  }
-
-  @override
-  void dispose() {
-    _combinedSub?.cancel();
-    super.dispose();
+    await Future.delayed(const Duration(milliseconds: 800));
+    
+    // Re-sync the date to the repositories to trigger a fresh stream emission
+    _syncDateToRepos();
+    
+    // If you have specific refresh logic in repos, call it here
+    // await _budgetRepo.refresh();
+    
+    notifyListeners();
   }
 }
 
-// Data holder for the View
-class BudgetingState {
-  final List<Category> categories;
-  final Map<String, double> budgetMap;
-  final Map<String, double> spendingMap;
-  final List<Transaction> transactions;
-  final double totalBudget;
-  final int activeBudgetsCount;
-  final int totalCategoryCount;
-  final String monthYear;
-
-  BudgetingState({
-    required this.categories,
-    required this.budgetMap,
-    required this.spendingMap,
-    required this.transactions,
-    required this.totalBudget,
-    required this.activeBudgetsCount,
-    required this.monthYear,
-    required this.totalCategoryCount,
-  });
-}

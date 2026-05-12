@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
-import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
+import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/widgets/animated_empty_state.dart';
 import 'package:personal_fin/core/widgets/currency_display.dart';
 import 'package:personal_fin/core/widgets/empty_state.dart';
@@ -27,7 +27,7 @@ class CategoryPieChart extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<SpendingChartViewModel>(
       create: (_) => SpendingChartViewModel(
-        context.read<MonthlyTransactionRepository>(),
+        context.read<TransactionRepository>(),
         context.read<CategoryRepository>(),
       ),
       child: const _CategoryPieChartConsumer(colorsList: _vibrantColors),

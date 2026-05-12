@@ -3,69 +3,49 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
 import '../../../models/savings.dart';
 
-
 class SavingsViewModel extends ChangeNotifier {
   final SavingsRepository _repository;
-  
-  List<SavingsGoal> _goals = [];
-  bool _isLoading = true;
-  String? _errorMessage;
-  StreamSubscription? _subscription;
 
-  SavingsViewModel(this._repository) {
-    _init();
+  SavingsViewModel(this._repository);
+
+  // THE MASTER STREAM: Maps the raw goals list into a UI-ready State
+  Stream<SavingsState> get stateStream => _repository.goalsStream.map((goals) {
+        final totalTarget = goals.fold(0.0, (sum, g) => sum + g.targetBaseAmount);
+        final totalSaved = goals.fold(0.0, (sum, g) => sum + g.currentBaseAmount);
+
+        return SavingsState(
+          goals: goals,
+          totalTargetBase: totalTarget,
+          totalSavedBase: totalSaved,
+          remainingBase: (totalTarget - totalSaved).clamp(0.0, double.infinity),
+          overallProgress: totalTarget == 0 ? 0.0 : (totalSaved / totalTarget).clamp(0.0, 1.0),
+        );
+      });
+
+  Future<void> deleteGoal(String id) async {
+    await _repository.deleteGoal(id);
   }
 
-  // Getters
-  List<SavingsGoal> get goals => _goals;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
-
-  // Computed Stats
-  double get totalTargetBase => _goals.fold(0.0, (sum, g) => sum + g.targetBaseAmount);
-  double get totalSavedBase => _goals.fold(0.0, (sum, g) => sum + g.currentBaseAmount);
-
-  // Remaining amount in Base Currency
-  double get remainingBase => (totalTargetBase - totalSavedBase).clamp(0.0, double.infinity);
-
-  // Overall Progress remains accurate regardless of exchange rates
-  double get overallProgress => totalTargetBase == 0 
-    ? 0 
-    : (totalSavedBase / totalTargetBase).clamp(0.0, 1.0);
-
-  void _init() {
-    _subscription = _repository.goalsStream.listen(
-      (goals) {
-        _goals = goals;
-        _isLoading = false;
-        _errorMessage = null;
-        notifyListeners();
-      },
-      onError: (e) {
-        _errorMessage = e.toString();
-        _isLoading = false;
-        notifyListeners();
-      },
-    );
-  }
-
+  // With Streams, refresh is usually just a visual "kick"
   Future<void> refresh() async {
-    await _repository.refresh();
-    _isLoading = true;
-    notifyListeners();
+    notifyListeners(); // Triggers UI to show RefreshIndicator if needed
+    await Future.delayed(const Duration(milliseconds: 800));
   }
+}
 
-  Future<void> retry() async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-    await refresh();
-  }
+// Data holder for the Savings Screen
+class SavingsState {
+  final List<SavingsGoal> goals;
+  final double totalTargetBase;
+  final double totalSavedBase;
+  final double remainingBase;
+  final double overallProgress;
 
-
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
-  }
+  SavingsState({
+    required this.goals,
+    required this.totalTargetBase,
+    required this.totalSavedBase,
+    required this.remainingBase,
+    required this.overallProgress,
+  });
 }
