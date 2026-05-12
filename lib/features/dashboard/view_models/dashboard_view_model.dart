@@ -32,7 +32,7 @@ class DashboardViewModel extends ChangeNotifier {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
-    await _repo.refresh();
+  
   }
 
   @override

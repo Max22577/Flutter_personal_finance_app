@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Category {
@@ -41,7 +40,7 @@ class Category {
     );
   }
 
-  Map <String, dynamic> toFirestore() {
+  Map<String, dynamic> toFirestore() {
     return {
       'name': name,
       'icon_code': iconCode,
@@ -49,5 +48,6 @@ class Category {
       'isCustom': isCustom,
     };
   }
+  Map<String, dynamic> toMap() => toFirestore();
 }
   

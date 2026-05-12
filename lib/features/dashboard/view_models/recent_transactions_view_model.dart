@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/models/transaction.dart';
 
 class RecentTransactionsViewModel extends ChangeNotifier {
   final TransactionRepository _repo;
+  final CategoryRepository _catRepo;
   final int _maxItems;
   StreamSubscription? _sub;
 
@@ -20,8 +22,8 @@ class RecentTransactionsViewModel extends ChangeNotifier {
 
   String getCategoryName(String id) => _categoryNames[id] ?? 'Loading...';
 
-  RecentTransactionsViewModel({required TransactionRepository repo, int maxItems = 5}) 
-      : _repo = repo, _maxItems = maxItems {
+  RecentTransactionsViewModel({required TransactionRepository repo, required CategoryRepository catRepo, int maxItems = 5}) 
+      : _repo = repo, _catRepo = catRepo, _maxItems = maxItems {
     _init();
   }
 
@@ -63,7 +65,7 @@ class RecentTransactionsViewModel extends ChangeNotifier {
 
     for (final id in ids) {
       if (!_categoryNames.containsKey(id)) {
-        final name = await _repo.getCategoryName(id);
+        final name = _catRepo.getNameByIdSync(id);
         _categoryNames[id] = name;
       }
     }

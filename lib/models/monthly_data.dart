@@ -62,6 +62,17 @@ class MonthlyData {
       categoryBreakdown: categoryBreakdown ?? this.categoryBreakdown,
     );
   }
+
+  factory MonthlyData.empty([DateTime? month]) {
+    return MonthlyData(
+      month: month ?? DateTime.now(),
+      income: 0,
+      expenses: 0,
+      savingsGoal: 0,
+      transactionCount: 0,
+      categoryBreakdown: const {},
+    );
+  }
   
   @override
   String toString() {

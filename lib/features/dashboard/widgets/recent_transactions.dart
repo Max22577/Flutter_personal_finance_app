@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/widgets/empty_state.dart';
 import 'package:personal_fin/features/dashboard/widgets/recent_transactions/transaction_item.dart';
@@ -20,8 +21,9 @@ class RecentTransactions extends StatelessWidget {
     final textScaler = MediaQuery.textScalerOf(context);
 
     return ChangeNotifierProvider(
-      create: (context) => RecentTransactionsViewModel(
+      create: (context) => RecentTransactionsViewModel(       
         repo: context.read<TransactionRepository>(),
+        catRepo: context.read<CategoryRepository>(),
         maxItems: maxItems,
       ),
       child: Consumer<RecentTransactionsViewModel>(

@@ -86,11 +86,9 @@ class TestNavigationDependencyManager {
     when(() => mockHomeVM.getTabIndex(any())).thenReturn(null);
     when(() => mockHomeVM.getTabIndex('/dashboard')).thenReturn(0);
 
-    when(() => mockTransactionVM.isLoading).thenReturn(false);
     when(() => mockTransactionVM.isSaving).thenReturn(false);
-    when(() => mockTransactionVM.errorMessage).thenReturn(null);
-    when(() => mockTransactionVM.transactions).thenReturn([]);
-    when(() => mockTransactionVM.groupedTransactions).thenReturn({});
+    when(() => mockTransactionVM.transactions).thenReturn(Stream.value([]));
+  
     when(() => mockTransactionVM.categories).thenReturn([]);
 
   }

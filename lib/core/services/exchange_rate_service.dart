@@ -1,28 +1,42 @@
-import 'package:flutter/material.dart';
-import 'package:personal_fin/core/services/firestore_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:personal_fin/models/exchange_rate.dart';
 
 class ExchangeRateService extends ChangeNotifier {
-  final FirestoreService _firestoreService;
   final Map<String, ExchangeRate> _cachedRates = {};
+  final String _appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
   
   static const String baseCurrencyCode = 'USD';
-
+  
   // Constructor starts the listener immediately
-  ExchangeRateService(this._firestoreService) {
+  ExchangeRateService();
+  
+  void init() {
     _initRateListener();
   }
 
+  CollectionReference _exchangeRatesRef() {
+    if (_appId.isEmpty) {
+      throw Exception("CRITICAL: APP_ID is empty. Firestore cannot build the collection path.");
+    }
+    return FirebaseFirestore.instance.collection('artifacts/$_appId/global_data/rates');
+  }
+
+  CollectionReference get exchangeRatesRef => _exchangeRatesRef();
+  
   void _initRateListener() async {
-    final ref = await _firestoreService.ratesCollectionRef();
-    
+    if (_appId.isEmpty) {
+      debugPrint("ExchangeRateService: Skipping listener, APP_ID not set.");
+      return;
+    }
+    final ref = _exchangeRatesRef();    
     // Listen to real-time updates from Firestore
     ref.snapshots().listen((snapshot) {
       for (var doc in snapshot.docs) {
         final rate = ExchangeRate.fromMap(doc.data() as Map<String, dynamic>);
         _cachedRates[rate.code] = rate;
       }
-      notifyListeners(); // This is what updates your UI!
+      notifyListeners(); 
     });
   }
 

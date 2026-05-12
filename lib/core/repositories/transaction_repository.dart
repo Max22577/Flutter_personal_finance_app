@@ -1,57 +1,83 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../models/transaction.dart';
 import '../services/firestore_service.dart';
-
 class TransactionRepository {
   final FirestoreService _service;
-  
-  // The "Master Stream"
-  late final BehaviorSubject<List<Transaction>> _transactionSubject;
-  StreamSubscription? _firestoreSub;
-  String get uid => _service.currentUid;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final String _appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
+
+  final _monthController = BehaviorSubject<DateTime>.seeded(DateTime.now());
 
   TransactionRepository({FirestoreService? service})
-   : _service = service ?? FirestoreService.instance {
-    _transactionSubject = BehaviorSubject<List<Transaction>>();
-    _init();
+      : _service = service ?? FirestoreService.instance;
+
+  // The Reactive Master Stream
+  Stream<List<Transaction>> get transactionsStream {
+    return _auth.authStateChanges().switchMap((user) {
+      if (user == null) return Stream.value([]);
+
+      final query = _txRef(user.uid).orderBy('date', descending: true);
+      
+      return _service.streamCollection<Transaction>(
+        query: query,
+        builder: (doc) => Transaction.fromFirestore(doc),
+      );
+    });
   }
 
-  void _init() {
-    _firestoreSub = _service.streamTransactions().listen(
-      (data) => _transactionSubject.add(data),
-      onError: (e) => _transactionSubject.addError(e),
-    );
+  Stream<List<Transaction>> get monthlyTransactionsStream {
+    return Rx.combineLatest2(
+      _auth.authStateChanges(),
+      _monthController.stream,
+      (user, date) => _TxParams(user?.uid, date),
+    ).switchMap((params) {
+      if (params.uid == null) return Stream.value([]);
+
+      final start = DateTime(params.date.year, params.date.month, 1);
+      final end = DateTime(params.date.year, params.date.month + 1, 0, 23, 59, 59);
+
+      final query = _txRef(params.uid!)
+        .where('date', isGreaterThanOrEqualTo: start)
+        .where('date', isLessThanOrEqualTo: end)
+        .orderBy('date', descending: true);
+
+      return _service.streamCollection<Transaction>(
+        query: query,
+        builder: (doc) => Transaction.fromFirestore(doc),
+      );
+    });
   }
 
-  // ViewModels call this to get the data
-  Stream<List<Transaction>> get transactionsStream => _transactionSubject.stream;
+  void setMonth(DateTime date) => _monthController.add(date);
 
-  Future<void> addTransaction(Transaction transaction) async {
-    await _service.addTransaction(transaction);
+  // Path Helper
+  CollectionReference _txRef(String uid) => 
+      FirebaseFirestore.instance.collection('artifacts/$_appId/users/$uid/transactions');
+
+  String get currentUid => _auth.currentUser?.uid ?? '';
+
+  Future<void> addTransaction(Transaction tx) async {
+    final uid = currentUid;
+    if (uid.isEmpty) throw Exception("Unauthorized");
+    await _service.addDocument(_txRef(uid), tx.toFirestore());
   }
 
-  Future<void> updateTransaction(Transaction transaction) async {
-    await _service.updateTransaction(transaction);
+  Future<void> updateTransaction(Transaction tx) async {
+    if (tx.id == null) throw Exception("ID Required");
+    await _service.updateDocument(_txRef(currentUid).doc(tx.id), tx.toFirestore());
   }
 
   Future<void> deleteTransaction(String id) async {
-    await _service.deleteTransaction(id);  
+    await _service.deleteDocument(_txRef(currentUid), id);
   }
+}
 
-  Future<String> getCategoryName(String categoryId) async {
-    return await _service.getCategoryName(categoryId);
-  }
-
-  Future<void> refresh() async {
-    _firestoreSub?.cancel();
-    _init();
-    await _transactionSubject.first.timeout(const Duration(seconds: 5));
-  }
-
-  // Clean up
-  void dispose() {
-    _firestoreSub?.cancel();
-    _transactionSubject.close();
-  }
+class _TxParams {
+  final String? uid;
+  final DateTime date;
+  _TxParams(this.uid, this.date);
 }

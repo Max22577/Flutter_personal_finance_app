@@ -1,87 +1,89 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:rxdart/rxdart.dart';
 import '../../models/category.dart';
 import '../services/firestore_service.dart';
 
 class CategoryRepository {
   final FirestoreService _service;
-  final _categorySubject = BehaviorSubject<List<Category>>(); //pre-defined and user defined categories
-  final _userCategorySubject = BehaviorSubject<List<Category>>(); //user defined categories
-  StreamSubscription? _catSub;
-  StreamSubscription? _userCatSub;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final String _appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
+  List<Category> _cache = [
+    Category(id: 'cat_food', name: 'Food'),
+    Category(id: 'cat_trans', name: 'Transportation'),
+    Category(id: 'cat_salary', name: 'Salary'),
+    Category(id: 'cat_rent', name: 'Rent'),
+    Category(id: 'cat_savings', name: 'Savings'),
+  ];
+
+  final List<Category> predefinedCategories = [
+    Category(id: 'cat_food', name: 'Food'),
+    Category(id: 'cat_trans', name: 'Transportation'),
+    Category(id: 'cat_salary', name: 'Salary'),
+    Category(id: 'cat_rent', name: 'Rent'),
+    Category(id: 'cat_savings', name: 'Savings'),
+  ];
 
 
   CategoryRepository({FirestoreService? service}) 
-    : _service = service ?? FirestoreService.instance {
-      _init();
+    : _service = service ?? FirestoreService.instance; 
+  
+
+  Stream<List<Category>> get allCategoriesStream {
+    return _auth.authStateChanges().switchMap((user) {
+      if (user == null) return Stream.value(predefinedCategories);
+
+      final query = _categoriesRef(user.uid).orderBy('name', descending: false);
+      return _service.streamCollection<Category>(
+        query: query,
+        builder: (doc) => Category.fromFirestore(doc),
+      ).map((customs) {
+        final fullList = [...predefinedCategories, ...customs];
+        
+        _cache = fullList; 
+        
+        return fullList;
+      });
+    });
   }
 
-  void _init() {
-    // Listen once to the Firestore stream
-    _catSub = _service.streamCategories().listen(
-      (data) => _categorySubject.add(data),
-      onError: (e) => _categorySubject.addError(e),
-    );
-
-    _userCatSub = _service.streamCustomCategories().listen(
-      (data) => _userCategorySubject.add(data),
-      onError: (e) => _userCategorySubject.addError(e),
-    );
+  Stream<List<Category>> get customCategoriesOnlyStream {
+    return _auth.authStateChanges().switchMap((user) {
+      if (user == null) return Stream.value([]); 
+      
+      final ref = _categoriesRef(user.uid);
+      final query = ref.orderBy('name', descending: false);
+      return _service.streamCollection<Category>(
+        query: query,
+        builder: (doc) => Category.fromFirestore(doc),
+      );
+    });
   }
 
-  // The stream shared by the whole app
-  Stream<List<Category>> get categoriesStream => _categorySubject.stream;
-  Stream<List<Category>> get customCategoriesStream => _userCategorySubject.stream;
-  List<Category> get predefinedCategories => _service.predefinedCategories;
-
-  Future<void> addCategory({
-    required String name, 
-    required int iconCode, 
-    required int colorValue, 
-    required bool isCustom 
-  }) async {
-    await _service.addCategory(
-      name: name,
-      iconCode: iconCode,
-      colorValue: colorValue,
-      isCustom: isCustom
-    );
-  }
-
-  Future<void> updateCategory({
-    required String id, 
-    String? name, 
-    int? iconCode, 
-    int? colorValue,
-    bool? isCustom = true,
-  }) async {
-    await _service.updateCategoryName(
-      categoryId: id,
-      newName: name,
-      iconCode: iconCode,
-      colorValue: colorValue,
-      isCustom: isCustom
-    );
-  }
-
-  // Sync refresh if needed
-  Future<void> refresh() async {
-    _catSub?.cancel();
-    _userCatSub?.cancel();
-    _init();
+  String getNameByIdSync(String id) {
     try {
-      await Future.wait([
-        _categorySubject.first.timeout(const Duration(seconds: 5)),
-        _userCategorySubject.first.timeout(const Duration(seconds: 5)),
-      ]);
-    } on TimeoutException {
-      throw 'Refresh timed out. Please try again.';
+      return _cache.firstWhere((cat) => cat.id == id).name;
+    } catch (_) {
+      return 'Unknown Category';
     }
   }
 
-  void dispose() {
-    _catSub?.cancel();
-    _userCatSub?.cancel();
-    _categorySubject.close();
+  List<Category> get categories => _cache;
+  // Helper to build the path
+  CollectionReference _categoriesRef(String uid) => 
+      FirebaseFirestore.instance.collection('artifacts/$_appId/users/$uid/transaction_categories');
+
+  Future<void> addCategory(Category category) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw Exception("User not logged in");
+    await _service.addDocument(_categoriesRef(uid), category.toMap());
+  }
+
+  Future<void> updateCategory(Category category) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw Exception("User not logged in");
+    await _service.updateDocument(_categoriesRef(uid).doc(category.id), category.toMap());
   }
 }

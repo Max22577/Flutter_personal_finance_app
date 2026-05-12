@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
-import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
+import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:rxdart/rxdart.dart';
 
 class SpendingChartViewModel extends ChangeNotifier {
-  final MonthlyTransactionRepository _transactionRepo;
+  final TransactionRepository _transactionRepo;
   final CategoryRepository _categoryRepo;
 
   bool _isLoading = true;
@@ -31,8 +31,8 @@ class SpendingChartViewModel extends ChangeNotifier {
     _subscription?.cancel();
 
     _subscription = Rx.combineLatest2(
-      _transactionRepo.stream,
-      _categoryRepo.categoriesStream,
+      _transactionRepo.monthlyTransactionsStream,
+      _categoryRepo.allCategoriesStream,
       (List<Transaction> transactions, List<Category> categories) {
         final Map<String, double> aggregatedData = {};
         

@@ -9,11 +9,9 @@ import 'package:personal_fin/core/providers/theme_provider.dart';
 import 'package:personal_fin/core/repositories/budget_repository.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
-import 'package:personal_fin/core/repositories/monthly_transaction_repository.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
-import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/core/theme/app_theme.dart'; 
 import 'package:personal_fin/features/auth/pages/sign_in_page.dart';
 import 'package:personal_fin/features/auth/pages/sign_up_page.dart';
@@ -45,7 +43,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
-  await FirestoreService.initialize();
   await GoogleSignIn.instance.initialize();
 
   await initializeDateFormatting();
@@ -61,18 +58,23 @@ void main() async {
   final languageProvider = LanguageProvider();
   await languageProvider.init();
 
-  final firestoreService = await FirestoreService.initialize();
   
   runApp(
     MultiProvider(
       providers: [
-        Provider<FirestoreService>.value(value: firestoreService),
         Provider(create: (_) => TransactionRepository()),
-        Provider(create: (_) => MonthlyDataRepository()),
         Provider(create: (_) => CategoryRepository()),
+        Provider(
+          create: (context) => MonthlyDataRepository(
+            context.read<CategoryRepository>(),
+          )
+        ),        
         Provider(create: (_) => BudgetRepository()),
-        Provider(create: (_) => MonthlyTransactionRepository()),
-        Provider(create: (_) => SavingsRepository()),       
+        Provider(
+          create: (context) => SavingsRepository(
+            context.read<TransactionRepository>()
+          )
+        ),       
         ChangeNotifierProvider.value( 
           value: themeProvider, 
         ),
@@ -86,11 +88,13 @@ void main() async {
           value: languageProvider, 
         ),
         ChangeNotifierProvider(
-          create: (context) => RateSyncProvider(firestoreService)
+          create: (context) => ExchangeRateService(),
         ),
         ChangeNotifierProvider(
-          create: (context) => ExchangeRateService(firestoreService),
-        ),
+          create: (context) => RateSyncProvider(
+            context.read<ExchangeRateService>(),
+          ),
+        ),       
         ChangeNotifierProvider(
           create: (context) => HomeViewModel(),
         ),
@@ -116,9 +120,8 @@ void main() async {
         ChangeNotifierProvider(
           create: (context) => BudgetingViewModel(
             context.read<BudgetRepository>(),
-            context.read<MonthlyTransactionRepository>(),
+            context.read<TransactionRepository>(),
             context.read<CategoryRepository>(),
-            context.read<LanguageProvider>(),
           )
         ),
         ChangeNotifierProvider(

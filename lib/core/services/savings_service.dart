@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:flutter/material.dart';
-import 'package:personal_fin/core/services/firestore_service.dart';
+import 'package:personal_fin/core/repositories/savings_repository.dart';
+import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import '../../models/transaction.dart';
 
 class SavingsService {
@@ -8,7 +9,8 @@ class SavingsService {
   factory SavingsService() => _instance;
   SavingsService._internal();
   static SavingsService get instance => _instance;
-  final FirestoreService _firestore = FirestoreService.instance;
+  final TransactionRepository _transactionRepo = TransactionRepository();
+  final SavingsRepository _savingsRepo = SavingsRepository(TransactionRepository());
   
   // Add money to specific savings goal
   Future<void> addToSavingsGoal({
@@ -21,7 +23,7 @@ class SavingsService {
     try {
       // savings transaction
       final transaction = Transaction(
-        userId:  _firestore.currentUid,
+        userId:  _savingsRepo.currentUid,
         title: transactionNote ?? 'Savings Contribution',
         amount: amount,
         baseAmount: baseAmount,
@@ -31,8 +33,8 @@ class SavingsService {
         date: DateTime.now(),
       );
       
-      await _firestore.addTransaction(transaction);
-      final savingsGoalRef = await _firestore.savingsGoalsCollectionRef();
+      await _transactionRepo.addTransaction(transaction);
+      final savingsGoalRef = _savingsRepo.goalsCollectionRef;
       await savingsGoalRef
           .doc(goalId)
           .update({
@@ -57,7 +59,7 @@ class SavingsService {
   }) async {
     try {
       final transaction = Transaction(
-        userId:  _firestore.currentUid,
+        userId:  _savingsRepo.currentUid,
         title: reason ?? 'Savings Withdrawal',
         amount: amount,
         baseAmount: amount, // Assuming base amount is the same as the withdrawal amount
@@ -67,8 +69,8 @@ class SavingsService {
         date: DateTime.now(),
       );
       
-      await _firestore.addTransaction(transaction);
-      final savingsGoalRef = await _firestore.savingsGoalsCollectionRef();
+      await _transactionRepo.addTransaction(transaction);
+      final savingsGoalRef = _savingsRepo.goalsCollectionRef;
   
       await savingsGoalRef
           .doc(goalId)

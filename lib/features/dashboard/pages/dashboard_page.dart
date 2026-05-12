@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
-import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/widgets/empty_state.dart';
 import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:personal_fin/features/dashboard/widgets/category_pie_chart.dart';
@@ -31,35 +29,30 @@ class _DashboardScaffold extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
-      body: RefreshIndicator(
-        onRefresh: () async => await Future.wait([
-          context.read<TransactionRepository>().refresh(),
-          context.read<MonthlyDataRepository>().refresh(),
-        ]),
-        child: SingleChildScrollView(
-          key: const Key('dashboard_main_scroll'),
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.all(textScaler.scale(16)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const _DashboardMonthlyReviewSection(),
-              SizedBox(height: textScaler.scale(16)),
-              const CategoryPieChart(),
-              SizedBox(height: textScaler.scale(16)),
-              const QuickStats(),
-              SizedBox(height: textScaler.scale(24)),
-              RecentTransactions(
-                maxItems: 5,
-                onViewAll: () => Navigator.pushNamed(context, '/transactions'),
-              ),
-              SizedBox(height: textScaler.scale(16)),
-              const _QuickActionsCard(),
-              SizedBox(height: textScaler.scale(120)), // Space for FAB/BottomBar
-            ],
-          ),
+      body: SingleChildScrollView(
+        key: const Key('dashboard_main_scroll'),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(textScaler.scale(16)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const _DashboardMonthlyReviewSection(),
+            SizedBox(height: textScaler.scale(16)),
+            const CategoryPieChart(),
+            SizedBox(height: textScaler.scale(16)),
+            const QuickStats(),
+            SizedBox(height: textScaler.scale(24)),
+            RecentTransactions(
+              maxItems: 5,
+              onViewAll: () => Navigator.pushNamed(context, '/transactions'),
+            ),
+            SizedBox(height: textScaler.scale(16)),
+            const _QuickActionsCard(),
+            SizedBox(height: textScaler.scale(120)), // Space for FAB/BottomBar
+          ],
         ),
       ),
+      
     );
   }
 }
@@ -71,7 +64,7 @@ class _DashboardMonthlyReviewSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<DashboardViewModel>();
+    final vm = context.read<DashboardViewModel>();
     final lang = context.watch<LanguageProvider>();
 
     if (vm.isLoading) {

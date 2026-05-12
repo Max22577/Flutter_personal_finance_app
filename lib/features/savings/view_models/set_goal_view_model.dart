@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
-import 'package:personal_fin/core/services/firestore_service.dart';
 import 'package:personal_fin/models/savings.dart';
 
 class SetGoalViewModel extends ChangeNotifier {
   final SavingsRepository _repository;
   final SavingsGoal? existingGoal;
-  final exchangeService = ExchangeRateService(FirestoreService.instance);
+  final exchangeService = ExchangeRateService();
 
   SetGoalViewModel(this._repository, {this.existingGoal}) {
     if (existingGoal != null) {
