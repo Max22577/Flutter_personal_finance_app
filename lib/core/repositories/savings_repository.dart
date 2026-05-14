@@ -4,26 +4,32 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
+import 'package:personal_fin/core/services/i_firestore_service.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../models/savings.dart';
-import '../services/firestore_service.dart';
 
 class SavingsRepository {
-  final FirestoreService _service;
+  final IFirestoreService _service;
   final TransactionRepository _txRepo;
   final ExchangeRateService _exchangeService;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth _auth;
    final String _appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
 
-  SavingsRepository(this._txRepo, {FirestoreService? service})
-      : _service = service ?? FirestoreService.instance,
-        _exchangeService = ExchangeRateService();
+  SavingsRepository(
+    this._txRepo, {
+    required IFirestoreService service,
+    required ExchangeRateService exchangeService,
+    required FirebaseAuth auth,
+  })  : _service = service,
+        _exchangeService = exchangeService,
+        _auth = auth;
 
   CollectionReference _goalsRef(String uid) =>
       FirebaseFirestore.instance.collection('artifacts/$_appId/users/$uid/savings_goals');
 
-  CollectionReference get goalsCollectionRef => _goalsRef(currentUid);
+  String _goalsPath(String uid) => 'artifacts/$_appId/users/$uid/savings_goals';
+  String get goalsCollectionPath => _goalsPath(currentUid);
   String get currentUid => _auth.currentUser?.uid ?? '';
 
   // REACTIVE MASTER STREAM
@@ -48,7 +54,6 @@ class SavingsRepository {
     final uid = currentUid;
     final baseAmount = _exchangeService.toBase(amount, currency);
 
-    // 1. Create the Transaction
     final tx = Transaction(
       userId: uid,
       title: note.isNotEmpty ? note : 'Savings Contribution',
@@ -60,13 +65,12 @@ class SavingsRepository {
       date: DateTime.now(),
     );
 
-    // 2. Add Transaction via TransactionRepo
     await _txRepo.addTransaction(tx);
 
-    // 3. Update Goal Progress
-    await _service.updateDocument(
-      _goalsRef(uid).doc(goalId),
-      {
+    await _service.updateDocumentById(
+      collectionPath: _goalsPath(uid),
+      documentId: goalId,      
+      data: {
         'currentAmount': FieldValue.increment(amount),
         'currentBaseAmount': FieldValue.increment(baseAmount),
         'lastContributionAt': FieldValue.serverTimestamp(),

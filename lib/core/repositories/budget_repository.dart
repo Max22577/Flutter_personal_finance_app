@@ -2,20 +2,20 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:personal_fin/core/services/firestore_service.dart';
+import 'package:personal_fin/core/services/i_firestore_service.dart';
 import 'package:personal_fin/models/budget.dart';
 import 'package:rxdart/rxdart.dart';
 
 class BudgetRepository {
-  final FirestoreService _service;
+  final IFirestoreService _service;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final String _appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
   
   // A controller to handle month switching reactively
   final _monthYearController = BehaviorSubject<String>();
 
-  BudgetRepository({FirestoreService? service})
-      : _service = service ?? FirestoreService.instance;
+  BudgetRepository({required IFirestoreService service})
+      : _service = service;
 
   CollectionReference _budgetRef(String uid) =>
       FirebaseFirestore.instance.collection('artifacts/$_appId/users/$uid/budgets');

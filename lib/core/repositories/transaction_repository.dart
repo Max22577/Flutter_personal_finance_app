@@ -2,18 +2,20 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:personal_fin/core/services/i_firestore_service.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../models/transaction.dart';
-import '../services/firestore_service.dart';
+
 class TransactionRepository {
-  final FirestoreService _service;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final IFirestoreService _service;
+  final FirebaseAuth _auth;
   final String _appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
 
   final _monthController = BehaviorSubject<DateTime>.seeded(DateTime.now());
 
-  TransactionRepository({FirestoreService? service})
-      : _service = service ?? FirestoreService.instance;
+  TransactionRepository({required IFirestoreService service, required FirebaseAuth auth})
+      : _service = service,
+        _auth = auth;
 
   // The Reactive Master Stream
   Stream<List<Transaction>> get transactionsStream {

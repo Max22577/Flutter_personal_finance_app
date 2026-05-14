@@ -2,12 +2,13 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' hide Category;
+import 'package:personal_fin/core/services/i_firestore_service.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../models/category.dart';
-import '../services/firestore_service.dart';
+
 
 class CategoryRepository {
-  final FirestoreService _service;
+  final IFirestoreService _service;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final String _appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
   List<Category> _cache = [
@@ -27,8 +28,8 @@ class CategoryRepository {
   ];
 
 
-  CategoryRepository({FirestoreService? service}) 
-    : _service = service ?? FirestoreService.instance; 
+  CategoryRepository({required IFirestoreService service}) 
+    : _service = service; 
   
 
   Stream<List<Category>> get allCategoriesStream {

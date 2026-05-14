@@ -1,36 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:personal_fin/core/providers/app_providers.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
-import 'package:personal_fin/core/providers/rate_sync_provider.dart';
 import 'package:personal_fin/core/providers/theme_provider.dart';
-import 'package:personal_fin/core/repositories/budget_repository.dart';
-import 'package:personal_fin/core/repositories/category_repository.dart';
-import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
-import 'package:personal_fin/core/repositories/savings_repository.dart';
-import 'package:personal_fin/core/repositories/transaction_repository.dart';
-import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/theme/app_theme.dart'; 
 import 'package:personal_fin/features/auth/pages/sign_in_page.dart';
 import 'package:personal_fin/features/auth/pages/sign_up_page.dart';
-import 'package:personal_fin/features/auth/view_models/sign_in_view_model.dart';
 import 'package:personal_fin/features/budgeting/pages/budgeting_page.dart';
-import 'package:personal_fin/features/budgeting/view_models/budgeting_view_model.dart';
 import 'package:personal_fin/features/category/pages/category_management_page.dart';
-import 'package:personal_fin/features/category/view_models/category_view_model.dart';
 import 'package:personal_fin/features/dashboard/pages/dashboard_page.dart';
 import 'package:personal_fin/features/dashboard/pages/monthly_review_page.dart';
-import 'package:personal_fin/features/dashboard/view_models/dashboard_view_model.dart';
 import 'package:personal_fin/features/home/pages/home_page.dart';
-import 'package:personal_fin/features/home/view_models/home_view_model.dart';
 import 'package:personal_fin/features/savings/pages/savings_page.dart';
 import 'package:personal_fin/features/savings/pages/set_goal_page.dart';
-import 'package:personal_fin/features/savings/view_models/savings_view_model.dart';
 import 'package:personal_fin/features/settings/pages/settings_page.dart';
 import 'package:personal_fin/features/transactions/pages/transactions.dart';
-import 'package:personal_fin/features/transactions/view_models/transactions_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -61,20 +48,7 @@ void main() async {
   
   runApp(
     MultiProvider(
-      providers: [
-        Provider(create: (_) => TransactionRepository()),
-        Provider(create: (_) => CategoryRepository()),
-        Provider(
-          create: (context) => MonthlyDataRepository(
-            context.read<CategoryRepository>(),
-          )
-        ),        
-        Provider(create: (_) => BudgetRepository()),
-        Provider(
-          create: (context) => SavingsRepository(
-            context.read<TransactionRepository>()
-          )
-        ),       
+      providers: AppProviders.providers..addAll([       
         ChangeNotifierProvider.value( 
           value: themeProvider, 
         ),
@@ -86,50 +60,8 @@ void main() async {
         ),
         ChangeNotifierProvider.value(
           value: languageProvider, 
-        ),
-        ChangeNotifierProvider(
-          create: (context) => ExchangeRateService(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => RateSyncProvider(
-            context.read<ExchangeRateService>(),
-          ),
         ),       
-        ChangeNotifierProvider(
-          create: (context) => HomeViewModel(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => SignInViewModel() 
-        ),
-        ChangeNotifierProvider(
-          create: (context) => DashboardViewModel(
-            context.read<MonthlyDataRepository>(), 
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => TransactionViewModel(
-            context.read<TransactionRepository>(),
-            context.read<CategoryRepository>(),
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => CategoryViewModel(
-            context.read<CategoryRepository>()
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => BudgetingViewModel(
-            context.read<BudgetRepository>(),
-            context.read<TransactionRepository>(),
-            context.read<CategoryRepository>(),
-          )
-        ),
-        ChangeNotifierProvider(
-          create: (context) => SavingsViewModel(
-            context.read<SavingsRepository>(),
-          )
-        ),
-      ],
+      ]),
       child: const MyApp(),
     ),
   );
