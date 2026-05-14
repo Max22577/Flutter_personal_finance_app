@@ -7,30 +7,29 @@ class ExchangeRateService extends ChangeNotifier {
   final String _appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
   
   static const String baseCurrencyCode = 'USD';
+  bool _hasStarted = false;
   
-  ExchangeRateService();
-  
-  void init() {
-    _initRateListener();
+  ExchangeRateService() {
+    init(); 
   }
-
+  
   CollectionReference _exchangeRatesRef() {
+    final path = 'artifacts/$_appId/rates';
+    
     if (_appId.isEmpty) {
-      throw Exception("CRITICAL: APP_ID is empty. Firestore cannot build the collection path.");
+      throw Exception("CRITICAL: APP_ID is empty.");
     }
-    return FirebaseFirestore.instance.collection('artifacts/$_appId/global_data/rates');
+
+    return FirebaseFirestore.instance.collection(path); 
   }
 
   CollectionReference get exchangeRatesRef => _exchangeRatesRef();
   
-  void _initRateListener() async {
-    if (_appId.isEmpty) {
-      debugPrint("ExchangeRateService: Skipping listener, APP_ID not set.");
-      return;
-    }
-    final ref = _exchangeRatesRef();    
-    // Listen to real-time updates from Firestore
-    ref.snapshots().listen((snapshot) {
+  void init() {
+    if (_hasStarted || _appId.isEmpty) return;
+    _hasStarted = true;
+    
+    _exchangeRatesRef().snapshots().listen((snapshot) {
       for (var doc in snapshot.docs) {
         final rate = ExchangeRate.fromMap(doc.data() as Map<String, dynamic>);
         _cachedRates[rate.code] = rate;

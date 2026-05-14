@@ -2,43 +2,56 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/apis/currency_api_service.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
-import 'package:personal_fin/models/currency.dart';
-import 'package:personal_fin/models/exchange_rate.dart';
+import 'package:personal_fin/core/services/preferences.dart';
 
 class RateSyncProvider extends ChangeNotifier {
   final CurrencyApiService _apiService = CurrencyApiService();
   final ExchangeRateService _exchangeRateService;
+  final PreferencesService _prefs = PreferencesService();
 
   RateSyncProvider(this._exchangeRateService);
 
-  Future<void> syncRates() async {
-    final newRates = await _apiService.fetchLatestRates();
+  Future<void> syncRates({bool force = false}) async {
+    final needsSync = await _prefs.shouldSyncRates();
     
-    if (newRates != null) {
-      // Get the correct collection reference from your service
-      final collectionRef = _exchangeRateService.exchangeRatesRef; 
-      final batch = FirebaseFirestore.instance.batch();
-      final now = DateTime.now();
+    if (!needsSync && !force) {
+      debugPrint("RateSyncProvider: Skipping sync, rates are up to date.");
+      return;
+    }
 
-      final supportedCodes = Currency.getCurrencyCodes();
+    try {
+      final newRates = await _apiService.fetchLatestRates();
+      
+      if (newRates != null) {
+        final collectionRef = _exchangeRateService.exchangeRatesRef; 
+        final batch = FirebaseFirestore.instance.batch();
+        final now = DateTime.now();
 
-      for (var code in supportedCodes) {
-        if (newRates.containsKey(code)) {
-          // Use the dynamic path from your service
-          final docRef = collectionRef.doc(code);
-          
-          final rateObject = ExchangeRate(
-            code: code,
-            rateToBase: newRates[code]!,
-            timestamp: now,
-          );
+        // Use a subset of codes to avoid hitting Firestore limits if the API returns 200+
+        // or just use newRates.keys if you want all of them.
+        final List<String> codesToSync = ['USD', 'EUR', 'GBP', 'JPY', 'KES', 'AUD']; 
 
-          batch.set(docRef, rateObject.toMap());
+        for (var code in codesToSync) {
+          if (newRates.containsKey(code)) {
+            final docRef = collectionRef.doc(code);
+            
+            final rateData = {
+              'code': code,
+              'rateToBase': newRates[code],
+              'timestamp': FieldValue.serverTimestamp(), // Better for Firestore sync
+            };
+
+            batch.set(docRef, rateData, SetOptions(merge: true));
+          }
         }
-      }
 
-      await batch.commit();
-      notifyListeners();
+        await batch.commit();
+        await _prefs.setLastRateSync(now);
+        debugPrint("Currency Sync Successful: ${codesToSync.length} rates updated.");
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint("CRITICAL Error during rate sync: $e");
     }
   }
 }

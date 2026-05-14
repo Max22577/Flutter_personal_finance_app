@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/providers/rate_sync_provider.dart';
 import 'package:personal_fin/core/widgets/empty_state.dart';
 import 'package:personal_fin/core/widgets/loading_state.dart';
 import 'package:personal_fin/features/dashboard/widgets/category_pie_chart.dart';
@@ -10,8 +11,25 @@ import 'package:personal_fin/features/dashboard/widgets/recent_transactions.dart
 import 'package:provider/provider.dart';
 import 'monthly_review_page.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  @override
+  void initState() {
+    super.initState();
+    
+    // Add the callback to the end of the frame lifecycle.
+    // This ensures that the Providers are fully built and 
+    // the context is ready to be used.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<RateSyncProvider>().syncRates();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
