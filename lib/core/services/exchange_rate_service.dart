@@ -8,7 +8,6 @@ class ExchangeRateService extends ChangeNotifier {
   
   static const String baseCurrencyCode = 'USD';
   
-  // Constructor starts the listener immediately
   ExchangeRateService();
   
   void init() {

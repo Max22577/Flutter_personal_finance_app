@@ -3,20 +3,20 @@ import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
-import 'package:personal_fin/core/services/firestore_service.dart';
+import 'package:personal_fin/core/services/i_firestore_service.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../models/monthly_data.dart';
 
-
 class MonthlyDataRepository {
-  final FirestoreService _service;
+  final IFirestoreService _firestoreService;
   final CategoryRepository _catRepo;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth _auth;
   final String _appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
 
-  MonthlyDataRepository(this._catRepo, {FirestoreService? service})
-      : _service = service ?? FirestoreService.instance;
+  MonthlyDataRepository(this._catRepo, {required IFirestoreService service, required FirebaseAuth auth})
+      : _firestoreService = service,
+        _auth = auth;
 
   // Collection reference helper
   CollectionReference _txRef(String uid) => 
@@ -45,7 +45,7 @@ class MonthlyDataRepository {
     final range = _getDateRange(month);
     
     // Use the Future-based fetch from the Firestore service
-    final transactions = await _service.getTransactionsInDateRange(
+    final transactions = await _firestoreService.getTransactionsInDateRange(
       _txRef(uid), 
       range.start, 
       range.end,
@@ -73,7 +73,7 @@ class MonthlyDataRepository {
         .where('date', isGreaterThanOrEqualTo: range.start)
         .where('date', isLessThanOrEqualTo: range.end)
         .orderBy('date', descending: true);
-    return _service.streamCollection<Transaction>(
+    return _firestoreService.streamCollection<Transaction>(
       query: query,
       builder: (doc) => Transaction.fromFirestore(doc),
     ).map((txs) => _calculateMonthlyData(txs, month));

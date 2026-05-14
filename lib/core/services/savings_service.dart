@@ -2,16 +2,22 @@ import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
+import 'package:personal_fin/core/services/i_firestore_service.dart';
 import '../../models/transaction.dart';
 
 class SavingsService {
-  static final SavingsService _instance = SavingsService._internal();
-  factory SavingsService() => _instance;
-  SavingsService._internal();
-  static SavingsService get instance => _instance;
-  final TransactionRepository _transactionRepo = TransactionRepository();
-  final SavingsRepository _savingsRepo = SavingsRepository(TransactionRepository());
-  
+  final TransactionRepository _transactionRepo;
+  final SavingsRepository _savingsRepo;
+  final IFirestoreService _firestoreService;
+
+  SavingsService({
+    required TransactionRepository transactionRepo,
+    required SavingsRepository savingsRepo,
+    required IFirestoreService firestoreService,
+  })  : _transactionRepo = transactionRepo,
+        _savingsRepo = savingsRepo,
+        _firestoreService = firestoreService;
+
   // Add money to specific savings goal
   Future<void> addToSavingsGoal({
     required String goalId,
@@ -34,10 +40,10 @@ class SavingsService {
       );
       
       await _transactionRepo.addTransaction(transaction);
-      final savingsGoalRef = _savingsRepo.goalsCollectionRef;
-      await savingsGoalRef
-          .doc(goalId)
-          .update({
+      _firestoreService.updateDocumentById(
+        collectionPath: _savingsRepo.goalsCollectionPath, 
+        documentId: goalId,
+        data:{
             'currentAmount': FieldValue.increment(amount),
             'currentBaseAmount': FieldValue.increment(baseAmount),
             'lastContributionAt': FieldValue.serverTimestamp(),
@@ -62,7 +68,7 @@ class SavingsService {
         userId:  _savingsRepo.currentUid,
         title: reason ?? 'Savings Withdrawal',
         amount: amount,
-        baseAmount: amount, // Assuming base amount is the same as the withdrawal amount
+        baseAmount: amount, 
         currency: currency,
         type: 'Income', 
         categoryId: 'cat_savings',
@@ -70,14 +76,15 @@ class SavingsService {
       );
       
       await _transactionRepo.addTransaction(transaction);
-      final savingsGoalRef = _savingsRepo.goalsCollectionRef;
   
-      await savingsGoalRef
-          .doc(goalId)
-          .update({
-            'currentAmount': FieldValue.increment(-amount),
-            'lastWithdrawalAt': FieldValue.serverTimestamp(),
-          });
+      await _firestoreService.updateDocumentById(
+        collectionPath: _savingsRepo.goalsCollectionPath,
+        documentId: goalId,
+        data: {
+          'currentAmount': FieldValue.increment(-amount),
+          'lastWithdrawalAt': FieldValue.serverTimestamp(),
+        }
+      );
       
       debugPrint('Withdrew $amount from savings goal $goalId');
     } catch (e) {
