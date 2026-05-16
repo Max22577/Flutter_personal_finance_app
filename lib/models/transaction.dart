@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Transaction {
-  final String? id;
+  final String id;
   final String userId;
   final String title;
   final double amount;
@@ -14,7 +14,7 @@ class Transaction {
   final DateTime date;
  
   Transaction({
-    this.id,
+    this.id = '',
     required this.userId,
     required this.title,
     required this.amount,
@@ -52,23 +52,30 @@ class Transaction {
   }
 
   // Factory constructor from Firestore
-  factory Transaction.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory Transaction.fromMap(Map<String, dynamic> map){
     return Transaction(
-      id: doc.id,
-      userId: data['userId'] ?? '',
-      title: data['title'] ?? '',
-      amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
-      baseAmount: (data['baseAmount'] as num?)?.toDouble() ?? 0.0,
-      currency: data['currency'] ?? 'USD',
-      type: data['type'] ?? 'Expense',
-      categoryId: data['categoryId'] ?? '',
-      date: (data['date'] as Timestamp).toDate(),
-
-      updatedAt: data['updatedAt'] != null 
-          ? (data['updatedAt'] as Timestamp).toDate() 
+      id: map['id'] ?? '',
+      userId: map['userId'] ?? '',
+      title: map['title'] ?? '',
+      amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
+      baseAmount: (map['baseAmount'] as num?)?.toDouble() ?? 0.0,
+      currency: map['currency'] ?? 'USD',
+      type: map['type'] ?? 'Expense',
+      categoryId: map['categoryId'] ?? '',
+      date: (map['date'] as Timestamp).toDate(),
+      updatedAt: map['updatedAt'] != null 
+          ? (map['updatedAt'] as Timestamp).toDate() 
           : null, 
-    );
+    );    
+  }
+
+  factory Transaction.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>? ?? {};
+    
+    // Inject the document ID into the map data structure
+    data['id'] = doc.id; 
+    
+    return Transaction.fromMap(data);
   }
 
   // Convert Transaction object to a map for Firestore storage

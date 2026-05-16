@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 class SavingsGoal {
-  final String? id;
+  final String id;
   final String name;
   final String currency;
   final double targetAmount;
@@ -10,7 +10,7 @@ class SavingsGoal {
   final DateTime deadline;
 
   SavingsGoal({
-    this.id,
+    this.id = '',
     required this.name,
     required this.targetAmount,
     required this.currentAmount,
@@ -20,18 +20,39 @@ class SavingsGoal {
     required this.deadline,
   });
 
-  // Factory constructor from Firestore
-  factory SavingsGoal.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  SavingsGoal copyWith({
+    String? id,
+    String? name,
+    String? currency,
+    double? targetAmount,
+    double? currentAmount,
+    double? targetBaseAmount,
+    double? currentBaseAmount,
+    DateTime? deadline,
+  }) {
     return SavingsGoal(
-      id: doc.id,
-      name: data['name'] ?? data['goalName'] ?? 'Unnamed Goal',
-      currency: data['currency'] ?? 'USD',
-      targetAmount: (data['targetAmount'] ?? data['target_amount'] as num?)?.toDouble() ?? 0.0,
-      currentAmount: (data['currentAmount'] ?? data['current_amount'] as num?)?.toDouble() ?? 0.0,
-      targetBaseAmount: (data['targetBaseAmount'] as num?)?.toDouble() ?? 0.0,
-      currentBaseAmount: (data['currentBaseAmount'] as num?)?.toDouble() ?? 0.0,
-      deadline: (data['deadline'] as Timestamp?)?.toDate() ?? DateTime.now().add(const Duration(days: 365)),
+      id: id ?? this.id,
+      name: name ?? this.name,
+      currency: currency ?? this.currency,
+      targetAmount: targetAmount ?? this.targetAmount,
+      currentAmount: currentAmount ?? this.currentAmount,
+      targetBaseAmount: targetBaseAmount ?? this.targetBaseAmount,
+      currentBaseAmount: currentBaseAmount ?? this.currentBaseAmount,
+      deadline: deadline ?? this.deadline,
+    );
+  }
+
+  // Factory constructor from Firestore
+  factory SavingsGoal.fromMap(Map<String, dynamic> map) {
+    return SavingsGoal(
+      id: map['id'] ?? '',
+      name: map['name'] ?? 'Unnamed Goal',
+      currency: map['currency'] ?? 'USD',
+      targetAmount: (map['targetAmount'] as num?)?.toDouble() ?? 0.0,
+      currentAmount: (map['currentAmount'] as num?)?.toDouble() ?? 0.0,
+      targetBaseAmount: (map['targetBaseAmount'] as num?)?.toDouble() ?? 0.0,
+      currentBaseAmount: (map['currentBaseAmount'] as num?)?.toDouble() ?? 0.0,
+      deadline: (map['deadline'] as Timestamp?)?.toDate() ?? DateTime.now().add(const Duration(days: 365)),
     );
   }
 

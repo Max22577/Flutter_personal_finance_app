@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:personal_fin/core/constants/firestore_path.dart';
+import 'package:personal_fin/core/network/query_options.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/services/i_firestore_service.dart';
@@ -14,7 +15,6 @@ class SavingsRepository {
   final TransactionRepository _txRepo;
   final ExchangeRateService _exchangeService;
   final FirebaseAuth _auth;
-   final String _appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
 
   SavingsRepository(
     this._txRepo, {
@@ -25,21 +25,21 @@ class SavingsRepository {
         _exchangeService = exchangeService,
         _auth = auth;
 
-  CollectionReference _goalsRef(String uid) =>
-      FirebaseFirestore.instance.collection('artifacts/$_appId/users/$uid/savings_goals');
 
-  String _goalsPath(String uid) => 'artifacts/$_appId/users/$uid/savings_goals';
-  String get goalsCollectionPath => _goalsPath(currentUid);
+  String get goalsCollectionPath => FirestorePath.savingsGoals(currentUid);
   String get currentUid => _auth.currentUser?.uid ?? '';
 
   // REACTIVE MASTER STREAM
   Stream<List<SavingsGoal>> get goalsStream {
     return _auth.authStateChanges().switchMap((user) {
       if (user == null) return Stream.value([]);
-      final query = _goalsRef(user.uid).orderBy('deadline', descending: false);
+
       return _service.streamCollection<SavingsGoal>(
-        query: query,
-        builder: (doc) => SavingsGoal.fromFirestore(doc),
+        collectionPath: goalsCollectionPath,
+        builder: (map) => SavingsGoal.fromMap(map), 
+        orderBy: [
+          OrderByOption('deadline', descending: false),
+        ],
       );
     });
   }
@@ -55,6 +55,7 @@ class SavingsRepository {
     final baseAmount = _exchangeService.toBase(amount, currency);
 
     final tx = Transaction(
+      id: '',
       userId: uid,
       title: note.isNotEmpty ? note : 'Savings Contribution',
       amount: amount,
@@ -67,8 +68,8 @@ class SavingsRepository {
 
     await _txRepo.addTransaction(tx);
 
-    await _service.updateDocumentById(
-      collectionPath: _goalsPath(uid),
+    await _service.updateDocument(
+      collectionPath: goalsCollectionPath,
       documentId: goalId,      
       data: {
         'currentAmount': FieldValue.increment(amount),
@@ -79,7 +80,7 @@ class SavingsRepository {
   }
 
   // Standard CRUD
-  Future<void> addGoal(SavingsGoal goal) => _service.addDocument(_goalsRef(currentUid), goal.toFirestore());
-  Future<void> updateGoal(SavingsGoal goal) => _service.updateDocument(_goalsRef(currentUid).doc(goal.id), goal.toFirestore());
-  Future<void> deleteGoal(String id) => _service.deleteDocument(_goalsRef(currentUid), id);
+  Future<void> addGoal(SavingsGoal goal) => _service.addDocument(collectionPath: goalsCollectionPath, data: goal.toFirestore());
+  Future<void> updateGoal(SavingsGoal goal) => _service.updateDocument(collectionPath: goalsCollectionPath, documentId: goal.id, data: goal.toFirestore());
+  Future<void> deleteGoal(String id) => _service.deleteDocument(collectionPath: goalsCollectionPath, id: id);
 }

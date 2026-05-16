@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:personal_fin/core/constants/firestore_path.dart';
+import 'package:personal_fin/core/network/query_options.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/services/i_firestore_service.dart';
 import 'package:personal_fin/models/transaction.dart';
@@ -12,15 +12,13 @@ class MonthlyDataRepository {
   final IFirestoreService _firestoreService;
   final CategoryRepository _catRepo;
   final FirebaseAuth _auth;
-  final String _appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
 
   MonthlyDataRepository(this._catRepo, {required IFirestoreService service, required FirebaseAuth auth})
       : _firestoreService = service,
         _auth = auth;
-
-  // Collection reference helper
-  CollectionReference _txRef(String uid) => 
-      FirebaseFirestore.instance.collection('artifacts/$_appId/users/$uid/transactions');
+    
+  String get currentUid => _auth.currentUser?.uid ?? '';
+  String get transactionsCollectionPath => FirestorePath.transactions(currentUid);
 
   Stream<Map<String, MonthlyData>> get comparisonStream {
     return _auth.authStateChanges().switchMap((user) {
@@ -45,10 +43,16 @@ class MonthlyDataRepository {
     final range = _getDateRange(month);
     
     // Use the Future-based fetch from the Firestore service
-    final transactions = await _firestoreService.getTransactionsInDateRange(
-      _txRef(uid), 
-      range.start, 
-      range.end,
+    final transactions = await _firestoreService.getCollection<Transaction>(
+      collectionPath: transactionsCollectionPath,
+      builder: (map) => Transaction.fromMap(map),
+      filters: [
+        FieldFilter('date', FilterOperator.isGreaterThanOrEqualTo, range.start),
+        FieldFilter('date', FilterOperator.isLessThanOrEqualTo, range.end),
+      ],
+      orderBy: [
+        OrderByOption('date', descending: true),
+      ],
     );
 
     // Use the same calculation logic used by the streams!
@@ -69,13 +73,15 @@ class MonthlyDataRepository {
     if (uid == null) return Stream.value(MonthlyData.empty());
 
     final range = _getDateRange(month);
-    final query = _txRef(uid)
-        .where('date', isGreaterThanOrEqualTo: range.start)
-        .where('date', isLessThanOrEqualTo: range.end)
-        .orderBy('date', descending: true);
+
     return _firestoreService.streamCollection<Transaction>(
-      query: query,
-      builder: (doc) => Transaction.fromFirestore(doc),
+      collectionPath: transactionsCollectionPath,
+      builder: (map) => Transaction.fromMap(map),
+      filters: [
+        FieldFilter('date', FilterOperator.isGreaterThanOrEqualTo, range.start),
+        FieldFilter('date', FilterOperator.isLessThanOrEqualTo, range.end),
+      ],
+      orderBy: [OrderByOption('date', descending: true)],
     ).map((txs) => _calculateMonthlyData(txs, month));
   }
 
