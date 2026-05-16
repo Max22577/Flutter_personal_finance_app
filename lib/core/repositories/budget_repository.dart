@@ -1,24 +1,23 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:personal_fin/core/constants/firestore_path.dart';
+import 'package:personal_fin/core/network/query_options.dart';
 import 'package:personal_fin/core/services/i_firestore_service.dart';
 import 'package:personal_fin/models/budget.dart';
 import 'package:rxdart/rxdart.dart';
 
 class BudgetRepository {
   final IFirestoreService _service;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final String _appId = (kDebugMode && !kIsWeb) ? 'debug-app-id' : String.fromEnvironment('APP_ID');
-  
+  final FirebaseAuth _auth;
+ 
   // A controller to handle month switching reactively
-  final _monthYearController = BehaviorSubject<String>();
+  final _monthYearController = BehaviorSubject<String>.seeded('');
 
-  BudgetRepository({required IFirestoreService service})
-      : _service = service;
+  BudgetRepository({required IFirestoreService service, required FirebaseAuth auth})
+      : _service = service, _auth = auth;
 
-  CollectionReference _budgetRef(String uid) =>
-      FirebaseFirestore.instance.collection('artifacts/$_appId/users/$uid/budgets');
+  String get uid => _auth.currentUser?.uid ?? '';
+  String get budgetsCollectionPath => FirestorePath.budgets(uid);
 
   // TRIGGER: Call this when the user changes the date in the UI
   void updateMonthYear(String monthYear) => _monthYearController.add(monthYear);
@@ -32,10 +31,10 @@ class BudgetRepository {
     ).switchMap((data) {
       if (data.uid == null) return Stream.value([]);
       
-      final query = _budgetRef(data.uid!).where('monthYear', isEqualTo: data.monthYear);
       return _service.streamCollection<Budget>(
-        query: query,
-        builder: (doc) => Budget.fromFirestore(doc),
+        collectionPath: budgetsCollectionPath,
+        builder: (map) => Budget.fromMap(map),
+        filters: [FieldFilter('monthYear', FilterOperator.isEqualTo, data.monthYear)],
       );
     });
   }
@@ -44,11 +43,8 @@ class BudgetRepository {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw Exception("Unauthorized");
     
-    // Consistent ID: CategoryId + MonthYear
-    final docId = '${budget.categoryId}_${budget.monthYear}';
-    await _service.saveBudget(_budgetRef(uid).doc(docId), budget.toJson());
-  }
-  String get uid => _auth.currentUser?.uid ?? '';
+    await _service.addDocument(collectionPath: budgetsCollectionPath, data: budget.toJson());
+  } 
 }
 
 class _MonthUser {

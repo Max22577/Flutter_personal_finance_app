@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Category {
   final String id;
@@ -29,14 +28,13 @@ class Category {
   int get hashCode => id.hashCode ^ name.hashCode ^ iconCode.hashCode ^ colorValue.hashCode;
 
   /// Factory constructor to create a Category from a Firestore Document Snapshot.
-  factory Category.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory Category.fromMap(Map<String, dynamic> map) {
     return Category(
-      id: doc.id,
-      name: data['name'] as String? ?? 'Unnamed Category',
-      iconCode: (data['icon_code'] as num?)?.toInt(),
-      colorValue: (data['color_value'] as num?)?.toInt(),
-      isCustom: data['isCustom'] as bool? ?? false,
+      id: map['id'] ?? '',
+      name: map['name'] ?? 'Unnamed Category',
+      iconCode: (map['icon_code'] as num?)?.toInt(),
+      colorValue: (map['color_value'] as num?)?.toInt(),
+      isCustom: map['isCustom'] as bool? ?? false,
     );
   }
 

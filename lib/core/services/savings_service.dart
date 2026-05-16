@@ -40,7 +40,7 @@ class SavingsService {
       );
       
       await _transactionRepo.addTransaction(transaction);
-      _firestoreService.updateDocumentById(
+      _firestoreService.updateDocument(
         collectionPath: _savingsRepo.goalsCollectionPath, 
         documentId: goalId,
         data:{
@@ -77,7 +77,7 @@ class SavingsService {
       
       await _transactionRepo.addTransaction(transaction);
   
-      await _firestoreService.updateDocumentById(
+      await _firestoreService.updateDocument(
         collectionPath: _savingsRepo.goalsCollectionPath,
         documentId: goalId,
         data: {

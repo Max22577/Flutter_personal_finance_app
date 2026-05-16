@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Budget {
   final String id; // This will typically be a combination of userId_categoryId_monthYear
@@ -20,10 +19,9 @@ class Budget {
   });
 
   /// Factory constructor to create a Budget from a Firestore Document Snapshot.
-  factory Budget.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory Budget.fromMap(Map<String, dynamic> data) {
     return Budget(
-      id: doc.id,
+      id: data['id'] as String,
       userId: data['userId'] as String,
       categoryId: data['categoryId'] as String,
       amount: (data['amount'] as num).toDouble(),

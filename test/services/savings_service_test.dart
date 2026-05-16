@@ -55,7 +55,7 @@ void main() {
       
       when(() => mockTxRepo.addTransaction(any())).thenAnswer((_) async => {});
       
-      when(() => mockFirestoreService.updateDocumentById(
+      when(() => mockFirestoreService.updateDocument(
         collectionPath: any(named: 'collectionPath'),
         documentId: any(named: 'documentId'),
         data: any(named: 'data'),
@@ -71,7 +71,7 @@ void main() {
 
       // Assert 
       verify(() => mockTxRepo.addTransaction(any())).called(1);
-      verify(() => mockFirestoreService.updateDocumentById(
+      verify(() => mockFirestoreService.updateDocument(
         collectionPath: 'test/path',
         documentId: 'goal_1',
         data: any(named: 'data'),
@@ -82,7 +82,7 @@ void main() {
       when(() => mockSavingsRepo.currentUid).thenReturn('user_123');
       when(() => mockSavingsRepo.goalsCollectionPath).thenReturn('test/path');
       when(() => mockTxRepo.addTransaction(any())).thenAnswer((_) async => {});
-      when(() => mockFirestoreService.updateDocumentById(
+      when(() => mockFirestoreService.updateDocument(
         collectionPath: any(named: 'collectionPath'),
         documentId: any(named: 'documentId'),
         data: any(named: 'data'),
@@ -94,7 +94,7 @@ void main() {
         currency: 'USD',
       );
 
-      verify(() => mockFirestoreService.updateDocumentById(
+      verify(() => mockFirestoreService.updateDocument(
         collectionPath: any(named: 'collectionPath'),
         documentId: 'goal_1',
         data: any(named: 'data'),

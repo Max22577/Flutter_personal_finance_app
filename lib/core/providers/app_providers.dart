@@ -33,10 +33,10 @@ class AppProviders {
       ),
     ),
     ProxyProvider<IFirestoreService, BudgetRepository>(
-      update: (_, service, _) => BudgetRepository(service: service),
+      update: (_, service, _) => BudgetRepository(service: service, auth: FirebaseAuth.instance),
     ),
     ProxyProvider<IFirestoreService, CategoryRepository>(
-      update: (_, service, _) => CategoryRepository(service: service),
+      update: (_, service, _) => CategoryRepository(service: service, auth: FirebaseAuth.instance),
     ),
     ProxyProvider2<CategoryRepository, IFirestoreService, MonthlyDataRepository>(
       update: (_, catRepo, service, _) => MonthlyDataRepository(
