@@ -12,6 +12,7 @@ abstract class IFirestoreService {
   Future<void> addDocument({required String collectionPath, required Map<String, dynamic> data});
   Future<void> updateDocument({required String collectionPath, required String documentId, required Map<String, dynamic> data});
   Future<void> deleteDocument({required String collectionPath, required String id});
+  Future<void> setDocument({required String collectionPath, required String documentId, required Map<String, dynamic> data});
   
 
   Future<List<T>> getCollection<T>({

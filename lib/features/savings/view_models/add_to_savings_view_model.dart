@@ -19,7 +19,6 @@ class AddToSavingsViewModel extends ChangeNotifier {
     _setProcessing(true);
 
     try {
-      // Call the consolidated logic in the Repository
       await _repository.contributeToGoal(
         goalId: goalId,
         amount: amount,

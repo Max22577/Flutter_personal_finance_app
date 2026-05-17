@@ -20,8 +20,8 @@ class BudgetingViewModel extends ChangeNotifier {
   DateTime _selectedDate = DateTime.now();
   DateTime get selectedDate => _selectedDate;
 
-  BudgetingViewModel(this._budgetRepo, this._txRepo, this._catRepo)
-      : _exchangeService = ExchangeRateService() {
+  BudgetingViewModel(this._budgetRepo, this._txRepo, this._catRepo, {required ExchangeRateService exchangeService})
+      : _exchangeService = exchangeService {
     // Set initial date
     _syncDateToRepos();
   }
@@ -74,11 +74,10 @@ class BudgetingViewModel extends ChangeNotifier {
     final formatted = DateFormat('MMMM yyyy').format(_selectedDate);
     
     _budgetRepo.updateMonthYear(formatted);
-    // If your TransactionRepo is also month-dependent:
-    // _txRepo.updateMonthYear(formatted); 
+
   }
 
-  Future<void> updateBudget(String categoryId, double amount, String currency) async {
+  Future<void> setBudget(String categoryId, double amount, String currency) async {
     final formatted = DateFormat('MMMM yyyy').format(_selectedDate);
     final uid = _budgetRepo.uid;
     final budget = Budget(

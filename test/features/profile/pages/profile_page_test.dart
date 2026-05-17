@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:personal_fin/features/profile/pages/profile_page.dart';
+import 'package:personal_fin/features/profile/views/profile_page.dart';
 import 'package:personal_fin/features/profile/view_models/profile_view_model.dart';
 import '../../../helpers/test_nav_helpers.dart';
 

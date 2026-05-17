@@ -26,9 +26,8 @@ class SavingsViewModel extends ChangeNotifier {
     await _repository.deleteGoal(id);
   }
 
-  // With Streams, refresh is usually just a visual "kick"
   Future<void> refresh() async {
-    notifyListeners(); // Triggers UI to show RefreshIndicator if needed
+    notifyListeners(); 
     await Future.delayed(const Duration(milliseconds: 800));
   }
 }

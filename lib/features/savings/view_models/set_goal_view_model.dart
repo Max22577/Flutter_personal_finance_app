@@ -6,9 +6,13 @@ import 'package:personal_fin/models/savings.dart';
 class SetGoalViewModel extends ChangeNotifier {
   final SavingsRepository _repository;
   final SavingsGoal? existingGoal;
-  final exchangeService = ExchangeRateService();
+  final ExchangeRateService _exchangeService;
 
-  SetGoalViewModel(this._repository, {this.existingGoal}) {
+  SetGoalViewModel(
+    this._repository, 
+    {this.existingGoal, 
+    required ExchangeRateService exchangeService}
+  ) : _exchangeService = exchangeService {
     if (existingGoal != null) {
       name = existingGoal!.name;
       targetAmount = existingGoal!.targetAmount;
@@ -46,12 +50,12 @@ class SetGoalViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final baseTargetAmount = exchangeService.toBase(target, currency);
+      final baseTargetAmount = _exchangeService.toBase(target, currency);
       final baseCurrentAmount = existingGoal != null 
-        ? exchangeService.toBase(existingGoal!.currentAmount, currency)
+        ? _exchangeService.toBase(existingGoal!.currentAmount, currency)
         : 0.0;
       final goal = SavingsGoal(
-        id: existingGoal?.id,
+        id: existingGoal?.id ?? '',
         name: name,
         targetAmount: target,
         currentAmount: existingGoal?.currentAmount ?? 0.0,
@@ -76,9 +80,9 @@ class SetGoalViewModel extends ChangeNotifier {
   }
 
   Future<bool> deleteGoal() async {
-    if (existingGoal?.id == null) return false;
+    if (existingGoal == null || existingGoal!.id.isEmpty) return false;
     try {
-      await _repository.deleteGoal(existingGoal!.id!);
+      await _repository.deleteGoal(existingGoal!.id);
       return true;
     } catch (e) {
       return false;
