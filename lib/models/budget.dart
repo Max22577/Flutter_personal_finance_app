@@ -32,8 +32,9 @@ class Budget {
   }
 
   /// Converts the Budget object to a Map for saving to Firestore.
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'userId': userId,
       'categoryId': categoryId,
       'amount': amount,

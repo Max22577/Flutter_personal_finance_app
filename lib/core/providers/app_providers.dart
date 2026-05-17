@@ -80,6 +80,7 @@ class AppProviders {
       create: (context) => TransactionViewModel(
         context.read<TransactionRepository>(),
         context.read<CategoryRepository>(),
+        exchangeService: context.read<ExchangeRateService>(),
       ),
     ),
     ChangeNotifierProvider(
@@ -92,6 +93,7 @@ class AppProviders {
         context.read<BudgetRepository>(),
         context.read<TransactionRepository>(),
         context.read<CategoryRepository>(),
+        exchangeService: context.read<ExchangeRateService>(),
       )
     ),
     ChangeNotifierProvider(

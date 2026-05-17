@@ -51,7 +51,7 @@ class Transaction {
     );
   }
 
-  // Factory constructor from Firestore
+  
   factory Transaction.fromMap(Map<String, dynamic> map){
     return Transaction(
       id: map['id'] ?? '',
@@ -68,7 +68,8 @@ class Transaction {
           : null, 
     );    
   }
-
+  
+  // Factory constructor from Firestore
   factory Transaction.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
     

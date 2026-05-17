@@ -15,8 +15,8 @@ class TransactionViewModel extends ChangeNotifier {
   bool _isSaving = false;
   bool get isSaving => _isSaving;
 
-  TransactionViewModel(this._txRepo, this._catRepo) 
-      : _exchangeService = ExchangeRateService();
+  TransactionViewModel(this._txRepo, this._catRepo, {required ExchangeRateService exchangeService}) 
+      : _exchangeService = exchangeService;
 
   Stream<List<Transaction>> get transactions => _txRepo.transactionsStream;
   Stream<List<Category>> get categoriesStream => _catRepo.allCategoriesStream;
@@ -43,7 +43,7 @@ class TransactionViewModel extends ChangeNotifier {
     _setSaving(true);
     try {
       final transaction = Transaction(
-        id: existingTransaction?.id,
+        id: existingTransaction?.id ?? '',
         userId: _txRepo.currentUid,
         title: title.trim(),
         amount: amount,

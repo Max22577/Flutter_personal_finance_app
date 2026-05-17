@@ -40,10 +40,10 @@ class BudgetRepository {
   }
 
   Future<void> setBudget(Budget budget) async {
-    final uid = _auth.currentUser?.uid;
+    final uid = _auth.currentUser?.uid;                                                                                                                                                                               
     if (uid == null) throw Exception("Unauthorized");
     
-    await _service.addDocument(collectionPath: budgetsCollectionPath, data: budget.toJson());
+    await _service.setDocument(collectionPath: budgetsCollectionPath, documentId: budget.id, data: budget.toMap());
   } 
 }
 

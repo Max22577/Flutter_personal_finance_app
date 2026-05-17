@@ -74,6 +74,19 @@ class FirestoreService implements IFirestoreService {
   }
 
   @override
+  Future<void> setDocument({
+    required String collectionPath, 
+    required String documentId, 
+    required Map<String, dynamic> data,
+    bool merge = true, // Merge true prevents accidentally erasing fields if you add fields later
+  }) async {
+    await _firestore
+        .collection(collectionPath)
+        .doc(documentId)
+        .set(data, SetOptions(merge: merge));
+  }
+
+  @override
   Future<List<T>> getCollection<T>({
     required String collectionPath,
     required T Function(Map<String, dynamic> doc) builder,
