@@ -1,19 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/features/dashboard/view_models/monthly_review_view_model.dart';
 import 'package:personal_fin/models/monthly_data.dart';
 
 
 class MockMonthlyDataRepository extends Mock implements MonthlyDataRepository {}
+class MockCurrencyProvider extends Mock implements CurrencyProvider {}
 
 void main() {
   late MonthlyReviewViewModel viewModel;
   late MockMonthlyDataRepository mockMonthlyDataRepo;
+  late MockCurrencyProvider mockCurrencyProvider;
 
   setUp(() {
     mockMonthlyDataRepo = MockMonthlyDataRepository();
-    viewModel = MonthlyReviewViewModel(mockMonthlyDataRepo);
+    mockCurrencyProvider = MockCurrencyProvider();
+  
+    // Default: Always return 'USD'
+    when(() => mockCurrencyProvider.currentCurrency).thenReturn('USD');
+    viewModel = MonthlyReviewViewModel(mockMonthlyDataRepo, mockCurrencyProvider);
   });
 
   group('MonthlyReviewViewModel Tests', () {
@@ -44,7 +51,8 @@ void main() {
     group('loadData Async Operations', () {
       test('should populate current and previous data properties successfully upon repo resolve', () async {
         // Arrange
-        when(() => mockMonthlyDataRepo.getReviewData(testMonth))
+        when(() => mockCurrencyProvider.currentCurrency).thenReturn('USD');
+        when(() => mockMonthlyDataRepo.getReviewData(testMonth, 'USD'))
             .thenAnswer((_) => Future.value([sampleCurrentData, samplePreviousData]));
 
         int notificationCount = 0;
@@ -68,7 +76,7 @@ void main() {
 
       test('should intercept execution exceptions and surface an error message cleanly to the layout', () async {
         // Arrange
-        when(() => mockMonthlyDataRepo.getReviewData(testMonth))
+        when(() => mockMonthlyDataRepo.getReviewData(testMonth, mockCurrencyProvider.currentCurrency))
             .thenThrow(Exception('Timeout fetching financial metrics'));
 
         // Act
@@ -81,13 +89,27 @@ void main() {
       });
     });
 
+    test('should fetch data using the current currency from CurrencyProvider', () async {
+      // Arrange
+      when(() => mockCurrencyProvider.currentCurrency).thenReturn('EUR');
+      when(() => mockMonthlyDataRepo.getReviewData(testMonth, 'EUR'))
+          .thenAnswer((_) => Future.value([sampleCurrentData, samplePreviousData]));
+
+      // Act
+      await viewModel.loadData(testMonth);
+
+      // Assert
+      verify(() => mockMonthlyDataRepo.getReviewData(testMonth, 'EUR')).called(1);
+      expect(viewModel.currentMonthData, sampleCurrentData);
+    });
+
     group('Business Logic Properties & Math Rules', () {
       test('savingsRate should evaluate to 0.0 if data is completely missing or income is zero', () {
         // No data loaded
         expect(viewModel.savingsRate, 0.0);
 
         // Setup broken data chunk with zero income
-        when(() => mockMonthlyDataRepo.getReviewData(testMonth)).thenAnswer((_) => Future.value([
+        when(() => mockMonthlyDataRepo.getReviewData(testMonth, mockCurrencyProvider.currentCurrency)).thenAnswer((_) => Future.value([
               MonthlyData(month: testMonth, income: 0.0, expenses: 100.0, transactionCount: 1, categoryBreakdown: {}),
               samplePreviousData,
             ]));
@@ -97,7 +119,8 @@ void main() {
 
       test('savingsRate should compute percentages accurately and clamp limits cleanly', () async {
         // Arrange (Net is 5000 - 2000 = 3000. 3000 / 5000 = 0.6)
-        when(() => mockMonthlyDataRepo.getReviewData(testMonth))
+        when(() => mockCurrencyProvider.currentCurrency).thenReturn('USD');
+        when(() => mockMonthlyDataRepo.getReviewData(testMonth, 'USD'))
             .thenAnswer((_) => Future.value([sampleCurrentData, samplePreviousData]));
 
         // Act
@@ -115,7 +138,8 @@ void main() {
 
       test('should sort categories descending and safely combine remaining entries into an other_label bracket', () async {
         // Arrange
-        when(() => mockMonthlyDataRepo.getReviewData(testMonth))
+        when(() => mockCurrencyProvider.currentCurrency).thenReturn('USD');
+        when(() => mockMonthlyDataRepo.getReviewData(testMonth, 'USD'))
             .thenAnswer((_) => Future.value([sampleCurrentData, samplePreviousData]));
 
         // Act
@@ -153,7 +177,8 @@ void main() {
           categoryBreakdown: {'Food': 400.0, 'Transport': 200.0},
         );
         
-        when(() => mockMonthlyDataRepo.getReviewData(testMonth))
+        when(() => mockCurrencyProvider.currentCurrency).thenReturn('USD');
+        when(() => mockMonthlyDataRepo.getReviewData(testMonth, 'USD'))
             .thenAnswer((_) => Future.value([smallData, samplePreviousData]));
 
         // Act

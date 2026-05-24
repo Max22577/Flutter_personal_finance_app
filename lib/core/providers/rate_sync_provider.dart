@@ -9,7 +9,8 @@ class RateSyncProvider extends ChangeNotifier {
   final ExchangeRateService _exchangeRateService;
   final PreferencesService _prefs = PreferencesService();
 
-  RateSyncProvider(this._exchangeRateService);
+  RateSyncProvider({required ExchangeRateService exchangeRateService})
+      : _exchangeRateService = exchangeRateService;
 
   Future<void> syncRates({bool force = false}) async {
     final needsSync = await _prefs.shouldSyncRates();

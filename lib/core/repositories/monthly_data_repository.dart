@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:personal_fin/core/constants/firestore_path.dart';
 import 'package:personal_fin/core/network/query_options.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/services/i_firestore_service.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:rxdart/rxdart.dart';
@@ -12,8 +14,10 @@ class MonthlyDataRepository {
   final IFirestoreService _firestoreService;
   final CategoryRepository _catRepo;
   final FirebaseAuth _auth;
+  final ExchangeRateService _exchangeService;
+  final CurrencyProvider _currencyProvider;
 
-  MonthlyDataRepository(this._catRepo, {required IFirestoreService service, required FirebaseAuth auth})
+  MonthlyDataRepository(this._catRepo, this._exchangeService, this._currencyProvider, {required IFirestoreService service, required FirebaseAuth auth})
       : _firestoreService = service,
         _auth = auth;
     
@@ -27,16 +31,17 @@ class MonthlyDataRepository {
       final now = DateTime.now();
       final currentMonth = DateTime(now.year, now.month);
       final prevMonth = DateTime(now.year, now.month - 1);
+      final currencyCode = _currencyProvider.currentCurrency;
 
       return Rx.combineLatest2(
-        streamMonthlyData(currentMonth),
-        streamMonthlyData(prevMonth),
+        streamMonthlyData(currentMonth, currencyCode),
+        streamMonthlyData(prevMonth, currencyCode),
         (current, previous) => {'current': current, 'previous': previous},
       ).startWith({});
     });
   }
 
-  Future<MonthlyData> getMonthlyData(DateTime month) async {
+  Future<MonthlyData> getMonthlyData(DateTime month, String currencyCode) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw Exception("User not logged in");
 
@@ -56,19 +61,19 @@ class MonthlyDataRepository {
     );
 
     // Use the same calculation logic used by the streams!
-    return _calculateMonthlyData(transactions, month);
+    return _calculateMonthlyData(transactions, month, currencyCode);
   }
 
-  Future<List<MonthlyData>> getReviewData(DateTime currentMonth) async {
+  Future<List<MonthlyData>> getReviewData(DateTime currentMonth, String currencyCode) async {
     final previousMonth = DateTime(currentMonth.year, currentMonth.month - 1, 1);
     
     return await Future.wait([
-      getMonthlyData(currentMonth),
-      getMonthlyData(previousMonth),
+      getMonthlyData(currentMonth, currencyCode),
+      getMonthlyData(previousMonth, currencyCode),
     ]);
   }
 
-  Stream<MonthlyData> streamMonthlyData(DateTime month) {
+  Stream<MonthlyData> streamMonthlyData(DateTime month, String currencyCode) {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return Stream.value(MonthlyData.empty());
 
@@ -82,7 +87,7 @@ class MonthlyDataRepository {
         FieldFilter('date', FilterOperator.isLessThanOrEqualTo, range.end),
       ],
       orderBy: [OrderByOption('date', descending: true)],
-    ).map((txs) => _calculateMonthlyData(txs, month));
+    ).map((txs) => _calculateMonthlyData(txs, month, currencyCode));
   }
 
   // Helper for date math
@@ -92,19 +97,21 @@ class MonthlyDataRepository {
       );
 
   // Calculation Logic (Calculates totals and breakdowns)
-  MonthlyData _calculateMonthlyData(List<Transaction> transactions, DateTime month) {
+  MonthlyData _calculateMonthlyData(List<Transaction> transactions, DateTime month, String currencyCode) {
     double income = 0;
     double expenses = 0;
+    
     final breakdown = <String, double>{};
 
     for (var tx in transactions) {
+      final amountInTarget = _exchangeService.fromBase(tx.baseAmount, currencyCode);
       if (tx.type == 'Income') {
-        income += tx.baseAmount;
+        income += amountInTarget;
       } else {
-        expenses += tx.baseAmount;
+        expenses += amountInTarget;
         final catName = _catRepo.getNameByIdSync(tx.categoryId);
         if (catName.isEmpty) continue;
-        breakdown.update(catName, (v) => v + tx.baseAmount, ifAbsent: () => tx.baseAmount);
+        breakdown.update(catName, (v) => v + amountInTarget, ifAbsent: () => amountInTarget);
       }
     }
 

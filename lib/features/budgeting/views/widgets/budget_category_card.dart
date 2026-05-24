@@ -3,7 +3,7 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/utils/category_icon_helper.dart';
 import 'package:provider/provider.dart';
 import '../../../../models/category.dart';
-import '../../../../core/widgets/currency_display.dart';
+import '../../../../core/shared_widgets/currency_display.dart';
 
 class BudgetCategoryCard extends StatelessWidget {
   final Category category;

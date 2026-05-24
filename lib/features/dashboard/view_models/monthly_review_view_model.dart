@@ -1,12 +1,14 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/models/monthly_data.dart';
 
 class MonthlyReviewViewModel extends ChangeNotifier {
   final MonthlyDataRepository _repo;
+  final CurrencyProvider _currencyProvider;
   
-  MonthlyReviewViewModel(this._repo);
+  MonthlyReviewViewModel(this._repo, this._currencyProvider);
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -52,7 +54,7 @@ class MonthlyReviewViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final results = await _repo.getReviewData(month);
+      final results = await _repo.getReviewData(month, _currencyProvider.currentCurrency);
       _currentMonthData = results[0];
       _previousMonthData = results[1];
     } catch (e) {

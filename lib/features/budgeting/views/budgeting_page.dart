@@ -6,8 +6,8 @@ import 'package:personal_fin/features/budgeting/views/widgets/budget_category_ca
 import 'package:personal_fin/features/budgeting/views/widgets/budget_edit_dialog.dart';
 import 'package:personal_fin/features/budgeting/views/widgets/month_picker.dart';
 import 'package:personal_fin/features/budgeting/views/widgets/month_selector.dart';
-import 'package:personal_fin/core/widgets/empty_state.dart';
-import 'package:personal_fin/core/widgets/loading_state.dart';
+import 'package:personal_fin/core/shared_widgets/empty_state.dart';
+import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/features/budgeting/views/widgets/small_stat_card.dart';
 import 'package:personal_fin/models/budgeting_state.dart';
 import 'package:provider/provider.dart';

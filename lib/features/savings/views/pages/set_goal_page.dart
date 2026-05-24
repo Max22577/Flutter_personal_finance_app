@@ -5,7 +5,7 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/utils/app_feedback.dart';
-import 'package:personal_fin/core/widgets/custom_appbar.dart';
+import 'package:personal_fin/core/shared_widgets/custom_appbar.dart';
 import 'package:personal_fin/features/savings/views/widgets/currency_input_field.dart';
 import 'package:personal_fin/features/savings/views/widgets/progress_chart.dart';
 import 'package:personal_fin/models/savings.dart';

@@ -1,26 +1,44 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:personal_fin/models/category.dart';
-
+import 'package:rxdart/rxdart.dart';
 
 class TransactionViewModel extends ChangeNotifier {
   final TransactionRepository _txRepo;
   final CategoryRepository _catRepo;
   final ExchangeRateService _exchangeService;
+  final CurrencyProvider _currencyProvider;
 
   bool _isSaving = false;
   bool get isSaving => _isSaving;
 
-  TransactionViewModel(this._txRepo, this._catRepo, {required ExchangeRateService exchangeService}) 
+  TransactionViewModel(this._txRepo, this._catRepo, this._currencyProvider, {required ExchangeRateService exchangeService}) 
       : _exchangeService = exchangeService;
 
   Stream<List<Transaction>> get transactions => _txRepo.transactionsStream;
   Stream<List<Category>> get categoriesStream => _catRepo.allCategoriesStream;
-  List<Category> get categories => _catRepo.categories; 
+  List<Category> get categories => _catRepo.categories;
+
+
+  Stream<List<Transaction>> get localizedTransactionsStream {
+    return Rx.combineLatest2(
+      _txRepo.transactionsStream,
+      _currencyProvider.currencyStream,
+      (transactions, currencyCode) {
+        return transactions.map((tx) {
+          return tx.copyWith(
+            // Assuming your Transaction model has a copyWith method
+            amount: _exchangeService.fromBase(tx.baseAmount, currencyCode),
+          );
+        }).toList();
+      },
+    );
+  }
 
   Map<DateTime, List<Transaction>> groupTransactions(List<Transaction> list) {
     final Map<DateTime, List<Transaction>> groups = {};

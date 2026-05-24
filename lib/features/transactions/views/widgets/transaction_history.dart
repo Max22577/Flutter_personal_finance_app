@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/utils/app_feedback.dart';
-import 'package:personal_fin/core/widgets/animated_empty_state.dart';
-import 'package:personal_fin/core/widgets/loading_state.dart';
+import 'package:personal_fin/core/shared_widgets/animated_empty_state.dart';
+import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/features/transactions/views/widgets/transaction_history/state/error_state.dart';
 import 'package:personal_fin/features/transactions/views/widgets/transaction_history/transaction_group.dart';
 import 'package:personal_fin/features/transactions/view_models/transactions_view_model.dart';
@@ -20,7 +20,7 @@ class TransactionHistory extends StatelessWidget {
     final lang = context.read<LanguageProvider>();
 
     return StreamBuilder<List<Transaction>>(
-      stream: vm.transactions, // The reactive stream from our Repo
+      stream: vm.localizedTransactionsStream, 
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return ErrorState(message: snapshot.error.toString());

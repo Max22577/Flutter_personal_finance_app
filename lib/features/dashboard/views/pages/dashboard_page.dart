@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/rate_sync_provider.dart';
-import 'package:personal_fin/core/widgets/empty_state.dart';
-import 'package:personal_fin/core/widgets/loading_state.dart';
+import 'package:personal_fin/core/shared_widgets/empty_state.dart';
+import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/category_pie_chart.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/monthly_review.dart';
 import 'package:personal_fin/features/dashboard/view_models/dashboard_view_model.dart';
@@ -82,36 +82,39 @@ class _DashboardMonthlyReviewSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.read<DashboardViewModel>();
     final lang = context.watch<LanguageProvider>();
 
-    if (vm.isLoading) {
-      return const Center(child: LoadingState());
-    }
+    return Consumer<DashboardViewModel>(
+      builder: (context, vm, child) {
+        if (vm.isLoading) {
+          return const Center(child: LoadingState());
+        }
 
-    if (vm.errorMessage != null || vm.currentMonthData == null) {
-      return Center(
-        child: EmptyState(
-          icon: Icons.error_outline,
-          title: lang.translate('error_loading_monthly_data'),
-          message: vm.errorMessage ?? 'Unknown error',
-          actionText: lang.translate('retry'),
-          onAction: () => vm.retry(),
-        ),
-      );
-    }
+        if (vm.errorMessage != null || vm.currentMonthData == null) {
+          return Center(
+            child: EmptyState(
+              icon: Icons.error_outline,
+              title: lang.translate('error_loading_monthly_data'),
+              message: vm.errorMessage ?? 'Unknown error',
+              actionText: lang.translate('retry'),
+              onAction: () => vm.retry(),
+            ),
+          );
+        }
 
-    return MonthlyReview(
-      monthlyData: vm.currentMonthData!,
-      previousMonthData: vm.previousMonthData,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => MonthlyReviewPage(
-            month: DateTime.now(),
-            customTitle: lang.translate('this_month'),
+        return MonthlyReview(
+          monthlyData: vm.currentMonthData!,
+          previousMonthData: vm.previousMonthData,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => MonthlyReviewPage(
+                month: DateTime.now(),
+                customTitle: lang.translate('this_month'),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

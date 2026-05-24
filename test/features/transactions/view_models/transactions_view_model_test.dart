@@ -1,22 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/features/transactions/view_models/transactions_view_model.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:personal_fin/models/transaction.dart';
+import 'package:rxdart/rxdart.dart';
 
 
 class MockTransactionRepository extends Mock implements TransactionRepository {}
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 class MockExchangeRateService extends Mock implements ExchangeRateService {}
+class MockCurrencyProvider extends Mock implements CurrencyProvider {}
 
 void main() {
   late TransactionViewModel viewModel;
   late MockTransactionRepository mockTxRepo;
   late MockCategoryRepository mockCatRepo;
   late MockExchangeRateService mockExchangeService;
+  late MockCurrencyProvider mockCurrencyProvider;
 
   setUpAll(() {
     registerFallbackValue(Transaction(
@@ -36,14 +40,18 @@ void main() {
     mockTxRepo = MockTransactionRepository();
     mockCatRepo = MockCategoryRepository();
     mockExchangeService = MockExchangeRateService();
+    mockCurrencyProvider = MockCurrencyProvider();
 
     // Default setups
     when(() => mockTxRepo.currentUid).thenReturn('user_abc123');
     when(() => mockExchangeService.toBase(any(), any())).thenAnswer((inv) => inv.positionalArguments[0] as double);
+    when(() => mockCurrencyProvider.currentCurrency).thenReturn('USD');
+    when(() => mockCurrencyProvider.currencyStream).thenAnswer((_) => Stream.value('USD'));
 
     viewModel = TransactionViewModel(
       mockTxRepo,
       mockCatRepo,
+      mockCurrencyProvider,
       exchangeService: mockExchangeService,
     );
   });
@@ -63,6 +71,33 @@ void main() {
       test('transactions should forward from underlying repository streams safely', () {
         when(() => mockTxRepo.transactionsStream).thenAnswer((_) => Stream.value(sampleTransactions));
         expect(viewModel.transactions, emits(sampleTransactions));
+      });
+
+      test('localizedTransactionsStream should apply currency conversion and react to currency changes', () async {
+        // Arrange
+        final txController = BehaviorSubject<List<Transaction>>.seeded(sampleTransactions);
+        final currController = BehaviorSubject<String>.seeded('USD');
+
+        when(() => mockTxRepo.transactionsStream).thenAnswer((_) => txController.stream);
+        when(() => mockCurrencyProvider.currencyStream).thenAnswer((_) => currController.stream);
+        
+        // Setup conversion rule: 1.0 base * 2.0 (for EUR)
+        when(() => mockExchangeService.fromBase(any(), 'EUR')).thenAnswer((inv) => (inv.positionalArguments[0] as double) * 2.0);
+
+        // Act
+        currController.add('EUR');
+        
+        // Assert
+        // The first coffee transaction (5.0 base) should become 10.0 in EUR
+        expect(
+          viewModel.localizedTransactionsStream,
+          emits(isA<List<Transaction>>().having(
+            (list) => list.first.amount, 'amount converted to EUR', 10.0
+          )),
+        );
+
+        await txController.close();
+        await currController.close();
       });
 
       test('categoriesStream should forward clean collection options from categories data layer', () {

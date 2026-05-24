@@ -1,19 +1,36 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/features/savings/view_models/savings_view_model.dart';
 import 'package:personal_fin/models/savings.dart';
+import 'package:rxdart/rxdart.dart';
 
 
 class MockSavingsRepository extends Mock implements SavingsRepository {}
+class MockExchangeRateService extends Mock implements ExchangeRateService {}
+class MockCurrencyProvider extends Mock implements CurrencyProvider {}
 
 void main() {
   late SavingsViewModel viewModel;
   late MockSavingsRepository mockRepository;
+  late MockExchangeRateService mockExchangeService;
+  late MockCurrencyProvider mockCurrencyProvider;
 
   setUp(() {
     mockRepository = MockSavingsRepository();
-    viewModel = SavingsViewModel(mockRepository);
+    mockExchangeService = MockExchangeRateService();
+    mockCurrencyProvider = MockCurrencyProvider();
+
+    // Stub defaults
+    when(() => mockExchangeService.fromBase(any(), any()))
+        .thenAnswer((inv) => inv.positionalArguments[0] as double);
+    
+    when(() => mockCurrencyProvider.currentCurrency).thenReturn('USD');
+    when(() => mockCurrencyProvider.currencyStream).thenAnswer((_) => Stream.value('USD'));
+    
+    viewModel = SavingsViewModel(mockRepository, mockExchangeService, mockCurrencyProvider);
   });
 
   group('SavingsViewModel Tests', () {
@@ -45,7 +62,12 @@ void main() {
     group('stateStream (Data Transformation Processing)', () {
       test('should calculate aggregated state correctly when goals stream emits data', () async {
         // Arrange
-        when(() => mockRepository.goalsStream).thenAnswer((_) => Stream.value(sampleGoals));
+        final goalsController = BehaviorSubject<List<SavingsGoal>>.seeded(sampleGoals);
+        final currController = BehaviorSubject<String>.seeded('USD');
+        
+        when(() => mockCurrencyProvider.currentCurrency).thenReturn('USD');
+        when(() => mockRepository.goalsStream).thenAnswer((_) => goalsController.stream);
+        when(() => mockCurrencyProvider.currencyStream).thenAnswer((_) => currController.stream);
 
         // Act & Assert
         expect(
@@ -57,11 +79,18 @@ void main() {
               .having((s) => s.remainingBase, 'remaining base', 2000.0) // 3000 - 1000
               .having((s) => s.overallProgress, 'progress math', 0.3333333333333333)), // 1000 / 3000
         );
+
+        await goalsController.close();
+        await currController.close();
       });
 
       test('should yield clean zeroed indicators safely when goal stream contains empty data lists', () async {
         // Arrange
+        final currController = BehaviorSubject<String>.seeded('USD');
+        
+        when(() => mockCurrencyProvider.currentCurrency).thenReturn('USD');
         when(() => mockRepository.goalsStream).thenAnswer((_) => Stream.value([]));
+        when(() => mockCurrencyProvider.currencyStream).thenAnswer((_) => currController.stream);
 
         // Act & Assert
         expect(
@@ -73,6 +102,7 @@ void main() {
               .having((s) => s.remainingBase, 'remaining base zeroed', 0.0)
               .having((s) => s.overallProgress, 'progress handle zero division fallback', 0.0)),
         );
+        await currController.close();
       });
 
       test('should clamp metrics elegantly if total base savings overflow target base rulesets', () async {
@@ -90,7 +120,12 @@ void main() {
           ),
         ];
         
-        when(() => mockRepository.goalsStream).thenAnswer((_) => Stream.value(overflowGoal));
+        final goalsController = BehaviorSubject<List<SavingsGoal>>.seeded(overflowGoal);
+        final currController = BehaviorSubject<String>.seeded('USD');
+        
+        when(() => mockCurrencyProvider.currentCurrency).thenReturn('USD');
+        when(() => mockRepository.goalsStream).thenAnswer((_) => goalsController.stream);
+        when(() => mockCurrencyProvider.currencyStream).thenAnswer((_) => currController.stream);
 
         // Act & Assert
         expect(
@@ -99,6 +134,9 @@ void main() {
               .having((s) => s.remainingBase, 'clamped remaining target lowest limit', 0.0) // Ensures it clamps to 0.0 instead of falling into negative numbers
               .having((s) => s.overallProgress, 'clamped maximal ratio value progress limit', 1.0)), // Caps explicitly at 1.0 (100%)
         );
+
+        await goalsController.close();
+        await currController.close();
       });
     });
 

@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/rate_sync_provider.dart';
 import 'package:personal_fin/core/repositories/budget_repository.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
@@ -23,7 +24,9 @@ class AppProviders {
   static List<SingleChildWidget> get providers => [
     // Services
     Provider<IFirestoreService>(create: (_) => FirestoreService()),
-    Provider<ExchangeRateService>(create: (_) => ExchangeRateService()),
+    ChangeNotifierProvider(
+      create: (context) => ExchangeRateService()
+    ),
 
     // Repositories 
     ProxyProvider<IFirestoreService, TransactionRepository>(
@@ -38,9 +41,11 @@ class AppProviders {
     ProxyProvider<IFirestoreService, CategoryRepository>(
       update: (_, service, _) => CategoryRepository(service: service, auth: FirebaseAuth.instance),
     ),
-    ProxyProvider2<CategoryRepository, IFirestoreService, MonthlyDataRepository>(
-      update: (_, catRepo, service, _) => MonthlyDataRepository(
-        catRepo, 
+    ProxyProvider4<CategoryRepository, ExchangeRateService, CurrencyProvider, IFirestoreService, MonthlyDataRepository>(
+      update: (_, catRepo, exchangeService, currencyProvider, service, _) => MonthlyDataRepository(
+        catRepo,
+        exchangeService,
+        currencyProvider,
         service: service,
         auth: FirebaseAuth.instance,
       ),
@@ -65,7 +70,7 @@ class AppProviders {
     ChangeNotifierProvider(create: (context) => HomeViewModel()),
     ChangeNotifierProvider(
       create: (context) => RateSyncProvider(
-        context.read<ExchangeRateService>(),
+        exchangeRateService: context.read<ExchangeRateService>(),
       ),
     ),
     ChangeNotifierProvider(
@@ -80,6 +85,7 @@ class AppProviders {
       create: (context) => TransactionViewModel(
         context.read<TransactionRepository>(),
         context.read<CategoryRepository>(),
+        context.read<CurrencyProvider>(),
         exchangeService: context.read<ExchangeRateService>(),
       ),
     ),
@@ -94,11 +100,14 @@ class AppProviders {
         context.read<TransactionRepository>(),
         context.read<CategoryRepository>(),
         exchangeService: context.read<ExchangeRateService>(),
+        currencyStream: context.read<CurrencyProvider>().currencyStream,
       )
     ),
     ChangeNotifierProvider(
       create: (context) => SavingsViewModel(
         context.read<SavingsRepository>(),
+        context.read<ExchangeRateService>(),
+        context.read<CurrencyProvider>(),
       )
     ),
   ];

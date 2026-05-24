@@ -10,6 +10,7 @@ class BudgetingState {
   final int activeBudgetsCount;
   final int totalCategoryCount;
   final String monthYear;
+  final String currencyCode;
 
   BudgetingState({
     required this.categories,
@@ -20,5 +21,6 @@ class BudgetingState {
     required this.activeBudgetsCount,
     required this.monthYear,
     required this.totalCategoryCount,
+    required this.currencyCode,
   });
 }
