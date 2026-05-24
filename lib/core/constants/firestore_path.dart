@@ -13,7 +13,7 @@ class FirestorePath {
   static String transactions(String uid) => '${_root()}/users/$uid/transactions';
   static String categories(String uid) => '${_root()}/users/$uid/transaction_categories';
   static String budgets(String uid) => '${_root()}/users/$uid/budgets';
-  static String exchangeRates() => '${_root()}/global_data/rates';
+  static String exchangeRates() => '${_root()}/rates';
   
   // Example for nested data
   static String goal(String uid, String goalId) => '${savingsGoals(uid)}/$goalId';

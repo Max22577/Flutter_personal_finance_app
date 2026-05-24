@@ -1,12 +1,14 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
-import 'package:personal_fin/core/widgets/animated_empty_state.dart';
-import 'package:personal_fin/core/widgets/currency_display.dart';
-import 'package:personal_fin/core/widgets/empty_state.dart';
-import 'package:personal_fin/core/widgets/loading_state.dart';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
+import 'package:personal_fin/core/shared_widgets/animated_empty_state.dart';
+import 'package:personal_fin/core/shared_widgets/currency_display.dart';
+import 'package:personal_fin/core/shared_widgets/empty_state.dart';
+import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/spending_chart_view_model.dart';
 
@@ -29,6 +31,8 @@ class CategoryPieChart extends StatelessWidget {
       create: (_) => SpendingChartViewModel(
         context.read<TransactionRepository>(),
         context.read<CategoryRepository>(),
+        context.read<ExchangeRateService>(),
+        currencyStream: context.read<CurrencyProvider>().currencyStream,
       ),
       child: const _CategoryPieChartConsumer(colorsList: _vibrantColors),
     );

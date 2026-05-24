@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
-import 'package:personal_fin/core/widgets/raised_floating_action_button.dart';
+import 'package:personal_fin/core/shared_widgets/raised_floating_action_button.dart';
 import 'package:personal_fin/features/transactions/views/widgets/transaction_form.dart';
 import 'package:personal_fin/features/transactions/views/widgets/transaction_history.dart';
 import 'package:personal_fin/models/transaction.dart';

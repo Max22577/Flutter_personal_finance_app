@@ -16,31 +16,38 @@ class BudgetingViewModel extends ChangeNotifier {
   final TransactionRepository _txRepo; 
   final CategoryRepository _catRepo;
   final ExchangeRateService _exchangeService;
+  final Stream<String> _currencyStream;
 
   DateTime _selectedDate = DateTime.now();
   DateTime get selectedDate => _selectedDate;
 
-  BudgetingViewModel(this._budgetRepo, this._txRepo, this._catRepo, {required ExchangeRateService exchangeService})
-      : _exchangeService = exchangeService {
+  BudgetingViewModel(
+    this._budgetRepo, 
+    this._txRepo, 
+    this._catRepo, 
+    {required ExchangeRateService exchangeService, required Stream<String> currencyStream})
+      : _exchangeService = exchangeService, _currencyStream = currencyStream {
     // Set initial date
     _syncDateToRepos();
   }
 
   // THE MASTER STATE STREAM
   Stream<BudgetingState> get stateStream {
-    return Rx.combineLatest3(
+    return Rx.combineLatest4(
       _catRepo.allCategoriesStream,
       _budgetRepo.budgetsStream,
-      _txRepo.transactionsStream, 
-      (categories, budgets, transactions) => _calculateState(categories, budgets, transactions),
+      _txRepo.transactionsStream,
+      _currencyStream, 
+      (categories, budgets, transactions, currencyCode) => _calculateState(categories, budgets, transactions, currencyCode),
     );
   }
 
-  BudgetingState _calculateState(List<Category> categories, List<Budget> budgets, List<Transaction> transactions) {
+  BudgetingState _calculateState(List<Category> categories, List<Budget> budgets, List<Transaction> transactions, String currencyCode ) {
     final Map<String, double> spendingMap = {};
     
     for (var t in transactions.where((tx) => tx.type == 'Expense')) {
-      spendingMap[t.categoryId] = (spendingMap[t.categoryId] ?? 0.0) + t.baseAmount;
+      final convertedAmount = _exchangeService.fromBase(t.baseAmount, currencyCode);
+      spendingMap[t.categoryId] = (spendingMap[t.categoryId] ?? 0.0) + convertedAmount;
     }
 
     // Filter out non-expense categories
@@ -48,15 +55,25 @@ class BudgetingViewModel extends ChangeNotifier {
       !['income', 'salary', 'revenue'].any((term) => c.name.toLowerCase().contains(term))
     ).toList();
 
+    final Map<String, double> convertedBudgetMap = {
+      for (var b in budgets) 
+        b.categoryId: _exchangeService.fromBase(b.baseAmount, currencyCode)
+    };
+
+    final totalBudget = budgets.fold(0.0, (sum, b) {
+      return sum + _exchangeService.fromBase(b.baseAmount, currencyCode);
+    });
+
     return BudgetingState(
       categories: filteredCats,
       transactions: transactions,
-      budgetMap: {for (var b in budgets) b.categoryId: b.baseAmount},
+      budgetMap: convertedBudgetMap,
       spendingMap: spendingMap,
-      totalBudget: budgets.fold(0.0, (sum, b) => sum + b.baseAmount),
+      totalBudget: totalBudget,
       activeBudgetsCount: budgets.where((b) => b.baseAmount > 0).length,
       monthYear: DateFormat('MMMM yyyy').format(_selectedDate),
       totalCategoryCount: filteredCats.length,
+      currencyCode: currencyCode,
     );
   }
 

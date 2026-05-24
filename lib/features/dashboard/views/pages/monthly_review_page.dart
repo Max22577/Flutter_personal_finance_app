@@ -2,11 +2,12 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
-import 'package:personal_fin/core/widgets/currency_display.dart';
-import 'package:personal_fin/core/widgets/custom_appbar.dart';
+import 'package:personal_fin/core/shared_widgets/currency_display.dart';
+import 'package:personal_fin/core/shared_widgets/custom_appbar.dart';
 import 'package:personal_fin/features/dashboard/view_models/monthly_review_view_model.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/monthly_review.dart';
 import 'package:personal_fin/models/monthly_data.dart';
@@ -26,6 +27,7 @@ class MonthlyReviewPage extends StatelessWidget {
     return ChangeNotifierProvider<MonthlyReviewViewModel>(
       create: (context) => MonthlyReviewViewModel(
         context.read<MonthlyDataRepository>(),
+        context.read<CurrencyProvider>(),
       )..loadData(targetMonth),
       child: _MonthlyReviewScaffold(targetMonth: targetMonth),
     );

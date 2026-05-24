@@ -9,7 +9,7 @@ import 'package:personal_fin/features/profile/view_models/profile_view_model.dar
 import 'package:provider/provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
-import 'package:personal_fin/core/widgets/custom_appbar.dart';
+import 'package:personal_fin/core/shared_widgets/custom_appbar.dart';
 import 'package:personal_fin/features/drawer/drawer.dart';
 import 'package:personal_fin/features/budgeting/views/budgeting_page.dart';
 import 'package:personal_fin/features/dashboard/views/pages/dashboard_page.dart';

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
-import 'package:personal_fin/core/widgets/animated_empty_state.dart';
-import 'package:personal_fin/core/widgets/custom_appbar.dart';
-import 'package:personal_fin/core/widgets/empty_state.dart';
-import 'package:personal_fin/core/widgets/loading_state.dart';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
+import 'package:personal_fin/core/shared_widgets/animated_empty_state.dart';
+import 'package:personal_fin/core/shared_widgets/custom_appbar.dart';
+import 'package:personal_fin/core/shared_widgets/empty_state.dart';
+import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/features/savings/views/pages/set_goal_page.dart';
 import 'package:personal_fin/features/savings/views/widgets/progress_chart.dart';
 import 'package:personal_fin/features/savings/views/widgets/savings_stat_card.dart';
@@ -18,7 +20,11 @@ class SavingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => SavingsViewModel(context.read<SavingsRepository>()),
+      create: (context) => SavingsViewModel(
+        context.read<SavingsRepository>(),
+        context.read<ExchangeRateService>(),
+        context.read<CurrencyProvider>()
+      ),
       child: const SavingsViewContent(),
     );
   }

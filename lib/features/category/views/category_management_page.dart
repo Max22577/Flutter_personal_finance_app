@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
-import 'package:personal_fin/core/widgets/animated_empty_state.dart';
-import 'package:personal_fin/core/widgets/circular_icon_badge.dart'; 
-import 'package:personal_fin/core/widgets/custom_appbar.dart';
-import 'package:personal_fin/core/widgets/loading_state.dart';
+import 'package:personal_fin/core/shared_widgets/animated_empty_state.dart';
+import 'package:personal_fin/core/shared_widgets/circular_icon_badge.dart'; 
+import 'package:personal_fin/core/shared_widgets/custom_appbar.dart';
+import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/features/category/view_models/widgets/category_form_handlers.dart';
 import 'package:personal_fin/features/category/view_models/widgets/predefined_chip.dart';
 import 'package:personal_fin/models/category.dart';

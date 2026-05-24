@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:personal_fin/core/widgets/currency_display.dart';
+import 'package:personal_fin/core/shared_widgets/currency_display.dart';
 
 class MainBudgetStat extends StatelessWidget {
   final String label;

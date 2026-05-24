@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/budget_repository.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
@@ -18,6 +19,7 @@ class MockBudgetRepository extends Mock implements BudgetRepository {}
 class MockTransactionRepository extends Mock implements TransactionRepository {}
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 class MockExchangeRateService extends Mock implements ExchangeRateService {}
+class CurrencyProviderMock extends Mock implements CurrencyProvider {}
 
 void main() {
   late BudgetingViewModel viewModel;
@@ -25,6 +27,8 @@ void main() {
   late MockTransactionRepository mockTxRepo;
   late MockCategoryRepository mockCatRepo;
   late MockExchangeRateService mockExchangeService;
+  late BehaviorSubject<String> currencyController;
+  late CurrencyProviderMock currencyProvider;
 
   final now = DateTime.now();
   final formattedCurrentMonth = DateFormat('MMMM yyyy').format(now);
@@ -63,11 +67,16 @@ void main() {
     mockTxRepo = MockTransactionRepository();
     mockCatRepo = MockCategoryRepository();
     mockExchangeService = MockExchangeRateService();
-
+    currencyController = BehaviorSubject<String>.seeded('USD');
+    currencyProvider = CurrencyProviderMock();
     // Default structural stubs
     when(() => mockBudgetRepo.uid).thenReturn('uid_123');
     when(() => mockBudgetRepo.updateMonthYear(any())).thenReturn(null);
     when(() => mockExchangeService.toBase(any(), any())).thenAnswer((inv) => inv.positionalArguments[0] as double);
+  });
+
+  tearDown(() {
+    currencyController.close();
   });
 
   group('BudgetingViewModel Tests', () {
@@ -79,6 +88,7 @@ void main() {
         mockTxRepo,
         mockCatRepo,
         exchangeService: mockExchangeService,
+        currencyStream: currencyController.stream
       );
 
       // Assert
@@ -95,8 +105,10 @@ void main() {
         when(() => mockCatRepo.allCategoriesStream).thenAnswer((_) => catController.stream);
         when(() => mockBudgetRepo.budgetsStream).thenAnswer((_) => budgetController.stream);
         when(() => mockTxRepo.transactionsStream).thenAnswer((_) => txController.stream);
+        when(() => mockExchangeService.fromBase(any(), any())).thenAnswer((inv) => inv.positionalArguments[0] as double); // Identity conversion for simplicity
+        when(() => currencyProvider.currencyStream).thenAnswer((_) => currencyController.stream);
 
-        viewModel = BudgetingViewModel(mockBudgetRepo, mockTxRepo, mockCatRepo, exchangeService: mockExchangeService);
+        viewModel = BudgetingViewModel(mockBudgetRepo, mockTxRepo, mockCatRepo, exchangeService: mockExchangeService, currencyStream: currencyController.stream);
 
         // Act & Assert
         expect(
@@ -123,7 +135,7 @@ void main() {
         when(() => mockBudgetRepo.budgetsStream).thenAnswer((_) => Stream.empty());
         when(() => mockTxRepo.transactionsStream).thenAnswer((_) => Stream.empty());
 
-        viewModel = BudgetingViewModel(mockBudgetRepo, mockTxRepo, mockCatRepo, exchangeService: mockExchangeService);
+        viewModel = BudgetingViewModel(mockBudgetRepo, mockTxRepo, mockCatRepo, exchangeService: mockExchangeService, currencyStream: currencyController.stream);
 
         final targetDate = DateTime(2026, 12, 25);
         final expectedFormattedDate = DateFormat('MMMM yyyy').format(targetDate);
@@ -145,7 +157,7 @@ void main() {
         when(() => mockBudgetRepo.budgetsStream).thenAnswer((_) => Stream.empty());
         when(() => mockTxRepo.transactionsStream).thenAnswer((_) => Stream.empty());
 
-        viewModel = BudgetingViewModel(mockBudgetRepo, mockTxRepo, mockCatRepo, exchangeService: mockExchangeService);
+        viewModel = BudgetingViewModel(mockBudgetRepo, mockTxRepo, mockCatRepo, exchangeService: mockExchangeService, currencyStream: currencyController.stream);
 
         int uiNotificationCount = 0;
         viewModel.addListener(() => uiNotificationCount++);
@@ -171,7 +183,7 @@ void main() {
         when(() => mockTxRepo.transactionsStream).thenAnswer((_) => Stream.empty());
         when(() => mockBudgetRepo.setBudget(any())).thenAnswer((_) => Future.value());
 
-        viewModel = BudgetingViewModel(mockBudgetRepo, mockTxRepo, mockCatRepo, exchangeService: mockExchangeService);
+        viewModel = BudgetingViewModel(mockBudgetRepo, mockTxRepo, mockCatRepo, exchangeService: mockExchangeService, currencyStream: currencyController.stream);
 
         // Act
         await viewModel.setBudget('cat_travel', 250.0, 'EUR');
@@ -186,5 +198,39 @@ void main() {
         ))).called(1);
       });
     });
+  });
+
+  test('should recalculate math maps when currency stream emits a new currency', () async {
+    // Arrange
+    final catController = BehaviorSubject<List<Category>>.seeded(testCategories);
+    final budgetController = BehaviorSubject<List<Budget>>.seeded(testBudgets);
+    final txController = BehaviorSubject<List<Transaction>>.seeded(testTransactions);
+    
+    when(() => mockCatRepo.allCategoriesStream).thenAnswer((_) => catController.stream);
+    when(() => mockBudgetRepo.budgetsStream).thenAnswer((_) => budgetController.stream);
+    when(() => mockTxRepo.transactionsStream).thenAnswer((_) => txController.stream);
+    
+    // Mock exchange service conversion for a new currency 'EUR' (e.g., 2.0x multiplier)
+    when(() => mockExchangeService.fromBase(any(), 'EUR')).thenAnswer((inv) => (inv.positionalArguments[0] as double) * 2.0);
+
+    viewModel = BudgetingViewModel(
+      mockBudgetRepo, 
+      mockTxRepo, 
+      mockCatRepo, 
+      exchangeService: mockExchangeService,
+      currencyStream: currencyController.stream
+    );
+
+    // Act: Switch to EUR
+    currencyController.add('EUR');
+
+    // Assert
+    expect(
+      viewModel.stateStream,
+      emits(isA<BudgetingState>()
+          .having((s) => s.currencyCode, 'updates currency code', 'EUR')
+          .having((s) => s.totalBudget, 'recalculates budget with new rate', 3400.0) // (500+1200) * 2
+          .having((s) => s.spendingMap['cat_food'], 'recalculates spending with new rate', 400.0)), // (150+50) * 2
+    );
   });
 }

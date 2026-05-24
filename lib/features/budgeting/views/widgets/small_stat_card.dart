@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:personal_fin/core/widgets/circular_icon_badge.dart';
+import 'package:personal_fin/core/shared_widgets/circular_icon_badge.dart';
 
 class SmallStatCard extends StatelessWidget {
   final IconData icon;
