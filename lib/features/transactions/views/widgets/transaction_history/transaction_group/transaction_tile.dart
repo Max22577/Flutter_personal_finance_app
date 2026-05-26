@@ -125,7 +125,7 @@ class _TileHeader extends StatelessWidget {
                 ),
               ),
               CurrencyDisplay(
-                baseAmount: transaction.amount,
+                amount: transaction.amount,
                 isExpense: !isIncome,
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,

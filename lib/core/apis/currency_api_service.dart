@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class CurrencyApiService {
-  static const String _apiKey = 'YOUR_API_KEY_HERE';
+  static final String _apiKey = dotenv.env['API_KEY'] ?? '';
   static const String _baseUrl = 'https://v6.exchangerate-api.com/v6';
 
   Future<Map<String, double>?> fetchLatestRates() async {

@@ -45,7 +45,7 @@ class ErrorState extends StatelessWidget {
                 // For now, just refresh the page
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (context) => TransactionsPage(isActive: true),
+                    builder: (context) => TransactionsPage(),
                   ),
                 );
               },

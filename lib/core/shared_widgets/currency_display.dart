@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../providers/currency_provider.dart';
 
 class CurrencyDisplay extends StatelessWidget {
-  final double baseAmount;
+  final double amount; // Expects the ALREADY converted currency amount from your stream
   final TextStyle? style;
   final bool compact;
   final Color? positiveColor;
@@ -16,7 +15,7 @@ class CurrencyDisplay extends StatelessWidget {
 
   const CurrencyDisplay({
     super.key,
-    required this.baseAmount,
+    required this.amount, 
     this.style,
     this.compact = false,
     this.positiveColor,
@@ -31,22 +30,19 @@ class CurrencyDisplay extends StatelessWidget {
     final financialColors = theme.extension<FinancialColors>();
     final lang = context.watch<LanguageProvider>();
     final currencyProvider = context.watch<CurrencyProvider>();
-    final rateService = context.watch<ExchangeRateService>();
 
-    final double displayAmount = rateService.fromBase(
-      baseAmount, 
-      currencyProvider.currency.code,
-    );
-
+    final double displayAmount = amount;
     final cf = currencyProvider.formatter;
 
     final bool actsAsNegative = displayAmount < 0 || isExpense;
     final bool actsAsPositive = displayAmount > 0 && !isExpense;
 
+    // Format using our updated, locale-safe formatter structure
     String formattedAmount = compact
         ? cf.formatCompact(displayAmount.abs(), lang.localeCode)
         : cf.formatDisplay(displayAmount.abs(), lang.localeCode);
 
+    // Append dynamic presentation mathematical symbols if requested
     if (showSign) {
       if (actsAsPositive) formattedAmount = '+$formattedAmount';
       if (actsAsNegative) formattedAmount = '-$formattedAmount';
@@ -59,8 +55,7 @@ class CurrencyDisplay extends StatelessWidget {
       textColor = negativeColor ?? financialColors?.expense ?? Colors.red;
     }
 
-    final baseStyle =
-        style?.copyWith(color: textColor) ?? TextStyle(color: textColor);
+    final baseStyle = style?.copyWith(color: textColor) ?? TextStyle(color: textColor);
 
     return Text.rich(
       TextSpan(

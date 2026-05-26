@@ -112,7 +112,7 @@ class _StatAmount extends StatelessWidget {
       fit: BoxFit.scaleDown,
       alignment: Alignment.centerLeft,
       child: CurrencyDisplay(
-        baseAmount: amount,
+        amount: amount,
         compact: false,
         style: displayStyle?.copyWith(
           color: Colors.white,

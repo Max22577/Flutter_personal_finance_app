@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
-import 'package:personal_fin/core/network/query_options.dart';
+import 'package:personal_fin/core/firestore/network/query_options.dart';
 import 'package:personal_fin/core/services/i_firestore_service.dart';
 
 class FirestoreService implements IFirestoreService {

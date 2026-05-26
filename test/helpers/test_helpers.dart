@@ -44,7 +44,7 @@ class TestDependencyManager {
         .thenAnswer((inv) => (inv.positionalArguments[0] as double).toStringAsFixed(2));
     when(() => mockFormatter.formatCompact(any(), any()))
         .thenAnswer((inv) => '${(inv.positionalArguments[0] as double).toInt()}K');
-    when(() => mockFormatter.formatNumber(any(), any()))
+    when(() => mockFormatter.formatDisplay(any(), any()))
         .thenAnswer((inv) => (inv.positionalArguments[0] as double).toStringAsFixed(2));
   }
 

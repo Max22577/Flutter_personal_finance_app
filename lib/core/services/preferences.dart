@@ -1,5 +1,4 @@
 import 'package:shared_preferences/shared_preferences.dart';
-
 class PreferencesService {
   static const String _currencyKey = 'app_currency';
   static const String _languageKey = 'app_language';

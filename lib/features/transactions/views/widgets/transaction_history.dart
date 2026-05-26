@@ -10,9 +10,8 @@ import 'package:personal_fin/models/transaction.dart';
 import 'package:provider/provider.dart';
 
 class TransactionHistory extends StatelessWidget { 
-  final bool isActive;
   
-  const TransactionHistory({required this.isActive, super.key});
+  const TransactionHistory({super.key});
 
   @override
   Widget build(BuildContext context) {

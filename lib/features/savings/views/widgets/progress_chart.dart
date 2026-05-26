@@ -232,7 +232,7 @@ class _LegendItem extends StatelessWidget {
                 ),
               ),
               CurrencyDisplay(
-                baseAmount: value,
+                amount: value,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: theme.colorScheme.onSurface,

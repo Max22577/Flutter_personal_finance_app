@@ -28,9 +28,7 @@ class RateSyncProvider extends ChangeNotifier {
         final batch = FirebaseFirestore.instance.batch();
         final now = DateTime.now();
 
-        // Use a subset of codes to avoid hitting Firestore limits if the API returns 200+
-        // or just use newRates.keys if you want all of them.
-        final List<String> codesToSync = ['USD', 'EUR', 'GBP', 'JPY', 'KES', 'AUD']; 
+        final List<String> codesToSync = ['USD', 'EUR', 'GBP', 'JPY', 'KES', 'ZAR', 'NGN', 'GHS']; 
 
         for (var code in codesToSync) {
           if (newRates.containsKey(code)) {

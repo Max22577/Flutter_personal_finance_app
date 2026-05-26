@@ -385,7 +385,7 @@ class _StatItemCard extends StatelessWidget {
                     curve: Curves.easeOutBack,
                     builder: (context, animatedValue, child) {
                       return CurrencyDisplay(
-                        baseAmount: animatedValue,
+                        amount: animatedValue,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                           color: colors.onSurface,

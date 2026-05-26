@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:personal_fin/core/network/query_options.dart';
+import 'package:personal_fin/core/firestore/network/query_options.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/services/i_firestore_service.dart';
 import 'package:personal_fin/models/category.dart';

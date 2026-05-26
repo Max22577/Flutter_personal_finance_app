@@ -16,7 +16,7 @@ class ExchangeRate {
     return ExchangeRate(
       code: map['code'] as String,
       rateToBase: (map['rateToBase'] as num).toDouble(),
-      timestamp: (map['timestamp'] as Timestamp).toDate(),
+      timestamp: (map['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 

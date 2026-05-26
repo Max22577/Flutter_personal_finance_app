@@ -16,7 +16,8 @@ class CurrencyProvider extends ChangeNotifier {
 
   // Initialize and load from storage
   Future<void> init() async {
-    _currentCurrency = await _prefs.getCurrency();
+    final savedCurrency = await _prefs.getCurrency();
+    _currentCurrency = savedCurrency; 
     _currencySubject.add(_currentCurrency);
     notifyListeners();
   }
