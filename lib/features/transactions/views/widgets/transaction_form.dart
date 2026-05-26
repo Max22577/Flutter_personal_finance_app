@@ -501,7 +501,7 @@ class _TransactionPreview extends StatelessWidget {
       future: () async {
         final amount = parseAmount(amountText);
         if (amount == null || amount <= 0) return '';
-        return cf.formatNumber(amount, lang.localeCode);
+        return cf.formatDisplay(amount, lang.localeCode);
       }(),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox.shrink();

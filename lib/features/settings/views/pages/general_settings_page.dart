@@ -201,7 +201,7 @@ class _DialogUtils {
       
       // Show confirmation with example
       final newCf = context.read<CurrencyProvider>().formatter;
-      final exampleAmount = newCf.formatNumber(1234.56, lang.localeCode);
+      final exampleAmount = newCf.formatDisplay(1234.56, lang.localeCode);
       
       messenger.showSnackBar(
         SnackBar(

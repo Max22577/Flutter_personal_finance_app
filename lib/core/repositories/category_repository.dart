@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:personal_fin/core/constants/firestore_path.dart';
-import 'package:personal_fin/core/network/query_options.dart';
+import 'package:personal_fin/core/firestore/constants/firestore_path.dart';
+import 'package:personal_fin/core/firestore/network/query_options.dart';
 import 'package:personal_fin/core/services/i_firestore_service.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../models/category.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:personal_fin/core/constants/firestore_path.dart';
+import 'package:personal_fin/core/firestore/constants/firestore_path.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';

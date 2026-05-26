@@ -147,7 +147,7 @@ class _StatCardMainBalance extends StatelessWidget {
           curve: Curves.easeOutBack,
           builder: (context, value, child) {
             return CurrencyDisplay(
-              baseAmount: value,
+              amount: value,
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: colors.onSurface,
                 letterSpacing: 0.2,
@@ -276,7 +276,7 @@ class _StatCardComparison extends StatelessWidget {
             ),
           ),
           CurrencyDisplay(
-            baseAmount: netDifference.abs(),
+            amount: netDifference.abs(),
             style: TextStyle(
               fontSize: textScaler.scale(11),
               color: isImproved ? financialColors.income : financialColors.expense,
@@ -331,7 +331,7 @@ class _StatItem extends StatelessWidget {
           const SizedBox(height: 4),
           CurrencyDisplay(
             isExpense: isExpense,
-            baseAmount: amount,
+            amount: amount,
             style: TextStyle(
               fontSize: textScaler.scale(16),
               fontWeight: FontWeight.bold,

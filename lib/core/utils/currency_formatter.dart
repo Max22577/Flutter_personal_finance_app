@@ -6,39 +6,34 @@ class CurrencyFormatter {
 
   CurrencyFormatter(this.currency);
 
-  // Standard Format: $1,234.56
-  String formatNumber(double amount, String locale) {
+  String get _spacedSymbol => '${currency.symbol}\u00A0';
+
+  /// Standard Full Format: e.g., KSh 1,234.56 or $1,234.56
+  String formatDisplay(double amount, String locale) {
     final format = NumberFormat.currency(
       locale: locale,
-      symbol: currency.symbol, 
-      decimalDigits: 2,
+      name: currency.code,   
+      symbol: _spacedSymbol, 
+
+      decimalDigits: _getDecimalDigits(), 
     );
     return format.format(amount);
   }
 
-  // Compact Format: $1.2K or $2.5M
-  String formatDisplay(double amount, String locale) {
-    final symbol = currency.symbol;
-    if (amount == amount.toInt()) {
-      // Formats as $1,234
-      return NumberFormat.currency(
-        locale: locale, 
-        symbol: symbol, 
-        decimalDigits: 0
-      ).format(amount);
-    }
-    // Formats as $1,234.56
-    return NumberFormat.currency(
-      locale: locale, 
-      symbol: symbol, 
-      decimalDigits: 2
-    ).format(amount);
+  /// Compact Format: e.g., KSh 1.2M or 1.2M $ depending on locale rules
+  String formatCompact(double amount, String locale) {
+    final format = NumberFormat.compactCurrency(
+      locale: locale,
+      symbol:_spacedSymbol,
+      name: currency.code,
+      decimalDigits: 1, // 1.2K instead of 1.23K
+    );
+    return format.format(amount);
   }
 
-  String formatCompact(double amount, String locale) {
-    final format = NumberFormat.compact(locale: locale);
-    return '${currency.symbol}${format.format(amount)}';
+  int _getDecimalDigits() {
+    // Optional safety check for zero-decimal currencies if your app supports them
+    final zeroDecimalCurrencies = {'JPY', 'KRW', 'CLP', 'VND', 'BIF', 'DJF', 'GNF', 'KMF', 'RWF', 'XAF', 'XOF', 'XPF'};
+    return zeroDecimalCurrencies.contains(currency.code.toUpperCase()) ? 0 : 2;
   }
- 
-  
 }

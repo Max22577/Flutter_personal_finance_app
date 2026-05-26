@@ -182,7 +182,7 @@ class _BudgetProgressIndicator extends StatelessWidget {
               ),
             ),
             CurrencyDisplay(
-              baseAmount: currentSpending,
+              amount: currentSpending,
               compact: true,
               style: theme.textTheme.labelMedium?.copyWith(
                 color: colors.onSurface.withValues(alpha: 0.6),
@@ -345,7 +345,7 @@ class FinancialFluidTile extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           CurrencyDisplay(
-            baseAmount: amount,
+            amount: amount,
             isExpense: isExpense,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: isPrimary ? FontWeight.w900 : FontWeight.w600,

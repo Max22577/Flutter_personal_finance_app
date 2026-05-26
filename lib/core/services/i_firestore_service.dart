@@ -1,4 +1,4 @@
-import 'package:personal_fin/core/network/query_options.dart';
+import 'package:personal_fin/core/firestore/network/query_options.dart';
 
 abstract class IFirestoreService {
   Stream<List<T>> streamCollection<T>({

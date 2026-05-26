@@ -178,7 +178,7 @@ class _PieChartGraphic extends StatelessWidget {
         showTitle: false,
         badgeWidget: shouldShowBadge
             ? CurrencyDisplay(
-                baseAmount: entry.value,
+                amount: entry.value,
                 compact: true,
                 isExpense: true,
                 positiveColor: colors.onSurface,

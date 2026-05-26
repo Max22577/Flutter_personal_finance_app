@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:personal_fin/core/constants/firestore_path.dart';
-import 'package:personal_fin/core/network/query_options.dart';
+import 'package:personal_fin/core/firestore/constants/firestore_path.dart';
+import 'package:personal_fin/core/firestore/network/query_options.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/services/i_firestore_service.dart';

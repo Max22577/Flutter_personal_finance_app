@@ -76,7 +76,7 @@ class HomePage extends StatelessWidget {
 
     final List<Widget> pages = [
       const DashboardPage(),
-      TransactionsPage(isActive: nav.selectedIndex == 1),
+      TransactionsPage(),
       const BudgetingPage(),
       ProfilePage(viewModel: profileViewModel,),
     ];

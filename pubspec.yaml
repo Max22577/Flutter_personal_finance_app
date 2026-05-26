@@ -55,6 +55,7 @@ dependencies:
   sliver_tools: ^0.2.12
   http: ^1.6.0
   test: ^1.25.0
+  flutter_dotenv: ^5.1.0
 
 
   # The following adds the Cupertino Icons font to your application.

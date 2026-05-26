@@ -8,9 +8,7 @@ import 'package:personal_fin/models/transaction.dart';
 import 'package:provider/provider.dart';
 
 class TransactionsPage extends StatefulWidget {
-  final bool isActive;
-
-  const TransactionsPage({required this.isActive, super.key});
+  const TransactionsPage({super.key});
 
   @override
   State<TransactionsPage> createState() => _TransactionsPageState();
@@ -79,7 +77,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
-      body: TransactionHistory(isActive: widget.isActive),
+      body: TransactionHistory(),
       floatingActionButton: _AddTransactionFAB(
         onPressed: () => _showTransactionForm(context),
         label: lang.translate('new_transaction'),
