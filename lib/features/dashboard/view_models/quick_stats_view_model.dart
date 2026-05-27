@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/models/transaction.dart';
+import 'package:rxdart/rxdart.dart';
 
-class QuickStatsViewModel extends ChangeNotifier {
-  StreamSubscription? _sub;
+class QuickStatsViewModel {
   final TransactionRepository _repo;
   final ExchangeRateService _exchangeService;
   final CurrencyProvider _currencyProvider;
@@ -17,37 +16,40 @@ class QuickStatsViewModel extends ChangeNotifier {
   double lastMonthExpenses = 0;
   bool isLoading = true;
 
-  QuickStatsViewModel(this._repo, this._exchangeService, this._currencyProvider) {
-    _sub = _repo.transactionsStream.listen((transactions) {
-      _calculate(transactions, _currencyProvider.currentCurrency);
-      isLoading = false;
-      notifyListeners();
-    });
+  QuickStatsViewModel(this._repo, this._exchangeService, this._currencyProvider); 
+
+  Stream<QuickStatsData> get statsStream {
+    return Rx.combineLatest2(
+      _repo.transactionsStream,
+      _currencyProvider.currencyStream,
+      (transactions, currencyCode) {
+        return _calculate(transactions, currencyCode);
+      },
+    );
   }
 
-  void _calculate(List<Transaction> transactions, String currencyCode) {
+  QuickStatsData _calculate(List<Transaction> transactions, String currencyCode) {
     final now = DateTime.now();
     final current = DateTime(now.year, now.month);
     final last = DateTime(now.year, now.month - 1);
 
-    // Reset values before recalculating
-    currentMonthIncome = 0; currentMonthExpenses = 0;
-    lastMonthIncome = 0; lastMonthExpenses = 0;
+    double cInc = 0, cExp = 0, lInc = 0, lExp = 0;
 
     for (final t in transactions) {
       final tMonth = DateTime(t.date.year, t.date.month);
-      final tAmountInTarget = _exchangeService.fromBase(t.baseAmount, currencyCode);
+      final val = _exchangeService.fromBase(t.baseAmount, currencyCode);
+      
       if (tMonth.isAtSameMomentAs(current)) {
-        t.type == 'Income' ? currentMonthIncome += tAmountInTarget : currentMonthExpenses += tAmountInTarget;
+        t.type == 'Income' ? cInc += val : cExp += val;
       } else if (tMonth.isAtSameMomentAs(last)) {
-        t.type == 'Income' ? lastMonthIncome += tAmountInTarget : lastMonthExpenses += tAmountInTarget;
+        t.type == 'Income' ? lInc += val : lExp += val;
       }
     }
+    return QuickStatsData(cInc, cExp, lInc, lExp);
   }
+}
 
-  @override
-  void dispose() {
-    _sub?.cancel();
-    super.dispose();
-  }
+class QuickStatsData {
+  final double cInc, cExp, lInc, lExp;
+  QuickStatsData(this.cInc, this.cExp, this.lInc, this.lExp);
 }

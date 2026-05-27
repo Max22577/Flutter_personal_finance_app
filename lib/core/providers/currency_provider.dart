@@ -6,9 +6,9 @@ import 'package:rxdart/rxdart.dart';
 
 class CurrencyProvider extends ChangeNotifier {
   final PreferencesService _prefs = PreferencesService();
-  String _currentCurrency = 'KSH';
+  String _currentCurrency = 'KES';
 
-  final _currencySubject = BehaviorSubject<String>.seeded('KSH');
+  final _currencySubject = BehaviorSubject<String>.seeded('KES');
 
   String get currentCurrency => _currentCurrency;
   Stream<String> get currencyStream => _currencySubject.stream;
@@ -16,7 +16,12 @@ class CurrencyProvider extends ChangeNotifier {
 
   // Initialize and load from storage
   Future<void> init() async {
-    final savedCurrency = await _prefs.getCurrency();
+    String? savedCurrency = await _prefs.getCurrency();
+
+    if (savedCurrency == 'KSH') {
+      savedCurrency = 'KES';
+      await _prefs.setCurrency('KES'); 
+    }
     _currentCurrency = savedCurrency; 
     _currencySubject.add(_currentCurrency);
     notifyListeners();

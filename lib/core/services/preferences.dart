@@ -15,7 +15,7 @@ class PreferencesService {
   // Currency
   Future<String> getCurrency() async {
     final prefs = await _prefs;
-    return prefs.getString(_currencyKey) ?? 'KSH';
+    return prefs.getString(_currencyKey) ?? 'KES';
   }
 
   Future<void> setCurrency(String currencyCode) async {

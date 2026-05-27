@@ -1,79 +1,55 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
+import 'package:personal_fin/features/dashboard/views/widgets/recent_transactions/transaction_display.dart';
 import 'package:personal_fin/models/transaction.dart';
+import 'package:rxdart/rxdart.dart';
 
-class RecentTransactionsViewModel extends ChangeNotifier {
+class RecentTransactionsViewModel {
   final TransactionRepository _repo;
   final CategoryRepository _catRepo;
+  final CurrencyProvider _currencyProvider;
+  final ExchangeRateService _exchangeService;
   final int _maxItems;
-  StreamSubscription? _sub;
 
-  List<Transaction> _recentTransactions = [];
-  List<Transaction> get recentTransactions => _recentTransactions;
-  final Map<String, String> _categoryNames = {};
+  RecentTransactionsViewModel({
+    required TransactionRepository repo,
+    required CategoryRepository catRepo,
+    required CurrencyProvider currencyProvider,
+    required ExchangeRateService exchangeService,
+    int maxItems = 5,
+  })  : _repo = repo,
+        _catRepo = catRepo,
+        _currencyProvider = currencyProvider,
+        _exchangeService = exchangeService,
+        _maxItems = maxItems;
 
-  bool _isLoading = true;
-  bool get isLoading => _isLoading;
+  // The single reactive source of truth
+  Stream<List<TransactionDisplay>> get recentTransactionsStream {
+    return Rx.combineLatest3(
+      _repo.transactionsStream,
+      _currencyProvider.currencyStream,
+      _catRepo.allCategoriesStream, 
+      (transactions, currencyCode, categories) {
+        // Create a fast lookup map
+        final catMap = {for (var c in categories) c.id: c.name};
 
-  String? _errorMessage; 
-  String? get errorMessage => _errorMessage;
+        final sortedList = List<Transaction>.from(transactions)
+        ..sort((a, b) => b.date.compareTo(a.date));
 
-  String getCategoryName(String id) => _categoryNames[id] ?? 'Loading...';
-
-  RecentTransactionsViewModel({required TransactionRepository repo, required CategoryRepository catRepo, int maxItems = 5}) 
-      : _repo = repo, _catRepo = catRepo, _maxItems = maxItems {
-    _init();
-  }
-
-  void _init() {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    _sub?.cancel();
-    _sub = _repo.transactionsStream.listen((transactions) async {
-      try {
-        final sorted = List<Transaction>.from(transactions)
-          ..sort((a, b) => b.date.compareTo(a.date));
-        
-        _recentTransactions = sorted.take(_maxItems).toList();
-        await _fetchCategoryNames();
-        
-        _isLoading = false;
-        _errorMessage = null;
-        notifyListeners();
-      } catch (e) {
-        _handleError("Failed to process transactions");
-      }
-    }, onError: (e) {
-      _handleError("Connection to transactions lost");
-    });
-  }
-
-  void _handleError(String message) {
-    _isLoading = false;
-    _errorMessage = message;
-    notifyListeners();
-  }
-
-  void retry() => _init();
-
-  Future<void> _fetchCategoryNames() async {
-    final ids = _recentTransactions.map((tx) => tx.categoryId).toSet();
-
-    for (final id in ids) {
-      if (!_categoryNames.containsKey(id)) {
-        final name = _catRepo.getNameByIdSync(id);
-        _categoryNames[id] = name;
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _sub?.cancel();
-    super.dispose();
+        return sortedList
+            .take(_maxItems)
+            .map((tx) {
+              final convertedAmount = _exchangeService.fromBase(tx.baseAmount, currencyCode);
+              return TransactionDisplay(
+                tx.copyWith(amount: convertedAmount),
+                catMap[tx.categoryId] ?? 'General',
+              );
+            })
+            .toList();
+      },
+    );
   }
 }

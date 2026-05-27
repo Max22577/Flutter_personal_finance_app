@@ -113,11 +113,7 @@ class BudgetingViewModel extends ChangeNotifier {
     await Future.delayed(const Duration(milliseconds: 800));
     
     // Re-sync the date to the repositories to trigger a fresh stream emission
-    _syncDateToRepos();
-    
-    // If you have specific refresh logic in repos, call it here
-    // await _budgetRepo.refresh();
-    
+    _syncDateToRepos();   
     notifyListeners();
   }
 }

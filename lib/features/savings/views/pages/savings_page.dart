@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
-import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/shared_widgets/animated_empty_state.dart';
 import 'package:personal_fin/core/shared_widgets/custom_appbar.dart';
 import 'package:personal_fin/core/shared_widgets/empty_state.dart';
@@ -19,12 +17,11 @@ class SavingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
+    return Provider(
       create: (context) => SavingsViewModel(
         context.read<SavingsRepository>(),
-        context.read<ExchangeRateService>(),
-        context.read<CurrencyProvider>()
       ),
+      dispose: (_, vm) => vm.dispose(),
       child: const SavingsViewContent(),
     );
   }
@@ -50,7 +47,7 @@ class SavingsViewContent extends StatelessWidget {
                 title: lang.translate('failed_to_load_goals'),
                 message: snapshot.error.toString(),
                 actionText: lang.translate('retry'),
-                onAction: vm.refresh, // Re-triggers the stream
+                onAction: vm.retry, // Re-triggers the stream
               ),
             ),
           );
@@ -119,33 +116,30 @@ class _SavingsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
     
-    return RefreshIndicator(
-      onRefresh: vm.refresh,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: BouncingScrollPhysics(),
-        ),
-        children: [
-          // Pass the state to the stat card for pre-calculated numbers
-          SavingsStatCard(state: state), 
-          
-          const SizedBox(height: 24),
-          Text(
-            lang.translate('your_goals'),
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: 16),
-          
-          // Render the list from state
-          ...state.goals.map((goal) => _GoalListItem(goal: goal)),
-          
-          // Added spacing for FAB
-          const SizedBox(height: 80), 
-        ],
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
       ),
+      children: [
+        // Pass the state to the stat card for pre-calculated numbers
+        SavingsStatCard(state: state), 
+        
+        const SizedBox(height: 24),
+        Text(
+          lang.translate('your_goals'),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 16),
+        
+        // Render the list from state
+        ...state.goals.map((goal) => _GoalListItem(goal: goal)),
+        
+        // Added spacing for FAB
+        const SizedBox(height: 80), 
+      ],      
     );
   }
 }

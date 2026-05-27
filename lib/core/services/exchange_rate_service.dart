@@ -74,7 +74,10 @@ class ExchangeRateService extends ChangeNotifier {
     if (toCode == baseCurrencyCode) return amountInBase;
     
     final rate = _cachedRates[toCode]?.rateToBase;
-    if (rate == null) return amountInBase;
+    if (rate == null){ 
+      debugPrint("CRITICAL ERROR: No exchange rate found for currency: $toCode");
+      return amountInBase;
+    }
     
     return amountInBase * rate;
   }

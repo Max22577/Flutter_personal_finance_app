@@ -1,43 +1,16 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import '../../../models/monthly_data.dart';
 
-class DashboardViewModel extends ChangeNotifier {
+class DashboardViewModel  {
   final MonthlyDataRepository _repo;
-  StreamSubscription? _sub;
 
   MonthlyData? currentMonthData;
   MonthlyData? previousMonthData;
   bool isLoading = true;
   String? errorMessage;
 
-  DashboardViewModel(this._repo) {
-    _sub = _repo.comparisonStream.listen(
-      (data) {
-        currentMonthData = data['current'];
-        previousMonthData = data['previous'];
-        isLoading = false;
-        notifyListeners();
-      },
-      onError: (e) {
-        errorMessage = e.toString();
-        isLoading = false;
-        notifyListeners();
-      },
-    );
-  }
+  DashboardViewModel(this._repo);
 
-  Future<void> retry() async {
-    isLoading = true;
-    errorMessage = null;
-    notifyListeners();
-  
-  }
-
-  @override
-  void dispose() {
-    _sub?.cancel();
-    super.dispose();
-  }
+  Stream<Map<String, MonthlyData?>> get monthlyDataStream => _repo.comparisonStream;
 }

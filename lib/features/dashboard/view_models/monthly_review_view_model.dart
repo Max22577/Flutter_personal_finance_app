@@ -1,17 +1,14 @@
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/models/monthly_data.dart';
+import 'package:rxdart/rxdart.dart';
 
-class MonthlyReviewViewModel extends ChangeNotifier {
+class MonthlyReviewViewModel {
   final MonthlyDataRepository _repo;
   final CurrencyProvider _currencyProvider;
   
   MonthlyReviewViewModel(this._repo, this._currencyProvider);
-
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
@@ -48,20 +45,10 @@ class MonthlyReviewViewModel extends ChangeNotifier {
     return topThree;
   }
 
-  Future<void> loadData(DateTime month) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+  Stream<List<MonthlyData>> getReviewDataStream(DateTime month) {
+    return _currencyProvider.currencyStream.switchMap((currencyCode) {
 
-    try {
-      final results = await _repo.getReviewData(month, _currencyProvider.currentCurrency);
-      _currentMonthData = results[0];
-      _previousMonthData = results[1];
-    } catch (e) {
-      _errorMessage = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+      return Stream.fromFuture(_repo.getReviewData(month, currencyCode));
+    });
   }
 }

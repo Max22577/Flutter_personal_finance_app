@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/shared_widgets/error_state.dart';
 import 'package:personal_fin/core/utils/app_feedback.dart';
 import 'package:personal_fin/core/shared_widgets/animated_empty_state.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
-import 'package:personal_fin/features/transactions/views/widgets/transaction_history/state/error_state.dart';
 import 'package:personal_fin/features/transactions/views/widgets/transaction_history/transaction_group.dart';
 import 'package:personal_fin/features/transactions/view_models/transactions_view_model.dart';
 import 'package:personal_fin/models/transaction.dart';
@@ -22,7 +22,11 @@ class TransactionHistory extends StatelessWidget {
       stream: vm.localizedTransactionsStream, 
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return ErrorState(message: snapshot.error.toString());
+          return ErrorState(
+            message: snapshot.error.toString(),
+            actionText: lang.translate('retry'),
+            onRetry: vm.retry 
+          );
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {

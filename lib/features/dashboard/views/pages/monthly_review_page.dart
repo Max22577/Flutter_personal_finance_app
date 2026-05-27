@@ -24,11 +24,11 @@ class MonthlyReviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final targetMonth = month ?? DateTime.now();
 
-    return ChangeNotifierProvider<MonthlyReviewViewModel>(
+    return Provider<MonthlyReviewViewModel>(
       create: (context) => MonthlyReviewViewModel(
         context.read<MonthlyDataRepository>(),
         context.read<CurrencyProvider>(),
-      )..loadData(targetMonth),
+      ),
       child: _MonthlyReviewScaffold(targetMonth: targetMonth),
     );
   }
@@ -62,50 +62,46 @@ class _MonthlyReviewBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<MonthlyReviewViewModel>();
+    final vm = context.read<MonthlyReviewViewModel>();
 
-    if (vm.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+  return StreamBuilder<List<MonthlyData>>(
+    stream: vm.getReviewDataStream(targetMonth),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      
+      if (snapshot.hasError) {
+        return _ErrorStateView(message: snapshot.error.toString(), onRetry: () { /* ... */ });
+      }
 
-    if (vm.errorMessage != null) {
-      return _ErrorStateView(
-        message: vm.errorMessage!,
-        onRetry: () => vm.loadData(targetMonth),
-      );
-    }
+      final data = snapshot.data;
+      if (data == null || data.isEmpty) return const Center(child: Text("No data"));
 
-    if (vm.currentMonthData == null) {
-      return const Center(
-        child: Text("No data found for this month"),
-      );
-    }
+      const baseDuration = Duration(milliseconds: 600);
+      const baseCurve = Curves.easeOutQuint;
 
-    const baseDuration = Duration(milliseconds: 600);
-    const baseCurve = Curves.easeOutQuint;
-
-    return RefreshIndicator(
-      onRefresh: () => vm.loadData(targetMonth),
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FadeInUp(
-              duration: baseDuration,
-              curve: baseCurve,
-              child: MonthlyReview(
-                monthlyData: vm.currentMonthData!,
-                previousMonthData: vm.previousMonthData,
-                onTap: () => _showMonthlyDetails(context, vm.currentMonthData!),
+      return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FadeInUp(
+                duration: baseDuration,
+                curve: baseCurve,
+                child: MonthlyReview(
+                  monthlyData: data[0],
+                  previousMonthData: data[1],
+                  onTap: () => _showMonthlyDetails(context, data[0]),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            const _AdditionalInsightsSection(),
-          ],
-        ),
-      ),
+              const SizedBox(height: 24),
+              const _AdditionalInsightsSection(),
+            ],
+          ),
+        );
+      }
     );
   }
 
