@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/date_format_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/shared_widgets/circular_icon_badge.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:provider/provider.dart';
@@ -39,14 +41,12 @@ class TransactionItem extends StatelessWidget {
     final textTheme = theme.textTheme;
     final financialColors = theme.extension<FinancialColors>() ?? FinancialColors(income: Colors.green, expense: Colors.red);
     final lang = context.watch<LanguageProvider>();
+    final dateFormatter = context.watch<DateFormatProvider>();
 
     final textScaler = MediaQuery.textScalerOf(context);
    
     final isIncome = transaction.type == 'Income';
     final iconColor = isIncome ? financialColors.income : financialColors.expense;
-    final bgColor = isIncome ? 
-        financialColors.income.withValues(alpha: 0.1) : 
-        financialColors.expense.withValues(alpha: 0.1);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -68,7 +68,11 @@ class TransactionItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Icon - Fixed size
-                _buildIcon(bgColor, iconColor, isIncome, textScaler),
+                CircularIconBadge(
+                  icon: isIncome ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                  color: iconColor,
+                  textScaler: textScaler,
+                ),
                 const SizedBox(width: 12),
 
                 // Title and details - Takes remaining space
@@ -87,7 +91,7 @@ class TransactionItem extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      _buildDetails(context, lang, textScaler),
+                      _buildDetails(context, lang, textScaler, dateFormatter),
                     ],
                   ),
                 ),
@@ -131,23 +135,7 @@ class TransactionItem extends StatelessWidget {
     );
   }
 
-  Widget _buildIcon(Color bgColor, Color iconColor, bool isIncome, TextScaler textScaler) {
-    final size = textScaler.scale(32).clamp(32.0, 48.0);
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
-      child: Icon(
-        isIncome ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-        color: iconColor,
-        size: textScaler.scale(20),
-      ),
-    );
-  }
-
-  
-
-  Widget _buildDetails(BuildContext context, LanguageProvider lang, TextScaler textScaler) {
+  Widget _buildDetails(BuildContext context, LanguageProvider lang, TextScaler textScaler, DateFormatProvider dateFormatter ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     
@@ -171,17 +159,12 @@ class TransactionItem extends StatelessWidget {
           ),
         if (showDate || showTime)
           Text(
-            _formatDate(),
+            dateFormatter.format(transaction.date, lang.localeCode),
             style: theme.textTheme.bodySmall?.copyWith(
               color: colors.onSurface.withValues(alpha: 0.6),
             ),
           ),
       ],
     );
-  }
-
-  String _formatDate() {
-    // Simplified for example
-    return "${transaction.date.day}/${transaction.date.month}";
   }
 }

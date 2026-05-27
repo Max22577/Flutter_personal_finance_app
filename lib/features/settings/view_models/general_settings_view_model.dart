@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/providers/date_format_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/services/preferences.dart';
 import 'package:provider/provider.dart';
@@ -73,7 +74,18 @@ class GeneralSettingsViewModel extends ChangeNotifier {
       await context.read<LanguageProvider>().updateLanguage(langName);
     }
     
-    notifyListeners(); // Refresh the UI
+    notifyListeners(); 
+  }
+
+  Future<void> updateDateFormat(BuildContext context, String newPattern) async {
+    dateFormat = newPattern;
+    await _prefs.setDateFormat(newPattern);
+    
+    if (context.mounted) {
+      await context.read<DateFormatProvider>().updateDateFormat(newPattern);
+    }
+    
+    notifyListeners();
   }
 
   Future<void> resetAll() async {

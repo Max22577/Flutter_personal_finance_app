@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:personal_fin/core/providers/date_format_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/features/transactions/views/widgets/transaction_form.dart';
 import 'package:personal_fin/models/transaction.dart';
@@ -28,14 +28,14 @@ class TransactionGroupWidget extends StatelessWidget {
     return lang.translate('uncategorized');
   }
 
-  String _formatDateHeader(LanguageProvider lang) {
+  String _formatDateHeader(LanguageProvider lang, DateFormatProvider dateFormatter) {
     final today = DateTime.now();
     final yesterday = today.subtract(const Duration(days: 1));
     
     if (_isSameDay(date, today)) return lang.translate('today');
     if (_isSameDay(date, yesterday)) return lang.translate('yesterday');
     
-    return DateFormat('EEEE, MMMM d', lang.localeCode).format(date);
+    return dateFormatter.format(date, lang.localeCode);
   }
 
   bool _isSameDay(DateTime a, DateTime b) {
@@ -65,6 +65,7 @@ class TransactionGroupWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final lang = context.read<LanguageProvider>();
+    final dateFormatter = context.watch<DateFormatProvider>();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,7 +74,7 @@ class TransactionGroupWidget extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
-            _formatDateHeader(lang),
+            _formatDateHeader(lang, dateFormatter),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),

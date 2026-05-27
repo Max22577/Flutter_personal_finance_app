@@ -20,21 +20,21 @@ class BudgetRepository {
   String get budgetsCollectionPath => FirestorePath.budgets(uid);
 
   // TRIGGER: Call this when the user changes the date in the UI
-  void updateMonthYear(String monthYear) => _monthYearController.add(monthYear);
+  void updateMonthYear(String monthKey) => _monthYearController.add(monthKey);
 
   // REACTIVE STREAM
   Stream<List<Budget>> get budgetsStream {
     return Rx.combineLatest2(
       _auth.authStateChanges(),
       _monthYearController.stream,
-      (user, monthYear) => _MonthUser(user?.uid, monthYear),
+      (user, monthKey) => _MonthUser(user?.uid, monthKey),
     ).switchMap((data) {
       if (data.uid == null) return Stream.value([]);
       
       return _service.streamCollection<Budget>(
         collectionPath: budgetsCollectionPath,
         builder: (map) => Budget.fromMap(map),
-        filters: [FieldFilter('monthYear', FilterOperator.isEqualTo, data.monthYear)],
+        filters: [FieldFilter('monthYear', FilterOperator.isEqualTo, data.monthKey)],
       );
     });
   }
@@ -49,6 +49,6 @@ class BudgetRepository {
 
 class _MonthUser {
   final String? uid;
-  final String monthYear;
-  _MonthUser(this.uid, this.monthYear);
+  final String monthKey;
+  _MonthUser(this.uid, this.monthKey);
 }

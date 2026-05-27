@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 class BudgetEditViewModel extends ChangeNotifier {
-  final Future<void> Function(String, double, String) onSave;
+  final Future<void> Function(String, double, DateTime) onSave;
   final String categoryId;
-  final String monthYear;
+  final DateTime selectedDate;
 
   BudgetEditViewModel({
     required this.onSave,
     required this.categoryId,
-    required this.monthYear,
+    required this.selectedDate,
   });
 
   bool _isSaving = false;
@@ -22,7 +22,7 @@ class BudgetEditViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await onSave(categoryId, amount, monthYear);
+      await onSave(categoryId, amount, selectedDate);
       return true;
     } catch (e) {
       debugPrint('Error saving budget: $e');
