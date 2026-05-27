@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:personal_fin/core/firestore/constants/firestore_path.dart';
 import 'package:personal_fin/core/firestore/network/query_options.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/services/i_firestore_service.dart';
@@ -14,6 +15,7 @@ class SavingsRepository {
   final IFirestoreService _service;
   final TransactionRepository _txRepo;
   final ExchangeRateService _exchangeService;
+  final CurrencyProvider _currencyProvider;
   final FirebaseAuth _auth;
 
   SavingsRepository(
@@ -21,9 +23,11 @@ class SavingsRepository {
     required IFirestoreService service,
     required ExchangeRateService exchangeService,
     required FirebaseAuth auth,
+    required CurrencyProvider currencyProvider,
   })  : _service = service,
         _exchangeService = exchangeService,
-        _auth = auth;
+        _auth = auth,
+        _currencyProvider = currencyProvider;
 
 
   String get goalsCollectionPath => FirestorePath.savingsGoals(currentUid);
@@ -34,12 +38,23 @@ class SavingsRepository {
     return _auth.authStateChanges().switchMap((user) {
       if (user == null) return Stream.value([]);
 
-      return _service.streamCollection<SavingsGoal>(
-        collectionPath: goalsCollectionPath,
-        builder: (map) => SavingsGoal.fromMap(map), 
-        orderBy: [
-          OrderByOption('deadline', descending: false),
-        ],
+      // Combine the Firestore stream with the currency stream
+      return Rx.combineLatest2(
+        _service.streamCollection<SavingsGoal>(
+          collectionPath: goalsCollectionPath,
+          builder: (map) => SavingsGoal.fromMap(map),
+          orderBy: [OrderByOption('deadline', descending: false)],
+        ),
+        _currencyProvider.currencyStream,
+        (List<SavingsGoal> goals, String currencyCode) {
+          // Map the goals to update their amounts based on the new currency
+          return goals.map((goal) {
+            return goal.copyWith(
+              currentAmount: _exchangeService.fromBase(goal.currentBaseAmount, currencyCode),
+              targetAmount: _exchangeService.fromBase(goal.targetBaseAmount, currencyCode),
+            );
+          }).toList();
+        },
       );
     });
   }

@@ -83,7 +83,7 @@ class Currency {
       locale: 'zh_CN',
     ),
     Currency(
-      code: 'KSh',
+      code: 'KES',
       symbol: 'KSh',
       name: 'Kenyan Shilling',
       flag: '🇰🇪',

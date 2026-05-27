@@ -57,12 +57,14 @@ class AppProviders {
         auth: FirebaseAuth.instance,
       ),
     ),
-     ProxyProvider3<TransactionRepository, IFirestoreService, ExchangeRateService, SavingsRepository>(
-      update: (_, txRepo, service, exchangeService, _) => SavingsRepository(
+     ProxyProvider4<TransactionRepository, IFirestoreService, ExchangeRateService, CurrencyProvider, SavingsRepository>(
+      update: (_, txRepo, service, exchangeService, currencyProvider, _) => SavingsRepository(
         txRepo,
         service: service,
         exchangeService: exchangeService,
-        auth: FirebaseAuth.instance, 
+        auth: FirebaseAuth.instance,
+        currencyProvider: currencyProvider,
+
       ),
     ),
     ProxyProvider3<TransactionRepository, SavingsRepository, IFirestoreService, SavingsService>(
@@ -83,7 +85,7 @@ class AppProviders {
     ChangeNotifierProvider(
       create: (context) => SignInViewModel() 
     ),
-    ChangeNotifierProvider(
+    Provider(
       create: (context) => DashboardViewModel(
         context.read<MonthlyDataRepository>(), 
       ),
@@ -110,11 +112,9 @@ class AppProviders {
         currencyStream: context.read<CurrencyProvider>().currencyStream,
       )
     ),
-    ChangeNotifierProvider(
+    Provider(
       create: (context) => SavingsViewModel(
         context.read<SavingsRepository>(),
-        context.read<ExchangeRateService>(),
-        context.read<CurrencyProvider>(),
       )
     ),
   ];

@@ -17,8 +17,8 @@ class ProgressChartWidget extends StatelessWidget {
     final colors = theme.colorScheme;
     final lang = context.watch<LanguageProvider>();
 
-    final percentage = goal.targetBaseAmount > 0 
-        ? (goal.currentBaseAmount / goal.targetBaseAmount).clamp(0.0, 1.0) 
+    final percentage = goal.targetAmount > 0 
+        ? (goal.currentAmount / goal.targetAmount).clamp(0.0, 1.0) 
         : 0.0;
 
     return Container(
@@ -109,7 +109,7 @@ class _DoughnutChart extends StatelessWidget {
               startDegreeOffset: -90,
               sections: [
                 PieChartSectionData(
-                  value: goal.currentBaseAmount <= 0 ? 0.01 : goal.currentBaseAmount,
+                  value: goal.currentAmount <= 0 ? 0.01 : goal.currentAmount,
                   gradient: LinearGradient(
                     colors: [colors.primary, colors.secondary],
                     begin: Alignment.bottomLeft,
@@ -119,7 +119,7 @@ class _DoughnutChart extends StatelessWidget {
                   showTitle: false,
                 ),
                 PieChartSectionData(
-                  value: (goal.targetBaseAmount - goal.currentBaseAmount).clamp(0.001, double.infinity),
+                  value: (goal.targetAmount - goal.currentAmount).clamp(0.001, double.infinity),
                   color: colors.primary.withValues(alpha: 0.15),
                   radius: 16,
                   showTitle: false,
@@ -182,13 +182,13 @@ class _ChartLegend extends StatelessWidget {
         const SizedBox(height: 12),
         _LegendItem(
           label: lang.translate('saved'),
-          value: goal.currentBaseAmount,
+          value: goal.currentAmount,
           color: colors.primary,
         ),
         const SizedBox(height: 12),
         _LegendItem(
           label: lang.translate('remaining'),
-          value: (goal.targetBaseAmount - goal.currentBaseAmount).clamp(0, double.infinity),
+          value: (goal.targetAmount - goal.currentAmount).clamp(0, double.infinity),
           color: colors.primary.withValues(alpha: 0.15),
         ),
         const SizedBox(height: 20),

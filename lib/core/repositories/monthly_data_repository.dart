@@ -25,19 +25,30 @@ class MonthlyDataRepository {
   String get transactionsCollectionPath => FirestorePath.transactions(currentUid);
 
   Stream<Map<String, MonthlyData>> get comparisonStream {
-    return _auth.authStateChanges().switchMap((user) {
-      if (user == null) return Stream.value({'current': MonthlyData.empty(), 'previous': MonthlyData.empty()});
+    return Rx.combineLatest2(
+      _auth.authStateChanges(),
+      _currencyProvider.currencyStream,
+      (user, currencyCode) => (user, currencyCode),
+    ).switchMap((tuple) {
+      final user = tuple.$1;
+      final currencyCode = tuple.$2;
+
+      if (user == null) {
+        return Stream.value({
+          'current': MonthlyData.empty(),
+          'previous': MonthlyData.empty()
+        });
+      }
 
       final now = DateTime.now();
       final currentMonth = DateTime(now.year, now.month);
       final prevMonth = DateTime(now.year, now.month - 1);
-      final currencyCode = _currencyProvider.currentCurrency;
 
       return Rx.combineLatest2(
         streamMonthlyData(currentMonth, currencyCode),
         streamMonthlyData(prevMonth, currencyCode),
         (current, previous) => {'current': current, 'previous': previous},
-      ).startWith({});
+      );
     });
   }
 

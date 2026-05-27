@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
-import 'package:personal_fin/core/shared_widgets/empty_state.dart';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
+import 'package:personal_fin/features/dashboard/views/widgets/recent_transactions/transaction_display.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/recent_transactions/transaction_item.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/recent_transactions_view_model.dart';
@@ -19,23 +21,24 @@ class RecentTransactions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textScaler = MediaQuery.textScalerOf(context);
+    final theme = Theme.of(context);
+    final lang = context.watch<LanguageProvider>();
 
-    return ChangeNotifierProvider(
-      create: (context) => RecentTransactionsViewModel(       
+    return Provider(
+      create: (context) => RecentTransactionsViewModel(
         repo: context.read<TransactionRepository>(),
         catRepo: context.read<CategoryRepository>(),
+        currencyProvider: context.read<CurrencyProvider>(),
+        exchangeService: context.read<ExchangeRateService>(),
         maxItems: maxItems,
       ),
-      child: Consumer<RecentTransactionsViewModel>(
-        builder: (context, vm, _) {
-          final theme = Theme.of(context);
-          final lang = context.watch<LanguageProvider>();
+      child: Builder(
+        builder: (context) {
+          final vm = context.read<RecentTransactionsViewModel>();
 
           return Card(
             elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22.0),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.0)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -44,6 +47,7 @@ class RecentTransactions extends StatelessWidget {
                 children: [
                   _buildHeader(theme, lang, textScaler),
                   const SizedBox(height: 12),
+                  // 2. The StreamBuilder now handles all loading/error/data states
                   _buildContent(vm, theme, lang, textScaler),
                   const SizedBox(height: 8),
                 ],
@@ -82,34 +86,26 @@ class RecentTransactions extends StatelessWidget {
   }
 
   Widget _buildContent(RecentTransactionsViewModel vm, ThemeData theme, LanguageProvider lang, TextScaler textScaler) {
-    if (vm.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    return StreamBuilder<List<TransactionDisplay>>(
+      stream: vm.recentTransactionsStream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const CircularProgressIndicator();
+        
+        final displayList = snapshot.data!;
 
-    if (vm.errorMessage != null) {
-      return Center(
-        child: EmptyState(
-          icon: Icons.error_outline,
-          title: lang.translate('error_loading'),
-          message: vm.errorMessage!,
-          actionText: lang.translate('retry'),
-          onAction: () => vm.retry(), 
-        ),
-      );
-    }
-
-    if (vm.recentTransactions.isEmpty) {
-      return _buildEmptyState(theme, lang, textScaler);
-    }
-
-    return Column(
-      children: vm.recentTransactions.map((tx) => TransactionItem(
-        transaction: tx,
-        categoryName: vm.getCategoryName(tx.categoryId),
-        showDate: true,
-        showCategory: true,
-        showTime: false,
-      )).toList(),
+        if (displayList.isEmpty) {
+          return _buildEmptyState(theme, lang, textScaler);
+        }
+        
+        return Column(
+          children: displayList.map((item) => TransactionItem(
+            transaction: item.tx, 
+            categoryName: item.categoryName, 
+            showDate: true,
+            showCategory: true,
+          )).toList(),
+        );
+      },
     );
   }
 

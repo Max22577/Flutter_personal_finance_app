@@ -8,8 +8,8 @@ import 'package:personal_fin/features/dashboard/views/widgets/monthly_review.dar
 import 'package:personal_fin/features/dashboard/view_models/dashboard_view_model.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/quick_stats.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/recent_transactions.dart';
+import 'package:personal_fin/models/monthly_data.dart';
 import 'package:provider/provider.dart';
-import 'monthly_review_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -23,9 +23,6 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     
-    // Add the callback to the end of the frame lifecycle.
-    // This ensures that the Providers are fully built and 
-    // the context is ready to be used.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<RateSyncProvider>().syncRates();
     });
@@ -83,36 +80,46 @@ class _DashboardMonthlyReviewSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
+    final vm = context.read<DashboardViewModel>();
 
-    return Consumer<DashboardViewModel>(
-      builder: (context, vm, child) {
-        if (vm.isLoading) {
+    return StreamBuilder<Map<String, MonthlyData?>>(
+      stream: vm.monthlyDataStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: LoadingState());
         }
 
-        if (vm.errorMessage != null || vm.currentMonthData == null) {
+        if (snapshot.hasError) {
           return Center(
             child: EmptyState(
               icon: Icons.error_outline,
               title: lang.translate('error_loading_monthly_data'),
-              message: vm.errorMessage ?? 'Unknown error',
+              message: snapshot.error.toString(),
               actionText: lang.translate('retry'),
-              onAction: () => vm.retry(),
+              onAction: () { /* Add your trigger to refresh the repo stream if needed */ },
             ),
           );
         }
 
-        return MonthlyReview(
-          monthlyData: vm.currentMonthData!,
-          previousMonthData: vm.previousMonthData,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => MonthlyReviewPage(
-                month: DateTime.now(),
-                customTitle: lang.translate('this_month'),
-              ),
+        final data = snapshot.data;
+        final current = data?['current'];
+
+        if (current == null) {
+          return Center(
+            child: EmptyState(
+              icon: Icons.info_outline,
+              title: lang.translate('no_monthly_data'),
+              message: 'Please ensure you have transactions for the current month to see the review.',
+              actionText: lang.translate('retry'),
+              onAction: () { /* Add your trigger to refresh the repo stream if needed */ },
             ),
-          ),
+          ); 
+        }
+
+        return MonthlyReview(
+          monthlyData: current,
+          previousMonthData: data?['previous'],
+          onTap: () => Navigator.pushNamed(context, '/monthly_review'),
         );
       },
     );

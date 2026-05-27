@@ -19,42 +19,48 @@ class QuickStats extends StatelessWidget {
     // This ensures the PageView container grows as the text inside it grows.
     final adaptiveHeight = textScaler.scale(height);
 
-    return ChangeNotifierProvider(
+    return Provider(
       create: (_) => QuickStatsViewModel(
         context.read<TransactionRepository>(),
         context.read<ExchangeRateService>(),
         context.read<CurrencyProvider>(),
       ),
-      child: Consumer<QuickStatsViewModel>(
-        builder: (context, vm, _) {
-          if (vm.isLoading) return const LoadingState();
-          
-          final lang = context.watch<LanguageProvider>();
+      child: Builder(builder: (context) {
+        final vm = context.read<QuickStatsViewModel>();
+        final lang = context.watch<LanguageProvider>();
 
-          return SizedBox(
-            height: adaptiveHeight,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: PageView(
-                controller: PageController(viewportFraction: 0.9),
-                padEnds: false,
-                children: [
-                  _buildCard(
-                    title: lang.translate('this_month'),
-                    income: vm.currentMonthIncome,
-                    expenses: vm.currentMonthExpenses,
-                  ),
-                  _buildCard(
-                    title: lang.translate('last_month'),
-                    income: vm.lastMonthIncome,
-                    expenses: vm.lastMonthExpenses,
-                  ),
-                ],
+        return StreamBuilder<QuickStatsData>(
+          stream: vm.statsStream,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return const LoadingState();
+            
+            final stats = snapshot.data!;
+
+            return SizedBox(
+              height: adaptiveHeight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: PageView(
+                  controller: PageController(viewportFraction: 0.9),
+                  padEnds: false,
+                  children: [
+                    _buildCard(
+                      title: lang.translate('this_month'),
+                      income: stats.cInc,
+                      expenses: stats.cExp,
+                    ),
+                    _buildCard(
+                      title: lang.translate('last_month'),
+                      income: stats.lInc,
+                      expenses: stats.lExp,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
-      ),
+            );
+          },
+        );
+      }),
     );
   }
 
