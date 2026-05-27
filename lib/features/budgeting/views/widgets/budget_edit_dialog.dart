@@ -10,14 +10,14 @@ import '../../view_models/budget_edit_view_model.dart';
 class BudgetEditDialog extends StatefulWidget {
   final Category category;
   final double currentBudget;
-  final String monthYear;
-  final Future<void> Function(String categoryId, double amount, String monthYear) onSave;
+  final DateTime selectedDate;
+  final Future<void> Function(String categoryId, double amount, DateTime selectedDate) onSave;
 
   const BudgetEditDialog({
     super.key,
     required this.category,
     required this.currentBudget,
-    required this.monthYear,
+    required this.selectedDate,
     required this.onSave,
   });
 
@@ -73,7 +73,7 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
       create: (_) => BudgetEditViewModel(
         onSave: widget.onSave,
         categoryId: widget.category.id,
-        monthYear: widget.monthYear,
+        selectedDate: widget.selectedDate,
       ),
       child: AnimatedScalingDialog(
         child: Dialog(

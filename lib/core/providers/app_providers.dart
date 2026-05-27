@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/providers/date_format_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:personal_fin/core/providers/rate_sync_provider.dart';
@@ -30,10 +31,13 @@ class AppProviders {
     ChangeNotifierProvider(
       create: (context) => ExchangeRateService()
     ),
+    
+    // State Providers
     ChangeNotifierProvider(create: (_) => ThemeProvider()),
     ChangeNotifierProvider(create: (_) => NavigationProvider()),
     ChangeNotifierProvider(create: (_) => CurrencyProvider()),
     ChangeNotifierProvider(create: (_) => LanguageProvider()),
+    ChangeNotifierProvider(create: (_) => DateFormatProvider()),
 
     // Repositories 
     ProxyProvider<IFirestoreService, TransactionRepository>(

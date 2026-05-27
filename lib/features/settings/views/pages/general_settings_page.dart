@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/utils/app_feedback.dart';
@@ -140,6 +141,7 @@ class _CustomSettingsTile extends StatelessWidget {
     // Logic for pickers stays here or moves to a mixin/controller
     if (item.id == 'currency') _DialogUtils.currencyPicker(context, vm);
     if (item.id == 'language') _DialogUtils.showLanguagePicker(context, vm);
+    if (item.id == 'date_format') _DialogUtils.showDateFormatPicker(context, vm);
   }
 }
 
@@ -264,6 +266,59 @@ class _DialogUtils {
 
       if (!context.mounted) return;
       AppFeedback.show(messenger, '${lang.translate('lang_changed')} $selected', colors: colors, textTheme: theme.textTheme, isError: false);     
+    }
+  }
+
+  static Future<void> showDateFormatPicker(BuildContext context, GeneralSettingsViewModel vm) async {
+    // Available format pattern keys
+    final formats = ['dd/MM/yyyy', 'MM/dd/yyyy', 'dd MMM yyyy', 'yyyy-MM-dd'];
+    
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final messenger = ScaffoldMessenger.of(context);
+    final lang = context.read<LanguageProvider>();
+    
+    final now = DateTime.now();
+
+    final String? selected = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(lang.translate('select_date_format')),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: formats.length,
+            itemBuilder: (context, index) {
+              final pattern = formats[index];
+              // Render a real preview using the pattern selection and current language configuration
+              final preview = DateFormat(pattern, lang.localeCode).format(now);
+
+              return ListTile(
+                title: Text(pattern),
+                subtitle: Text(preview, style: TextStyle(color: colors.onSurfaceVariant)),
+                trailing: vm.dateFormat == pattern 
+                  ? Icon(Icons.check, color: colors.primary) 
+                  : null,
+                onTap: () => Navigator.pop(context, pattern),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    if (selected != null && selected != vm.dateFormat && context.mounted) {
+      await vm.updateDateFormat(context, selected);
+
+      if (!context.mounted) return;
+      AppFeedback.show(
+        messenger, 
+        '${lang.translate('date_format_changed')}: ${DateFormat(selected, lang.localeCode).format(now)}', 
+        colors: colors, 
+        textTheme: theme.textTheme, 
+        isError: false
+      );     
     }
   }
 

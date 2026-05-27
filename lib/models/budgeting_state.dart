@@ -9,7 +9,7 @@ class BudgetingState {
   final double totalBudget;
   final int activeBudgetsCount;
   final int totalCategoryCount;
-  final String monthYear;
+  final DateTime selectedDate;
   final String currencyCode;
 
   BudgetingState({
@@ -19,7 +19,7 @@ class BudgetingState {
     required this.transactions,
     required this.totalBudget,
     required this.activeBudgetsCount,
-    required this.monthYear,
+    required this.selectedDate,
     required this.totalCategoryCount,
     required this.currencyCode,
   });

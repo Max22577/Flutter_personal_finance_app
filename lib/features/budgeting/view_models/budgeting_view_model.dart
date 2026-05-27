@@ -21,6 +21,8 @@ class BudgetingViewModel extends ChangeNotifier {
   DateTime _selectedDate = DateTime.now();
   DateTime get selectedDate => _selectedDate;
 
+  String get _dbMonthKey => DateFormat('yyyy-MM').format(_selectedDate);
+
   BudgetingViewModel(
     this._budgetRepo, 
     this._txRepo, 
@@ -71,7 +73,7 @@ class BudgetingViewModel extends ChangeNotifier {
       spendingMap: spendingMap,
       totalBudget: totalBudget,
       activeBudgetsCount: budgets.where((b) => b.baseAmount > 0).length,
-      monthYear: DateFormat('MMMM yyyy').format(_selectedDate),
+      selectedDate: _selectedDate,
       totalCategoryCount: filteredCats.length,
       currencyCode: currencyCode,
     );
@@ -86,25 +88,20 @@ class BudgetingViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _syncDateToRepos() {
-    // Ensure we use a consistent format across the app (usually 'MMMM yyyy')
-    final formatted = DateFormat('MMMM yyyy').format(_selectedDate);
-    
-    _budgetRepo.updateMonthYear(formatted);
-
+  void _syncDateToRepos() {    
+    _budgetRepo.updateMonthYear(_dbMonthKey);
   }
 
   Future<void> setBudget(String categoryId, double amount, String currency) async {
-    final formatted = DateFormat('MMMM yyyy').format(_selectedDate);
     final uid = _budgetRepo.uid;
     final budget = Budget(
-      id: '${categoryId}_$formatted', 
+      id: '${categoryId}_$_dbMonthKey', 
       userId: uid,
       categoryId: categoryId,
       amount: amount,
       baseAmount: _exchangeService.toBase(amount, currency),
       currency: currency,
-      monthYear: formatted,
+      monthYear: _dbMonthKey,
     );
     await _budgetRepo.setBudget(budget);
   }

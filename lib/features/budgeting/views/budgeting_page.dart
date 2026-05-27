@@ -249,7 +249,7 @@ class _BudgetListSection extends StatelessWidget {
       builder: (context) => BudgetEditDialog(
         category: category,
         currentBudget: state.budgetMap[category.id] ?? 0.0,
-        monthYear: state.monthYear,
+        selectedDate: state.selectedDate,
         onSave: (id, newAmount, _) => vm.setBudget(id, newAmount, currencyCode),
       ),
     );
