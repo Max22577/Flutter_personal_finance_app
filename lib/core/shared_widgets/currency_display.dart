@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/currency_provider.dart';
 
 class CurrencyDisplay extends StatelessWidget {
-  final double amount; // Expects the ALREADY converted currency amount from your stream
+  final double amount; 
   final TextStyle? style;
   final bool compact;
   final Color? positiveColor;
@@ -44,29 +44,24 @@ class CurrencyDisplay extends StatelessWidget {
 
     // Append dynamic presentation mathematical symbols if requested
     if (showSign) {
-      if (actsAsPositive) formattedAmount = '+$formattedAmount';
-      if (actsAsNegative) formattedAmount = '-$formattedAmount';
+      if (actsAsPositive) formattedAmount = '+ $formattedAmount';
+      if (actsAsNegative) formattedAmount = '- $formattedAmount';
     }
 
-    Color? textColor;
+    Color? dynamicColor;
     if (actsAsPositive) {
-      textColor = positiveColor ?? financialColors?.income ?? Colors.green;
+      dynamicColor = positiveColor ?? financialColors?.income ?? Colors.green;
     } else if (actsAsNegative) {
-      textColor = negativeColor ?? financialColors?.expense ?? Colors.red;
+      dynamicColor = negativeColor ?? financialColors?.expense ?? Colors.red;
     }
 
-    final baseStyle = style?.copyWith(color: textColor) ?? TextStyle(color: textColor);
+    // Last resort: If you want the financial color to ALWAYS win
+    final TextStyle baseStyle = style?.copyWith(color: dynamicColor) ?? TextStyle(color: dynamicColor);
 
-    return Text.rich(
-      TextSpan(
-        children: [         
-          TextSpan(
-            text: formattedAmount,
-            style: baseStyle.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
+    return Text(
+      formattedAmount,
+      style: baseStyle.copyWith(
+        fontWeight: FontWeight.w700,
       ),
     );
   }

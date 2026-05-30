@@ -3,11 +3,11 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/rate_sync_provider.dart';
 import 'package:personal_fin/core/shared_widgets/empty_state.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
-import 'package:personal_fin/features/dashboard/views/widgets/category_pie_chart.dart';
-import 'package:personal_fin/features/dashboard/views/widgets/monthly_review.dart';
+import 'package:personal_fin/features/dashboard/views/widgets/dashboard/category_pie_chart.dart';
 import 'package:personal_fin/features/dashboard/view_models/dashboard_view_model.dart';
-import 'package:personal_fin/features/dashboard/views/widgets/quick_stats.dart';
-import 'package:personal_fin/features/dashboard/views/widgets/recent_transactions.dart';
+import 'package:personal_fin/features/dashboard/views/widgets/monthly_review_summary.dart';
+import 'package:personal_fin/features/dashboard/views/widgets/dashboard/quick_stats.dart';
+import 'package:personal_fin/features/dashboard/views/widgets/dashboard/recent_transactions.dart';
 import 'package:personal_fin/models/monthly_data.dart';
 import 'package:provider/provider.dart';
 
@@ -21,12 +21,12 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
-    super.initState();
-    
+    super.initState();   
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<RateSyncProvider>().syncRates();
     });
   }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -42,32 +42,76 @@ class _DashboardScaffold extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final textScaler = MediaQuery.textScalerOf(context);
 
+    // Safely look up system status bar heights manually
+    final double statusBarHeight = MediaQuery.paddingOf(context).top;
+
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
-      body: SingleChildScrollView(
-        key: const Key('dashboard_main_scroll'),
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.all(textScaler.scale(16)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const _DashboardMonthlyReviewSection(),
-            SizedBox(height: textScaler.scale(16)),
-            const CategoryPieChart(),
-            SizedBox(height: textScaler.scale(16)),
-            const QuickStats(),
-            SizedBox(height: textScaler.scale(24)),
-            RecentTransactions(
-              maxItems: 5,
-              onViewAll: () => Navigator.pushNamed(context, '/transactions'),
-            ),
-            SizedBox(height: textScaler.scale(16)),
-            const _QuickActionsCard(),
-            SizedBox(height: textScaler.scale(120)), // Space for FAB/BottomBar
-          ],
-        ),
-      ),
-      
+      extendBodyBehindAppBar: true,
+      body: SizedBox.expand( 
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final double gradientBackdropHeight = statusBarHeight + kToolbarHeight + textScaler.scale(160);
+
+            return Stack(
+              children: [
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: gradientBackdropHeight + textScaler.scale(20), // Added buffer
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [colors.primary, Color.lerp(colors.primary, colors.secondary, 0.5)!],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ),
+                
+                Positioned.fill(
+                  child: SingleChildScrollView(
+                    key: const Key('dashboard_main_scroll'),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    // Adjust top padding manually to prevent layout overlaps under the appbar
+                    padding: EdgeInsets.fromLTRB(
+                      textScaler.scale(16), 
+                      statusBarHeight + kToolbarHeight + textScaler.scale(8), 
+                      textScaler.scale(16), 
+                      textScaler.scale(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: textScaler.scale(120), 
+                          ),
+                          child: const _DashboardMonthlyReviewSection(),
+                        ),
+                        SizedBox(height: textScaler.scale(24)),
+                        const CategoryPieChart(),
+                        SizedBox(height: textScaler.scale(16)),
+                        const QuickStats(),
+                        SizedBox(height: textScaler.scale(24)),
+                        RecentTransactions(
+                          maxItems: 5,
+                          onViewAll: () => Navigator.pushNamed(context, '/transactions'),
+                        ),
+                        SizedBox(height: textScaler.scale(16)),
+                        const _QuickActionsCard(),
+                        SizedBox(height: textScaler.scale(120)), // Space for FAB/BottomBar
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        )
+      ),    
     );
   }
 }
@@ -81,22 +125,29 @@ class _DashboardMonthlyReviewSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
     final vm = context.read<DashboardViewModel>();
+    final textScaler = MediaQuery.textScalerOf(context);
 
     return StreamBuilder<Map<String, MonthlyData?>>(
       stream: vm.monthlyDataStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: LoadingState());
+          return SizedBox(
+            height: textScaler.scale(150),
+            child: const Center(child: LoadingState()),
+          );
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: EmptyState(
-              icon: Icons.error_outline,
-              title: lang.translate('error_loading_monthly_data'),
-              message: snapshot.error.toString(),
-              actionText: lang.translate('retry'),
-              onAction: () { /* Add your trigger to refresh the repo stream if needed */ },
+          return SizedBox(
+            height: textScaler.scale(160),
+            child: Center(
+              child: EmptyState(
+                icon: Icons.error_outline,
+                title: lang.translate('error_loading_monthly_data'),
+                message: snapshot.error.toString(),
+                actionText: lang.translate('retry'),
+                onAction: () {},
+              ),
             ),
           );
         }
@@ -105,21 +156,25 @@ class _DashboardMonthlyReviewSection extends StatelessWidget {
         final current = data?['current'];
 
         if (current == null) {
-          return Center(
-            child: EmptyState(
-              icon: Icons.info_outline,
-              title: lang.translate('no_monthly_data'),
-              message: 'Please ensure you have transactions for the current month to see the review.',
-              actionText: lang.translate('retry'),
-              onAction: () { /* Add your trigger to refresh the repo stream if needed */ },
+          return SizedBox(
+            height: textScaler.scale(160),
+            child: Center(
+              child: EmptyState(
+                icon: Icons.info_outline,
+                title: lang.translate('no_monthly_data'),
+                message: 'Please ensure you have transactions for the current month.',
+                actionText: lang.translate('retry'),
+                onAction: () {},
+              ),
             ),
-          ); 
+          );
         }
 
-        return MonthlyReview(
+        return MonthlyReviewSummary(
           monthlyData: current,
           previousMonthData: data?['previous'],
           onTap: () => Navigator.pushNamed(context, '/monthly_review'),
+          isDashboard: true,
         );
       },
     );
