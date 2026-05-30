@@ -23,6 +23,7 @@ class MonthlyDataRepository {
     
   String get currentUid => _auth.currentUser?.uid ?? '';
   String get transactionsCollectionPath => FirestorePath.transactions(currentUid);
+  ExchangeRateService get exchangeService => _exchangeService;
 
   Stream<Map<String, MonthlyData>> get comparisonStream {
     return Rx.combineLatest2(
@@ -132,6 +133,18 @@ class MonthlyDataRepository {
       expenses: expenses,
       transactionCount: transactions.length,
       categoryBreakdown: breakdown,
+    );
+  }
+
+  Future<List<Transaction>> getMonthlyDataTransactions(DateTime month, String currencyCode) async {
+    final range = _getDateRange(month);
+    return await _firestoreService.getCollection<Transaction>(
+      collectionPath: transactionsCollectionPath,
+      builder: (map) => Transaction.fromMap(map),
+      filters: [
+        FieldFilter('date', FilterOperator.isGreaterThanOrEqualTo, range.start),
+        FieldFilter('date', FilterOperator.isLessThanOrEqualTo, range.end),
+      ],
     );
   }
 }

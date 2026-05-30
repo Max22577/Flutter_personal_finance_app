@@ -93,6 +93,7 @@ class FinancialColors extends ThemeExtension<FinancialColors> {
 class AppThemes {
   static const TextTheme _baseTextTheme = TextTheme(
     displayMedium: TextStyle(fontSize: 45, fontWeight: FontWeight.bold),
+    headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
     headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
     headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
     titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
@@ -102,6 +103,7 @@ class AppThemes {
     bodyMedium: TextStyle(fontSize: 14, letterSpacing: 0.25),
     bodySmall: TextStyle(fontSize: 12, letterSpacing: 0.4),
     labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.1),
+    labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 0.5),
     labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 0.5),
   );
 

@@ -10,6 +10,7 @@ class NavigationProvider extends ChangeNotifier {
   int get selectedIndex => _selectedIndex;
   List<Widget> get currentActions => _currentActions;
   String get currentTitle => _pageTitlesKeys[_selectedIndex];
+  bool get isCurrentPageOverGradient => _selectedIndex == 0;
 
   void setPage(int index) {
     _selectedIndex = index;
@@ -17,7 +18,6 @@ class NavigationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // This is the key: replace current actions and notify the AppBar
   void setActions(List<Widget> actions) {
     _currentActions = actions;
     notifyListeners();

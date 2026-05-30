@@ -71,7 +71,6 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<HomeViewModel>();
     final nav = context.watch<NavigationProvider>();
-    final lang = context.watch<LanguageProvider>();
     final colors = Theme.of(context).colorScheme;
 
     final List<Widget> pages = [
@@ -83,8 +82,11 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
-      extendBody: true,
-      appBar: const CustomAppBar(isRootNav: true),
+      extendBodyBehindAppBar: nav.isCurrentPageOverGradient,
+      appBar: CustomAppBar(
+        isRootNav: true,
+        isOverGradient: nav.isCurrentPageOverGradient
+      ),
       drawer: AppDrawer(
         onNavigate: (route) => _onNavigate(context, route),
         onLogout: () => _onLogout(context),
@@ -95,12 +97,21 @@ class HomePage extends StatelessWidget {
         index: nav.selectedIndex,
         children: pages,
       ),
-      bottomNavigationBar: _buildBottomBar(context, nav, lang, colors),
+      bottomNavigationBar: const _BottomNavBar(),
     );
   }
 
-  Widget _buildBottomBar(BuildContext context, NavigationProvider nav, LanguageProvider lang, ColorScheme colors) {
-    return Container(
+}
+
+class _BottomNavBar extends StatelessWidget {
+  const _BottomNavBar();
+
+  @override
+  Widget build(BuildContext context) {
+    final nav = context.watch<NavigationProvider>();
+    final lang = context.watch<LanguageProvider>();
+    final colors = Theme.of(context).colorScheme;
+   return Container(
       margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24.0),

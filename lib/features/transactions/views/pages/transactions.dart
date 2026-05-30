@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
-import 'package:personal_fin/core/shared_widgets/raised_floating_action_button.dart';
 import 'package:personal_fin/features/transactions/views/widgets/transaction_form.dart';
 import 'package:personal_fin/features/transactions/views/widgets/transaction_history.dart';
 import 'package:personal_fin/models/transaction.dart';
@@ -82,7 +81,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
         onPressed: () => _showTransactionForm(context),
         label: lang.translate('new_transaction'),
       ),
-      floatingActionButtonLocation: const RaisedFloatingActionButtonLocation(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
