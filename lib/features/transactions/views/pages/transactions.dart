@@ -14,39 +14,21 @@ class TransactionsPage extends StatefulWidget {
 }
 
 class _TransactionsPageState extends State<TransactionsPage> {
-  late NavigationProvider _navProvider;
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initAppBar());
+    _updateAppBar();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _navProvider = context.read<NavigationProvider>();
-    _navProvider.removeListener(_onNavChanged);
-    _navProvider.addListener(_onNavChanged);
-  }
-
-  void _onNavChanged() {
-    if (!mounted) return;
-    if (_navProvider.selectedIndex == 1 && _navProvider.currentActions.isEmpty) {
-      _updateAppBar();
-    }
-  }
-
-  void _initAppBar() {
-    if (mounted && _navProvider.selectedIndex == 1) {
-      _updateAppBar();
-    }
-  }
 
   void _updateAppBar() {
-    _navProvider.setActions([
-      _AppBarAddButton(onPressed: () => _showTransactionForm(context)),
-    ]);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<NavigationProvider>().setActions([
+          _AppBarAddButton(onPressed: () => _showTransactionForm(context)),
+        ]);
+      }
+    });
   }
 
   void _showTransactionForm(BuildContext context, {Transaction? transaction}) {
@@ -61,9 +43,10 @@ class _TransactionsPageState extends State<TransactionsPage> {
 
   @override
   void dispose() {
-    _navProvider.removeListener(_onNavChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _navProvider.setActions([]);
+      if (mounted) {
+        context.read<NavigationProvider>().setActions([]);
+      }
     });
     super.dispose();
   }

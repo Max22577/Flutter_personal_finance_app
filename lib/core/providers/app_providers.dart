@@ -38,32 +38,36 @@ class AppProviders {
     ChangeNotifierProvider(create: (_) => CurrencyProvider()),
     ChangeNotifierProvider(create: (_) => LanguageProvider()),
     ChangeNotifierProvider(create: (_) => DateFormatProvider()),
+    
 
-    // Repositories 
-    ProxyProvider<IFirestoreService, TransactionRepository>(
-      update: (_, service, _) => TransactionRepository(
-        service: service, 
+    // Repositories
+    ProxyProvider<IFirestoreService, CategoryRepository>(
+      update: (_, service, _) => CategoryRepository(service: service, auth: FirebaseAuth.instance),
+    ),
+    ProxyProvider4<CurrencyProvider, CategoryRepository, ExchangeRateService, IFirestoreService, TransactionRepository>(
+      update: (_, currencyProvider, catRepo, exchangeService, service, _) => TransactionRepository(
+        currencyProvider,
+        categoryRepo: catRepo,
+        exchangeService: exchangeService,
+        service: service,
         auth: FirebaseAuth.instance
       ),
     ),
     ProxyProvider<IFirestoreService, BudgetRepository>(
       update: (_, service, _) => BudgetRepository(service: service, auth: FirebaseAuth.instance),
-    ),
-    ProxyProvider<IFirestoreService, CategoryRepository>(
-      update: (_, service, _) => CategoryRepository(service: service, auth: FirebaseAuth.instance),
-    ),
+    ),   
     ProxyProvider4<CategoryRepository, ExchangeRateService, CurrencyProvider, IFirestoreService, MonthlyDataRepository>(
       update: (_, catRepo, exchangeService, currencyProvider, service, _) => MonthlyDataRepository(
-        catRepo,
-        exchangeService,
-        currencyProvider,
+        catRepo: catRepo,
+        exchangeService: exchangeService,
+        currencyProvider: currencyProvider,
         service: service,
         auth: FirebaseAuth.instance,
       ),
     ),
      ProxyProvider4<TransactionRepository, IFirestoreService, ExchangeRateService, CurrencyProvider, SavingsRepository>(
       update: (_, txRepo, service, exchangeService, currencyProvider, _) => SavingsRepository(
-        txRepo,
+        transRepo: txRepo,
         service: service,
         exchangeService: exchangeService,
         auth: FirebaseAuth.instance,
@@ -80,12 +84,12 @@ class AppProviders {
     ),
         
     // ViewModels (ChangeNotifierProviders)
-    ChangeNotifierProvider(create: (context) => HomeViewModel()),
     ChangeNotifierProvider(
       create: (context) => RateSyncProvider(
         exchangeRateService: context.read<ExchangeRateService>(),
       ),
     ),
+    ChangeNotifierProvider(create: (context) => HomeViewModel()),
     ChangeNotifierProvider(
       create: (context) => SignInViewModel() 
     ),
@@ -96,9 +100,9 @@ class AppProviders {
     ),
     ChangeNotifierProvider(
       create: (context) => TransactionViewModel(
-        context.read<TransactionRepository>(),
-        context.read<CategoryRepository>(),
-        context.read<CurrencyProvider>(),
+        txRepo: context.read<TransactionRepository>(),
+        catRepo: context.read<CategoryRepository>(),
+        currencyProvider: context.read<CurrencyProvider>(),
         exchangeService: context.read<ExchangeRateService>(),
       ),
     ),
@@ -109,9 +113,9 @@ class AppProviders {
     ),
     ChangeNotifierProvider(
       create: (context) => BudgetingViewModel(
-        context.read<BudgetRepository>(),
-        context.read<TransactionRepository>(),
-        context.read<CategoryRepository>(),
+        budgetRepo: context.read<BudgetRepository>(),
+        txRepo: context.read<TransactionRepository>(),
+        catRepo: context.read<CategoryRepository>(),
         exchangeService: context.read<ExchangeRateService>(),
         currencyStream: context.read<CurrencyProvider>().currencyStream,
       )

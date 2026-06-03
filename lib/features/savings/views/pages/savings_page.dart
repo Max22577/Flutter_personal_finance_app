@@ -5,7 +5,6 @@ import 'package:personal_fin/core/shared_widgets/animated_empty_state.dart';
 import 'package:personal_fin/core/shared_widgets/custom_appbar.dart';
 import 'package:personal_fin/core/shared_widgets/empty_state.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
-import 'package:personal_fin/features/savings/views/pages/set_goal_page.dart';
 import 'package:personal_fin/features/savings/views/widgets/progress_chart.dart';
 import 'package:personal_fin/features/savings/views/widgets/savings_stat_card.dart';
 import 'package:personal_fin/models/savings.dart';
@@ -104,7 +103,7 @@ class _SavingsAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class _SavingsList extends StatelessWidget {
-  final SavingsState state; // Receive the calculated state
+  final SavingsState state; 
   final SavingsViewModel vm;
   
   const _SavingsList({
@@ -122,22 +121,19 @@ class _SavingsList extends StatelessWidget {
         parent: BouncingScrollPhysics(),
       ),
       children: [
-        // Pass the state to the stat card for pre-calculated numbers
         SavingsStatCard(state: state), 
         
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         Text(
           lang.translate('your_goals'),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
         ),
         const SizedBox(height: 16),
         
-        // Render the list from state
         ...state.goals.map((goal) => _GoalListItem(goal: goal)),
         
-        // Added spacing for FAB
         const SizedBox(height: 80), 
       ],      
     );
@@ -176,14 +172,13 @@ class _AddGoalFAB extends StatelessWidget {
 }
 
 // --- Logic Helpers ---
-
 class _NavigationHelper {
   static void addGoal(BuildContext context) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SetGoalPage()));
+    Navigator.pushNamed(context, '/savings/goal');
   }
 
   static void editGoal(BuildContext context, SavingsGoal goal) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => SetGoalPage(existingGoal: goal)));
+    Navigator.pushNamed(context, '/savings/goal', arguments: goal);
   }
 }
 

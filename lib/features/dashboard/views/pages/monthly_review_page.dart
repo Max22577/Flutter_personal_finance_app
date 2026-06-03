@@ -5,12 +5,14 @@ import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
+import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/shared_widgets/empty_state.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:personal_fin/core/shared_widgets/currency_display.dart';
 import 'package:personal_fin/core/shared_widgets/custom_appbar.dart';
 import 'package:personal_fin/features/dashboard/view_models/monthly_review_view_model.dart';
+import 'package:personal_fin/features/dashboard/views/widgets/monthly_review/category_spending_card.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/monthly_review/monthly_trends_card.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/monthly_review_summary.dart';
 import 'package:personal_fin/models/monthly_data.dart';
@@ -30,6 +32,7 @@ class MonthlyReviewPage extends StatelessWidget {
     return ChangeNotifierProvider<MonthlyReviewViewModel>(
       create: (context) => MonthlyReviewViewModel(
         context.read<MonthlyDataRepository>(),
+        context.read<TransactionRepository>(),
         context.read<CurrencyProvider>(),
         targetMonth,
       ),
@@ -161,6 +164,7 @@ class _MonthlyReviewBody extends StatelessWidget {
                         child: FadeInUp(
                           duration: baseDuration,
                           curve: baseCurve,
+                          delay: const Duration(milliseconds: 0),
                           child: MonthlyReviewSummary(
                             monthlyData: data[0],
                             previousMonthData: data[1],
@@ -172,8 +176,17 @@ class _MonthlyReviewBody extends StatelessWidget {
                       FadeInUp(
                         duration: baseDuration,
                         curve: baseCurve,
+                        delay: const Duration(milliseconds: 150),
                         child: const MonthlyTrendsCard(),
                       ),
+                      SizedBox(height: textScaler.scale(16)),
+                      FadeInUp(
+                        duration: baseDuration,
+                        curve: baseCurve,
+                        delay: const Duration(milliseconds: 300),
+                        child: const CategorySpendingCarousel(),
+                      ),
+                      SizedBox(height: textScaler.scale(120))
                       
                     ],
                   ),

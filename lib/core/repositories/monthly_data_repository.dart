@@ -17,9 +17,18 @@ class MonthlyDataRepository {
   final ExchangeRateService _exchangeService;
   final CurrencyProvider _currencyProvider;
 
-  MonthlyDataRepository(this._catRepo, this._exchangeService, this._currencyProvider, {required IFirestoreService service, required FirebaseAuth auth})
-      : _firestoreService = service,
-        _auth = auth;
+  MonthlyDataRepository({
+    required CategoryRepository catRepo, 
+    required ExchangeRateService exchangeService, 
+    required CurrencyProvider currencyProvider, 
+    required IFirestoreService service, 
+    required FirebaseAuth auth
+  }) : _catRepo = catRepo,
+      _exchangeService = exchangeService,
+      _currencyProvider = currencyProvider, 
+      _firestoreService = service,
+      _auth = auth;
+      
     
   String get currentUid => _auth.currentUser?.uid ?? '';
   String get transactionsCollectionPath => FirestorePath.transactions(currentUid);

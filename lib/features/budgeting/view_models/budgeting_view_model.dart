@@ -23,12 +23,17 @@ class BudgetingViewModel extends ChangeNotifier {
 
   String get _dbMonthKey => DateFormat('yyyy-MM').format(_selectedDate);
 
-  BudgetingViewModel(
-    this._budgetRepo, 
-    this._txRepo, 
-    this._catRepo, 
-    {required ExchangeRateService exchangeService, required Stream<String> currencyStream})
-      : _exchangeService = exchangeService, _currencyStream = currencyStream {
+  BudgetingViewModel({
+    required BudgetRepository budgetRepo, 
+    required TransactionRepository txRepo, 
+    required CategoryRepository catRepo, 
+    required ExchangeRateService exchangeService, required Stream<String> currencyStream})
+      :
+      _budgetRepo = budgetRepo,
+      _txRepo = txRepo,
+      _catRepo = catRepo,
+      _exchangeService = exchangeService, 
+      _currencyStream = currencyStream {
     // Set initial date
     _syncDateToRepos();
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/providers/navigation_provider.dart';
 import 'package:personal_fin/core/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +22,8 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final lang = context.watch<LanguageProvider>();
+    final nav = context.watch<NavigationProvider>();
+    final String currentRoute = ModalRoute.of(context)?.settings.name ?? '/home';
 
     return Drawer(
       backgroundColor: colors.surface,
@@ -29,24 +32,30 @@ class AppDrawer extends StatelessWidget {
           _DrawerHeader(userName: userName, userEmail: userEmail),
           Expanded(
             child: ListView(
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0), // Margin spacing for active borders
               children: [
                 _DrawerItem(
                   icon: Icons.dashboard_rounded,
                   title: lang.translate('dashboard'),
-                  onTap: () => onNavigate('/dashboard'),
+                  isSelected: (currentRoute == '/home' || currentRoute == '/') && nav.selectedIndex == 0,
+                  onTap: () {
+                    Navigator.pop(context);
+                    nav.setPage(0);
+                  },
                 ),
                 _AccountGroup(
                   onNavigate: onNavigate,
                   onLogout: onLogout,
+                  currentRoute: currentRoute,
                 ),
-                _FinancialToolsGroup(onNavigate: onNavigate),
-                _TransactionGroup(onNavigate: onNavigate),
-                _BudgetingGroup(onNavigate: onNavigate),
-                _SavingsGroup(onNavigate: onNavigate),
+                _FinancialToolsGroup(onNavigate: onNavigate, currentRoute: currentRoute),
+                _TransactionGroup(onNavigate: onNavigate, currentRoute: currentRoute),
+                _BudgetingGroup(onNavigate: onNavigate, currentRoute: currentRoute),
+                _SavingsGroup(onNavigate: onNavigate, currentRoute: currentRoute),
                 _DrawerItem(
-                  icon: Icons.settings,
+                  icon: Icons.settings_rounded,
                   title: lang.translate('settings'),
+                  isSelected: currentRoute == '/settings',
                   onTap: () => onNavigate('/settings'),
                 ),
               ],
@@ -75,19 +84,23 @@ class _DrawerHeader extends StatelessWidget {
 
     return UserAccountsDrawerHeader(
       accountName: Text(userName, 
-        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: colors.onPrimary)),
+        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: colors.onPrimary)),
       accountEmail: Text(userEmail, 
         style: theme.textTheme.bodyMedium?.copyWith(color: colors.onPrimary.withValues(alpha: 0.8))),
-      currentAccountPicture: CircleAvatar(
-        backgroundColor: colors.primaryContainer,
-        child: Icon(Icons.account_balance_wallet, color: colors.onPrimaryContainer, size: 40),
+      currentAccountPicture: Container(
+        decoration: BoxDecoration(
+          color: colors.primaryContainer,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.account_balance_wallet_rounded, color: colors.onPrimaryContainer, size: 36),
       ),
+      margin: EdgeInsets.zero,
       decoration: BoxDecoration(
         color: isDark ? colors.surfaceContainerHigh : colors.primary,
         image: const DecorationImage(
           image: AssetImage('assets/images/user_header.jpg'),
           fit: BoxFit.cover,
-          opacity: 0.4,
+          opacity: 0.25, // Softened context background image opacity
         ),
       ),
     );
@@ -97,17 +110,62 @@ class _DrawerHeader extends StatelessWidget {
 class _DrawerItem extends StatelessWidget {
   final IconData icon;
   final String title;
+  final bool isSelected;
   final VoidCallback onTap;
 
-  const _DrawerItem({required this.icon, required this.title, required this.onTap});
+  const _DrawerItem({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.isSelected = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ListTile(
-      leading: Icon(icon, color: theme.colorScheme.primary),
-      title: Text(title, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
-      onTap: onTap,
+    final colors = theme.colorScheme;
+
+    final activeColor = colors.primary;
+    final inactiveColor = colors.onSurfaceVariant;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.fastOutSlowIn,
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor.withValues(alpha: 0.05) : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          // Border lights up entirely matching active state selection
+          border: Border.all(
+            color: isSelected ? activeColor.withValues(alpha: 0.4) : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          dense: true,
+          // Icon wrapped in rounded square card background
+          leading: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isSelected ? activeColor.withValues(alpha: 0.15) : colors.surfaceContainerHigh.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: isSelected ? activeColor : inactiveColor, size: 20),
+          ),
+          title: Text(
+            title, 
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+              color: isSelected ? activeColor : colors.onSurface,
+            ),
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          onTap: onTap,
+        ),
+      ),
     );
   }
 }
@@ -116,35 +174,66 @@ class _DrawerGroup extends StatelessWidget {
   final IconData icon;
   final String title;
   final List<Widget> children;
+  final bool hasActiveChild;
 
-  const _DrawerGroup({required this.icon, required this.title, required this.children});
+  const _DrawerGroup({
+    required this.icon,
+    required this.title,
+    required this.children,
+    required this.hasActiveChild,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return ExpansionTile(
-      leading: Icon(icon, color: colors.primary),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      children: children,
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent), // Removes default ExpansionTile hard divider lines
+        child: ExpansionTile(
+          initiallyExpanded: hasActiveChild,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: hasActiveChild ? colors.primary.withValues(alpha: 0.1) : colors.surfaceContainerHighest.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: hasActiveChild ? colors.primary : colors.onSurfaceVariant, size: 20),
+          ),
+          title: Text(
+            title, 
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: hasActiveChild ? colors.primary : colors.onSurface,
+            ),
+          ),
+          childrenPadding: const EdgeInsets.only(left: 16.0),
+          children: children,
+        ),
+      ),
     );
   }
 }
 
 class _FinancialToolsGroup extends StatelessWidget {
   final Function(String) onNavigate;
-  const _FinancialToolsGroup({required this.onNavigate});
+  final String currentRoute;
+  const _FinancialToolsGroup({required this.onNavigate, required this.currentRoute});
 
   @override
   Widget build(BuildContext context) {
-    // You can access LangProvider here via context.watch
     return _DrawerGroup(
       icon: Icons.calculate_rounded,
       title: 'Financial Tools',
+      hasActiveChild: currentRoute == '/tools/savings',
       children: [
         _DrawerItem(
-          icon: Icons.trending_up, 
+          icon: Icons.trending_up_rounded, 
           title: 'Savings Calculator', 
-          onTap: () => onNavigate('/tools/savings')
+          isSelected: currentRoute == '/tools/savings',
+          onTap: () => onNavigate('/tools/savings'),
         ),
       ],
     );
@@ -154,53 +243,66 @@ class _FinancialToolsGroup extends StatelessWidget {
 class _AccountGroup extends StatelessWidget {
   final Function(String) onNavigate;
   final VoidCallback onLogout;
+  final String currentRoute;
 
-  const _AccountGroup({required this.onNavigate, required this.onLogout});
+  const _AccountGroup({required this.onNavigate, required this.onLogout, required this.currentRoute});
 
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
+    final routes = ['/profile'];
     return _DrawerGroup(
-      icon: Icons.person_outline, 
+      icon: Icons.person_rounded, 
       title: lang.translate('profile'), 
+      hasActiveChild: routes.contains(currentRoute),
       children: [
         _DrawerItem(
-          icon: Icons.account_circle, 
+          icon: Icons.account_circle_rounded, 
           title: lang.translate('user_profile'), 
+          isSelected: currentRoute == '/profile',
           onTap: () => onNavigate('/profile'),
         ),
         _DrawerItem(
-          icon: Icons.logout, 
+          icon: Icons.logout_rounded, 
           title: lang.translate('logout'), 
-          onTap: onLogout
+          onTap: onLogout,
         ),
-      ]
+      ],
     );
   }
 }
 
 class _TransactionGroup extends StatelessWidget {
   final Function(String) onNavigate;
+  final String currentRoute;
 
-  const _TransactionGroup({required this.onNavigate});
+  const _TransactionGroup({required this.onNavigate, required this.currentRoute});
 
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
+    final nav = context.watch<NavigationProvider>();
+    final routes = ['/categories', '/transactions'];
     return _DrawerGroup(
-      icon: Icons.category_rounded,
+      icon: Icons.receipt_long_rounded, 
       title: lang.translate('transactions'),
+      hasActiveChild: routes.contains(currentRoute),
       children: [
         _DrawerItem(
-          icon: Icons.label_important_outline,
+          icon: Icons.label_rounded,
           title: lang.translate('manage_categories'),
+          isSelected: currentRoute == '/categories',
           onTap: () => onNavigate('/categories'),
         ),
         _DrawerItem(
-          icon: Icons.attach_money,
+          icon: Icons.paid_rounded, 
           title: lang.translate('view_transactions'),
-          onTap: () => onNavigate('/transactions'),
-        ),                    
+          isSelected: (currentRoute == '/home' || currentRoute == '/') && nav.selectedIndex == 1,
+          onTap: () {
+            Navigator.pop(context);
+            nav.setPage(1);
+          },
+        ),
       ],
     );
   }
@@ -208,20 +310,27 @@ class _TransactionGroup extends StatelessWidget {
 
 class _BudgetingGroup extends StatelessWidget {
   final Function(String) onNavigate;
+  final String currentRoute;
 
-  const _BudgetingGroup({required this.onNavigate});
+  const _BudgetingGroup({required this.onNavigate, required this.currentRoute});
 
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
+    final nav = context.watch<NavigationProvider>();
     return _DrawerGroup(
-      icon: Icons.attach_money,
+      icon: Icons.pie_chart_rounded, 
       title: lang.translate('budgeting'),
+      hasActiveChild: currentRoute == '/budgeting',
       children: [
         _DrawerItem(
-          icon: Icons.attach_money,
+          icon: Icons.analytics_rounded, 
           title: lang.translate('set_budgets'),
-          onTap: () => onNavigate('/budgeting'),
+          isSelected: (currentRoute == '/home' || currentRoute == '/') && nav.selectedIndex == 2,
+          onTap: () {
+            Navigator.pop(context);
+            nav.setPage(2);
+          },
         ),                   
       ],
     );
@@ -230,24 +339,29 @@ class _BudgetingGroup extends StatelessWidget {
 
 class _SavingsGroup extends StatelessWidget {
   final Function(String) onNavigate;
+  final String currentRoute;
 
-  const _SavingsGroup({required this.onNavigate});
+  const _SavingsGroup({required this.onNavigate, required this.currentRoute});
 
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
+    final routes = ['/savings', '/savings/goal'];
     return _DrawerGroup(
-      icon: Icons.wallet_travel,
+      icon: Icons.savings_rounded,
       title: lang.translate('savings'),
+      hasActiveChild: routes.contains(currentRoute),
       children: [
         _DrawerItem(
-          icon: Icons.attach_money,
+          icon: Icons.donut_large_rounded, 
           title: lang.translate('savings_progress'),
+          isSelected: currentRoute == '/savings',
           onTap: () => onNavigate('/savings'),
         ),
         _DrawerItem(
-          icon: Icons.wallet_travel,
+          icon: Icons.add_task_rounded, 
           title: lang.translate('set_savings_goal'),
+          isSelected: currentRoute == '/savings/goal',
           onTap: () => onNavigate('/savings/goal'),
         ),                    
       ],
@@ -266,7 +380,7 @@ class _ThemeToggleTile extends StatelessWidget {
     final bool isDark = theme.brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
       child: SwitchListTile(
         secondary: AnimatedSwitcher(
           duration: const Duration(milliseconds: 400),
@@ -274,10 +388,9 @@ class _ThemeToggleTile extends StatelessWidget {
             turns: animation,
             child: FadeTransition(opacity: animation, child: child),
           ),
-          // Unique keys are required for AnimatedSwitcher to trigger
           child: isDark 
-            ? Icon(Icons.dark_mode, key: const ValueKey('dark'), color: colors.primary)
-            : Icon(Icons.light_mode, key: const ValueKey('light'), color: Colors.deepPurpleAccent),
+            ? Icon(Icons.dark_mode_rounded, key: const ValueKey('dark'), color: colors.primary)
+            : Icon(Icons.light_mode_rounded, key: const ValueKey('light'), color: Colors.amber.shade700),
         ),
         title: Text(
           isDark ? 'Dark Mode' : 'Light Mode',

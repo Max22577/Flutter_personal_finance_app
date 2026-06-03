@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/features/dashboard/view_models/monthly_review_view_model.dart';
+import 'package:personal_fin/features/dashboard/views/widgets/empty_chart_state.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/monthly_review/daily_trends_line_chart.dart';
 import 'package:provider/provider.dart';
 
@@ -27,7 +28,7 @@ class MonthlyTrendsCard extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Padding(
@@ -88,7 +89,7 @@ class MonthlyTrendsCard extends StatelessWidget {
                   }
                   final pointsData = snapshot.data ?? [];
                   if (pointsData.isEmpty) {
-                    return const Center(child: Text("No transaction distribution points calculated."));
+                    return const Center(child: EmptyChartState(textMessage: "No transactions found for this month."));
                   }
                   return DailyTrendsLineChart(
                     points: pointsData, 

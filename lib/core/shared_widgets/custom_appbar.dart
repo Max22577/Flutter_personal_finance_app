@@ -27,13 +27,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final lang = context.watch<LanguageProvider>();
+    final navProvider = context.watch<NavigationProvider>();
 
     // Determine Title and Actions dynamically
     String displayTitle = '';
     List<Widget> displayActions = [];
 
     if (isRootNav) {
-      final navProvider = Provider.of<NavigationProvider>(context);
       displayTitle = lang.translate(navProvider.currentTitle);
       displayActions = navProvider.currentActions.isNotEmpty
           ? navProvider.currentActions

@@ -18,8 +18,16 @@ class TransactionViewModel extends ChangeNotifier {
   bool get isSaving => _isSaving;
   final _refreshTrigger = BehaviorSubject.seeded(null);
 
-  TransactionViewModel(this._txRepo, this._catRepo, this._currencyProvider, {required ExchangeRateService exchangeService}) 
-      : _exchangeService = exchangeService;
+  TransactionViewModel({
+    required TransactionRepository txRepo, 
+    required CategoryRepository catRepo, 
+    required CurrencyProvider currencyProvider, 
+    required ExchangeRateService exchangeService}) 
+      : 
+      _txRepo = txRepo,
+      _catRepo = catRepo,
+      _currencyProvider = currencyProvider,
+      _exchangeService = exchangeService;
 
   Stream<List<Transaction>> get transactions => _txRepo.transactionsStream;
   Stream<List<Category>> get categoriesStream => _catRepo.allCategoriesStream;

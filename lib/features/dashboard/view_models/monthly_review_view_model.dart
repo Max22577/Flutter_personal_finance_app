@@ -2,6 +2,8 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
+import 'package:personal_fin/core/repositories/transaction_repository.dart';
+import 'package:personal_fin/models/category_spending.dart';
 import 'package:personal_fin/models/monthly_data.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -15,11 +17,13 @@ class DailyChartPoint {
 
 class MonthlyReviewViewModel extends ChangeNotifier {
   final MonthlyDataRepository _repo;
+  final TransactionRepository _transRepo;
   final CurrencyProvider _currencyProvider;
 
   final _monthController = BehaviorSubject<DateTime>();
   
-  MonthlyReviewViewModel(this._repo, this._currencyProvider, DateTime initialMonth) {
+  
+  MonthlyReviewViewModel(this._repo, this._transRepo, this._currencyProvider, DateTime initialMonth) {
     _selectedMonth = initialMonth;
     _monthController.add(initialMonth);
   }
@@ -41,6 +45,9 @@ class MonthlyReviewViewModel extends ChangeNotifier {
     _monthController.add(newMonth);
     notifyListeners();
   }
+
+  Stream<List<CategorySpending>> get categorySpendingStream => _transRepo.getMonthlySpendingStream(
+    _selectedMonth, _currencyProvider.currentCurrency);
 
   // Stream combining current currency and selected month to fetch historical daily trend series
   Stream<List<DailyChartPoint>> get dailyTrendStream {

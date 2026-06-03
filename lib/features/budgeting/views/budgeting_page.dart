@@ -32,40 +32,32 @@ class BudgetingViewContent extends StatefulWidget {
 }
 
 class _BudgetingViewContentState extends State<BudgetingViewContent> {
-  late NavigationProvider _navProvider;
   final ScrollController _scrollController = ScrollController();
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _navProvider = context.read<NavigationProvider>();
-    _navProvider.addListener(_onNavChanged);
-    
-    // Initial sync of the AppBar
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onNavChanged());
-  }
-
-  void _onNavChanged() {
-    if (!mounted || _navProvider.selectedIndex != 2) return;
-    
-    if (_navProvider.currentActions.isEmpty) {
+   @override
+    void initState() {
+      super.initState();
       _updateAppBar();
     }
-  }
 
   void _updateAppBar() {
-    _navProvider.setActions([
-      _CategoryActionButton(onPressed: () => Navigator.pushNamed(context, '/categories')),
-    ]);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<NavigationProvider>().setActions([
+          _CategoryActionButton(onPressed: () => Navigator.pushNamed(context, '/categories')),
+        ]);
+      }
+    }); 
   }
 
   @override
   void dispose() {
-    _navProvider.removeListener(_onNavChanged);
     _scrollController.dispose(); 
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _navProvider.setActions([]);
+      if (mounted) {
+        context.read<NavigationProvider>().setActions([]);
+      }
     });
     super.dispose();
   }

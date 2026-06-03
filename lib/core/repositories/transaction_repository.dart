@@ -2,19 +2,29 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:personal_fin/core/firestore/constants/firestore_path.dart';
 import 'package:personal_fin/core/firestore/network/query_options.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/repositories/category_repository.dart';
+import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/services/i_firestore_service.dart';
+import 'package:personal_fin/models/category.dart';
+import 'package:personal_fin/models/category_spending.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../models/transaction.dart';
 
 class TransactionRepository {
   final IFirestoreService _service;
   final FirebaseAuth _auth;
+  final CategoryRepository _categoryRepo;
+  final ExchangeRateService _exchangeService;
+  final CurrencyProvider _currencyProvider;
 
   final _monthController = BehaviorSubject<DateTime>.seeded(DateTime.now());
 
-  TransactionRepository({required IFirestoreService service, required FirebaseAuth auth})
+  TransactionRepository(this._currencyProvider, {required IFirestoreService service, required FirebaseAuth auth, required CategoryRepository categoryRepo, required ExchangeRateService exchangeService})
       : _service = service,
-        _auth = auth;
+        _auth = auth,
+        _categoryRepo = categoryRepo,
+        _exchangeService = exchangeService;
 
   // The Reactive Master Stream
   Stream<List<Transaction>> get transactionsStream {
@@ -51,6 +61,46 @@ class TransactionRepository {
       );
     });
   }
+
+  // In TransactionRepository or a new AnalyticsService
+  Stream<List<CategorySpending>> getMonthlySpendingStream(DateTime month, String currencyCode) {
+    return Rx.combineLatest3(
+     monthlyTransactionsStream,
+      _categoryRepo.allCategoriesStream,
+      _currencyProvider.currencyStream, 
+      (transactions, categories, code) {
+        final Map<String, double> totals = {};
+        final Map<String, Category> categoryMap = {};
+        double totalMonthlyExpense = 0.0;
+
+        for (var t in transactions.where((t) => t.type == 'Expense')) {
+          final category = categories.firstWhere(
+            (c) => c.id == t.categoryId, 
+            orElse: () => Category(id: 'unknown', name: 'Other'),
+          );
+          
+          final amount = _exchangeService.fromBase(t.baseAmount, code);
+          totalMonthlyExpense += amount;
+          totals.update(category.id, (v) => v + amount, ifAbsent: () => amount);
+          categoryMap[category.id] = category;
+        }
+
+        // Convert map to sorted List<CategorySpending>
+        return totals.entries.map((e) {
+          final cat = categoryMap[e.key]!;
+
+          final percentage = totalMonthlyExpense > 0 ? (e.value / totalMonthlyExpense) : 0.0;
+          return CategorySpending(
+            category: cat,
+            totalAmount: e.value,
+            percentage: percentage,
+          );
+        }).toList()..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
+      },
+    );
+  }
+
+  
 
   void setMonth(DateTime date) => _monthController.add(date);
 

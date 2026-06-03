@@ -250,7 +250,7 @@ class _TransactionFormState extends State<TransactionForm> {
                     colors: colors,
                     onPressed: () => _handleSubmit(lang),
                   ),
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 24),
                   
                   // Live Preview
                   _TransactionPreview(
