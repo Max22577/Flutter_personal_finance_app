@@ -4,7 +4,6 @@ import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/dashboard/recent_transactions/transaction_display.dart';
-import 'package:personal_fin/models/transaction.dart';
 import 'package:rxdart/rxdart.dart';
 
 class RecentTransactionsViewModel {
@@ -29,26 +28,19 @@ class RecentTransactionsViewModel {
   // The single reactive source of truth
   Stream<List<TransactionDisplay>> get recentTransactionsStream {
     return Rx.combineLatest3(
-      _repo.transactionsStream,
+      _repo.getRecentTransactions(_maxItems), 
       _currencyProvider.currencyStream,
-      _catRepo.allCategoriesStream, 
+      _catRepo.allCategoriesStream,
       (transactions, currencyCode, categories) {
-        // Create a fast lookup map
         final catMap = {for (var c in categories) c.id: c.name};
 
-        final sortedList = List<Transaction>.from(transactions)
-        ..sort((a, b) => b.date.compareTo(a.date));
-
-        return sortedList
-            .take(_maxItems)
-            .map((tx) {
-              final convertedAmount = _exchangeService.fromBase(tx.baseAmount, currencyCode);
-              return TransactionDisplay(
-                tx.copyWith(amount: convertedAmount),
-                catMap[tx.categoryId] ?? 'General',
-              );
-            })
-            .toList();
+        return transactions.map((tx) {
+          final convertedAmount = _exchangeService.fromBase(tx.baseAmount, currencyCode);
+          return TransactionDisplay(
+            tx.copyWith(amount: convertedAmount),
+            catMap[tx.categoryId] ?? 'General',
+          );
+        }).toList();
       },
     );
   }

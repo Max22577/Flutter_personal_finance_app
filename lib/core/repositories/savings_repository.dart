@@ -18,13 +18,14 @@ class SavingsRepository {
   final CurrencyProvider _currencyProvider;
   final FirebaseAuth _auth;
 
-  SavingsRepository(
-    this._txRepo, {
+  SavingsRepository({
+    required TransactionRepository transRepo, 
     required IFirestoreService service,
     required ExchangeRateService exchangeService,
     required FirebaseAuth auth,
     required CurrencyProvider currencyProvider,
-  })  : _service = service,
+  })  : _txRepo = transRepo,
+        _service = service,
         _exchangeService = exchangeService,
         _auth = auth,
         _currencyProvider = currencyProvider;

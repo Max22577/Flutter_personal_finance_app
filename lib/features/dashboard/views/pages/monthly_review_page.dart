@@ -11,6 +11,7 @@ import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:personal_fin/core/shared_widgets/currency_display.dart';
 import 'package:personal_fin/core/shared_widgets/custom_appbar.dart';
 import 'package:personal_fin/features/dashboard/view_models/monthly_review_view_model.dart';
+import 'package:personal_fin/features/dashboard/views/widgets/monthly_review/category_spending_card.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/monthly_review/monthly_trends_card.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/monthly_review_summary.dart';
 import 'package:personal_fin/models/monthly_data.dart';
@@ -77,7 +78,7 @@ class _MonthlyReviewBody extends StatelessWidget {
     final double statusBarHeight = MediaQuery.paddingOf(context).top;
 
   return StreamBuilder<List<MonthlyData>>(
-    stream: vm.getReviewDataStream(targetMonth),
+    stream: vm.reviewDataStream,
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
         return SizedBox(
@@ -161,6 +162,7 @@ class _MonthlyReviewBody extends StatelessWidget {
                         child: FadeInUp(
                           duration: baseDuration,
                           curve: baseCurve,
+                          delay: const Duration(milliseconds: 0),
                           child: MonthlyReviewSummary(
                             monthlyData: data[0],
                             previousMonthData: data[1],
@@ -172,8 +174,17 @@ class _MonthlyReviewBody extends StatelessWidget {
                       FadeInUp(
                         duration: baseDuration,
                         curve: baseCurve,
+                        delay: const Duration(milliseconds: 150),
                         child: const MonthlyTrendsCard(),
                       ),
+                      SizedBox(height: textScaler.scale(16)),
+                      FadeInUp(
+                        duration: baseDuration,
+                        curve: baseCurve,
+                        delay: const Duration(milliseconds: 300),
+                        child: const CategorySpendingCarousel(),
+                      ),
+                      SizedBox(height: textScaler.scale(120))
                       
                     ],
                   ),

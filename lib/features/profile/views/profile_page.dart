@@ -29,7 +29,6 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
   late final TextEditingController _fullNameController;
   late final TextEditingController _bioController;
   final _formKey = GlobalKey<FormState>();
-  late NavigationProvider _navProvider;
 
   @override
   void initState() {
@@ -39,40 +38,25 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
     _bioController = TextEditingController(text: vm.bio);
 
     // Initial setup of AppBar
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initAppBar());
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _navProvider = context.read<NavigationProvider>();
-    _navProvider.removeListener(_onNavChanged);
-    _navProvider.addListener(_onNavChanged);
-  }
-
-  void _onNavChanged() {
-    if (!mounted) return;
-    if (_navProvider.selectedIndex == 3 && _navProvider.currentActions.isEmpty) {
-      _updateAppBarLogic();
-    }
-  }
-
-  void _initAppBar() {
-    if (mounted && _navProvider.selectedIndex == 3) {   
-      _updateAppBarLogic();
-    }
+    _updateAppBarLogic();
   }
 
   void _updateAppBarLogic() {
     final vm = context.read<ProfileViewModel>();
-    _ProfileActionsHandler.setProfileActions(context, _navProvider, vm); 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _ProfileActionsHandler.setProfileActions(context, context.read<NavigationProvider>(), vm); 
+      }
+    });
   }
 
   @override
   void dispose() {
-    _navProvider.removeListener(_onNavChanged);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _navProvider.setActions([]);
+      if (mounted) {
+        context.read<NavigationProvider>().setActions([]);
+      }
     });
     _fullNameController.dispose();
     _bioController.dispose();

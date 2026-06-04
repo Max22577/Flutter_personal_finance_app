@@ -39,6 +39,14 @@ class BudgetRepository {
     });
   }
 
+  Stream<List<Budget>> getBudgetsForMonth(String monthKey) {
+    return _service.streamCollection<Budget>(
+      collectionPath: budgetsCollectionPath,
+      builder: (map) => Budget.fromMap(map),
+      filters: [FieldFilter('monthYear', FilterOperator.isEqualTo, monthKey)],
+    );
+  }
+
   Future<void> setBudget(Budget budget) async {
     final uid = _auth.currentUser?.uid;                                                                                                                                                                               
     if (uid == null) throw Exception("Unauthorized");

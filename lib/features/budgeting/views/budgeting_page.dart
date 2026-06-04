@@ -9,7 +9,7 @@ import 'package:personal_fin/features/budgeting/views/widgets/month_selector.dar
 import 'package:personal_fin/core/shared_widgets/empty_state.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/features/budgeting/views/widgets/small_stat_card.dart';
-import 'package:personal_fin/models/budgeting_state.dart';
+import 'package:personal_fin/models/state_models/budgeting_state.dart';
 import 'package:provider/provider.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import '../view_models/budgeting_view_model.dart';
@@ -32,40 +32,32 @@ class BudgetingViewContent extends StatefulWidget {
 }
 
 class _BudgetingViewContentState extends State<BudgetingViewContent> {
-  late NavigationProvider _navProvider;
   final ScrollController _scrollController = ScrollController();
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _navProvider = context.read<NavigationProvider>();
-    _navProvider.addListener(_onNavChanged);
-    
-    // Initial sync of the AppBar
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onNavChanged());
-  }
-
-  void _onNavChanged() {
-    if (!mounted || _navProvider.selectedIndex != 2) return;
-    
-    if (_navProvider.currentActions.isEmpty) {
+   @override
+    void initState() {
+      super.initState();
       _updateAppBar();
     }
-  }
 
   void _updateAppBar() {
-    _navProvider.setActions([
-      _CategoryActionButton(onPressed: () => Navigator.pushNamed(context, '/categories')),
-    ]);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<NavigationProvider>().setActions([
+          _CategoryActionButton(onPressed: () => Navigator.pushNamed(context, '/categories')),
+        ]);
+      }
+    }); 
   }
 
   @override
   void dispose() {
-    _navProvider.removeListener(_onNavChanged);
     _scrollController.dispose(); 
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _navProvider.setActions([]);
+      if (mounted) {
+        context.read<NavigationProvider>().setActions([]);
+      }
     });
     super.dispose();
   }
@@ -104,22 +96,19 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
 
       final state = snapshot.data!;
 
-      return RefreshIndicator(
-        onRefresh: vm.refreshData,
-        child: CustomScrollView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
-          ),
-          slivers: [
-            _BudgetingHeader(vm: vm, state: state),
-
-            _BudgetListSection(state: state, vm: vm),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 120)),
-          ],
+      return CustomScrollView(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
         ),
-      );
+        slivers: [
+          _BudgetingHeader(vm: vm, state: state),
+
+          _BudgetListSection(state: state, vm: vm),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 120)),
+        ],
+      );      
     },
   );
 }

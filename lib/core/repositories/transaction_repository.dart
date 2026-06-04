@@ -16,6 +16,7 @@ class TransactionRepository {
       : _service = service,
         _auth = auth;
 
+
   // The Reactive Master Stream
   Stream<List<Transaction>> get transactionsStream {
     return _auth.authStateChanges().switchMap((user) {
@@ -29,25 +30,15 @@ class TransactionRepository {
     });
   }
 
-  Stream<List<Transaction>> get monthlyTransactionsStream {
-    return Rx.combineLatest2(
-      _auth.authStateChanges(),
-      _monthController.stream,
-      (user, date) => _TxParams(user?.uid, date),
-    ).switchMap((params) {
-      if (params.uid == null) return Stream.value([]);
-
-      final start = DateTime(params.date.year, params.date.month, 1);
-      final end = DateTime(params.date.year, params.date.month + 1, 0, 23, 59, 59);
-
+  Stream<List<Transaction>> getRecentTransactions(int limit) {
+    return _auth.authStateChanges().switchMap((user) {
+      if (user == null) return Stream.value([]);
+      
       return _service.streamCollection<Transaction>(
         collectionPath: transactionsCollectionPath,
         builder: (map) => Transaction.fromMap(map),
-        filters: [
-          FieldFilter('date', FilterOperator.isGreaterThanOrEqualTo, start),
-          FieldFilter('date', FilterOperator.isLessThanOrEqualTo, end),
-        ],
         orderBy: [OrderByOption('date', descending: true)],
+        limit: limit, 
       );
     });
   }
@@ -71,10 +62,4 @@ class TransactionRepository {
   Future<void> deleteTransaction(String id) async {
     await _service.deleteDocument(collectionPath: transactionsCollectionPath, id: id);
   }
-}
-
-class _TxParams {
-  final String? uid;
-  final DateTime date;
-  _TxParams(this.uid, this.date);
 }

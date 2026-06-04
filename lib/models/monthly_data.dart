@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:personal_fin/models/transaction.dart';
 
 class MonthlyData {
   final DateTime month;
@@ -7,6 +8,7 @@ class MonthlyData {
   final double savingsGoal;
   final int transactionCount;
   final Map<String, double> categoryBreakdown;
+  final List<Transaction> rawTransactions; 
 
   const MonthlyData({
     required this.month,
@@ -15,6 +17,7 @@ class MonthlyData {
     this.savingsGoal = 0,
     this.transactionCount = 0,
     this.categoryBreakdown = const {},
+    this.rawTransactions = const [],
   });
 
   double get net => income - expenses;
@@ -52,6 +55,7 @@ class MonthlyData {
     double? savingsGoal,
     int? transactionCount,
     Map<String, double>? categoryBreakdown,
+    List<Transaction>? rawTransactions,
   }) {
     return MonthlyData(
       month: month ?? this.month,
@@ -60,6 +64,7 @@ class MonthlyData {
       savingsGoal: savingsGoal ?? this.savingsGoal,
       transactionCount: transactionCount ?? this.transactionCount,
       categoryBreakdown: categoryBreakdown ?? this.categoryBreakdown,
+      rawTransactions: rawTransactions ?? this.rawTransactions,
     );
   }
 
@@ -71,6 +76,7 @@ class MonthlyData {
       savingsGoal: 0,
       transactionCount: 0,
       categoryBreakdown: const {},
+      rawTransactions: const [],
     );
   }
   

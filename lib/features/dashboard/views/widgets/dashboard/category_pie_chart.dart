@@ -1,14 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
-import 'package:personal_fin/core/providers/language_provider.dart';
-import 'package:personal_fin/core/repositories/category_repository.dart';
-import 'package:personal_fin/core/repositories/transaction_repository.dart';
-import 'package:personal_fin/core/services/exchange_rate_service.dart';
-import 'package:personal_fin/core/shared_widgets/animated_empty_state.dart';
+import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/shared_widgets/currency_display.dart';
-import 'package:personal_fin/core/shared_widgets/empty_state.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
+import 'package:personal_fin/features/dashboard/views/widgets/empty_chart_state.dart';
 import 'package:provider/provider.dart';
 import '../../../view_models/spending_chart_view_model.dart';
 
@@ -29,10 +25,8 @@ class CategoryPieChart extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<SpendingChartViewModel>(
       create: (_) => SpendingChartViewModel(
-        context.read<TransactionRepository>(),
-        context.read<CategoryRepository>(),
-        context.read<ExchangeRateService>(),
-        currencyStream: context.read<CurrencyProvider>().currencyStream,
+        context.read<MonthlyDataRepository>(),
+        context.read<CurrencyProvider>(),
       ),
       child: const _CategoryPieChartConsumer(colorsList: _vibrantColors),
     );
@@ -46,41 +40,33 @@ class _CategoryPieChartConsumer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang = context.read<LanguageProvider>();
     final vm = context.watch<SpendingChartViewModel>();
 
-    if (vm.isLoading) {
-      return const Center(child: LoadingState());
-    }
+    return StreamBuilder<Map<String, double>>(
+      stream: vm.spendingMapStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: LoadingState());
+        }
+        
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const _ChartCardWrapper(
+            child: Center(
+              child: EmptyChartState(textMessage: "No transactions found for this month."),
+            ),
+          );
+        }
 
-    if (vm.errorMessage != null) {
-      return _ChartCardWrapper(
-        child: EmptyState(
-          icon: Icons.error_outline,
-          title: lang.translate('error_loading'),
-          message: vm.errorMessage!,
-          actionText: lang.translate('retry'),
-          onAction: () => vm.retry(),
-        ),
-      );
-    }
-
-    final data = vm.categoryData;
-
-    if (data.isEmpty) {
-      return const _ChartCardWrapper(
-        child: Center(
-          child: _EmptyChartState(),
-        ),
-      );
-    }
-
-    return _ChartCardWrapper(
-      child: _ActiveChartContent(
-        categoryData: data,
-        colorsList: colorsList,
-      ),
-    );
+        final spendingList = snapshot.data!;
+        
+        return _ChartCardWrapper(
+          child: _ActiveChartContent(
+            categoryData: spendingList,
+            colorsList: colorsList,
+          ),
+        );
+      },
+    );   
   }
 }
 
@@ -340,33 +326,6 @@ class _ChartLegend extends StatelessWidget {
     );
   }
 }
-
-class _EmptyChartState extends StatelessWidget {
-  const _EmptyChartState();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final lang = context.read<LanguageProvider>();
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedEmptyState(
-          message: lang.translate('No data recorded').toUpperCase(),
-          imagePath: 'assets/images/empty_wallet_light.svg',
-          darkImagePath: 'assets/images/empty_wallet_dark1.svg',
-        ),
-        const SizedBox(height: 16),
-        Text(
-          "No transactions found for this month.",
-          style: TextStyle(color: colors.onSurfaceVariant),
-        ),
-      ],
-    );
-  }
-}
-
 
 class _ChartCardWrapper extends StatelessWidget {
   final Widget child;

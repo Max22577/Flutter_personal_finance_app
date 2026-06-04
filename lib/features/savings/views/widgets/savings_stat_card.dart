@@ -14,129 +14,155 @@ class SavingsStatCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textTheme = theme.textTheme;
-
     final lang = context.watch<LanguageProvider>();
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(28), 
-        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header with Icon and Label
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: colors.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.insights_rounded, color: colors.primary, size: 18),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  lang.translate('savings_overview'),
-                  style: textTheme.labelMedium?.copyWith( 
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-              ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Text(
+            lang.translate('savings_overview'),
+            style: textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+              color: colors.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 24),
+        ),
+        const SizedBox(height: 8),
 
-          // Stats Row with Dividers
-          IntrinsicHeight( // Ensures vertical dividers match column height
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    _StatItem(label: lang.translate('goals'), valueWidget: Text(state.goals.length.toString(), style: _valueStyle(textTheme)), theme: theme),
-                    _VerticalDivider(colors: colors),
-                    _StatItem(label: lang.translate('progress'), valueWidget: Text('${(state.overallProgress * 100).toStringAsFixed(0)}%', 
-                        style: _valueStyle(textTheme).copyWith(color: colors.primary)), theme: theme),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Divider(color: colors.outlineVariant.withValues(alpha: 0.1)),
-                ),
-                Row(
-                  children: [
-                    _StatItem(label: lang.translate('target'), valueWidget: CurrencyDisplay(amount: state.totalTarget, compact: true, style: _valueStyle(textTheme)), theme: theme),
-                    _VerticalDivider(colors: colors),
-                    _StatItem(label: lang.translate('saved'), valueWidget: CurrencyDisplay(amount: state.totalSaved, compact: true, style: _valueStyle(textTheme)), theme: theme),
-                  ],
-                ),
-              ],
-            )
-          ),
-        ],
-      ),
+        // 2x2 Grid with precise cross-axis and main-axis gaps
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          childAspectRatio: 1.4, // Prevents text overflow while maintaining card proportions
+          mainAxisSpacing: 12,   // Controlled vertical spacing
+          crossAxisSpacing: 12,  // Controlled horizontal spacing
+          children: [
+            _StatCardItem(
+              label: lang.translate('goals'),
+              icon: Icons.flag_rounded,
+              iconColor: colors.primary,
+              valueWidget: Text(
+                state.goals.length.toString(),
+                style: _valueStyle(textTheme, colors.onSurface),
+              ),
+            ),
+            _StatCardItem(
+              label: lang.translate('progress'),
+              icon: Icons.ads_click_rounded,
+              iconColor: colors.tertiary,
+              valueWidget: Text(
+                '${(state.overallProgress * 100).toStringAsFixed(0)}%',
+                style: _valueStyle(textTheme, colors.tertiary),
+              ),
+            ),
+            _StatCardItem(
+              label: lang.translate('target'),
+              icon: Icons.track_changes_rounded,
+              iconColor: colors.secondary,
+              valueWidget: CurrencyDisplay(
+                amount: state.totalTarget,
+                compact: true,
+                style: _valueStyle(textTheme, colors.onSurface),
+              ),
+            ),
+            _StatCardItem(
+              label: lang.translate('saved'),
+              icon: Icons.savings_rounded,
+              iconColor: colors.primary,
+              valueWidget: CurrencyDisplay(
+                amount: state.totalSaved,
+                compact: true,
+                style: _valueStyle(textTheme, colors.primary),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-  TextStyle _valueStyle(TextTheme textTheme) => textTheme.titleMedium!.copyWith(
-    fontWeight: FontWeight.w500,
-    letterSpacing: -0.2,
-  );  
+  TextStyle _valueStyle(TextTheme textTheme, Color color) => textTheme.labelMedium!.copyWith(
+        fontWeight: FontWeight.w900,
+        letterSpacing: -0.5,
+        color: color,
+      );
 }
 
-class _StatItem extends StatelessWidget {
+// Private sub-component card unit
+class _StatCardItem extends StatelessWidget {
   final String label;
+  final IconData icon;
+  final Color iconColor;
   final Widget valueWidget;
-  final ThemeData theme;
 
-  const _StatItem({required this.label, required this.valueWidget, required this.theme});
+  const _StatCardItem({
+    required this.label,
+    required this.icon,
+    required this.iconColor,
+    required this.valueWidget,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded( 
-      child: Column(
-        children: [
-          valueWidget,
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 9,
-              color: theme.colorScheme.outline,
-            ),
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: colors.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: 0.02),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _VerticalDivider extends StatelessWidget {
-  final ColorScheme colors;
-
-  const _VerticalDivider({required this.colors});
-
-   @override
-  Widget build(BuildContext context) {
-    return VerticalDivider(
-      color: colors.outlineVariant.withValues(alpha: 0.2),
-      thickness: 1,
-      indent: 8,
-      endIndent: 8,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Row: Top Left Mini Tinted Decorative Icon Badge
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 16),
+          ),
+          
+          // Bottom Column: Metrics and Title stacked cleanly
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              valueWidget,
+              const SizedBox(height: 2),
+              Text(
+                label.toUpperCase(),
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  fontSize: 10,
+                  color: colors.outline,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
