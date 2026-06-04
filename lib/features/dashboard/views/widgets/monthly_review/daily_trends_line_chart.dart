@@ -107,7 +107,7 @@ class DailyTrendsLineChart extends StatelessWidget {
                     // ENABLE AND CONFIGURE Y-AXIS TITLES
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
-                        showTitles: true,
+                        showTitles: false,
                         reservedSize: 40, // INCREASED: Gives space for the "$1.2k" text
                         interval: (maxY / 4).floorToDouble(), // Dynamic interval based on your data scale
                         getTitlesWidget: (value, meta) {
@@ -126,7 +126,6 @@ class DailyTrendsLineChart extends StatelessWidget {
                       ),
                     ),
 
-                    // 2. X-AXIS TITLES (Retain existing implementation)
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,

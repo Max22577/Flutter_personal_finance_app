@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
-import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/shared_widgets/empty_state.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
@@ -32,7 +31,6 @@ class MonthlyReviewPage extends StatelessWidget {
     return ChangeNotifierProvider<MonthlyReviewViewModel>(
       create: (context) => MonthlyReviewViewModel(
         context.read<MonthlyDataRepository>(),
-        context.read<TransactionRepository>(),
         context.read<CurrencyProvider>(),
         targetMonth,
       ),
@@ -80,7 +78,7 @@ class _MonthlyReviewBody extends StatelessWidget {
     final double statusBarHeight = MediaQuery.paddingOf(context).top;
 
   return StreamBuilder<List<MonthlyData>>(
-    stream: vm.getReviewDataStream(targetMonth),
+    stream: vm.reviewDataStream,
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
         return SizedBox(

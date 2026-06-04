@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/rate_sync_provider.dart';
+import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/shared_widgets/empty_state.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/dashboard/category_pie_chart.dart';
@@ -30,7 +32,13 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return const _DashboardScaffold();
+    return ChangeNotifierProvider<DashboardViewModel>(
+      create: (context) => DashboardViewModel(
+        context.read<MonthlyDataRepository>(),
+        context.read<CurrencyProvider>(),
+      ),
+      child: _DashboardScaffold(),
+    );
   }
 }
 
@@ -127,8 +135,8 @@ class _DashboardMonthlyReviewSection extends StatelessWidget {
     final vm = context.read<DashboardViewModel>();
     final textScaler = MediaQuery.textScalerOf(context);
 
-    return StreamBuilder<Map<String, MonthlyData?>>(
-      stream: vm.monthlyDataStream,
+    return StreamBuilder<List<MonthlyData>>(
+      stream: vm.dashboardReviewStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SizedBox(
@@ -153,9 +161,9 @@ class _DashboardMonthlyReviewSection extends StatelessWidget {
         }
 
         final data = snapshot.data;
-        final current = data?['current'];
 
-        if (current == null) {
+
+        if (data == null || data.isEmpty) {
           return SizedBox(
             height: textScaler.scale(160),
             child: Center(
@@ -171,8 +179,8 @@ class _DashboardMonthlyReviewSection extends StatelessWidget {
         }
 
         return MonthlyReviewSummary(
-          monthlyData: current,
-          previousMonthData: data?['previous'],
+          monthlyData: data[0],
+          previousMonthData: data[1],
           onTap: () => Navigator.pushNamed(context, '/monthly_review'),
           isDashboard: true,
         );

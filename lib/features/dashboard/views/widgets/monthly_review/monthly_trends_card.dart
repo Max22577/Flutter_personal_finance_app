@@ -18,7 +18,6 @@ class MonthlyTrendsCard extends StatelessWidget {
     final currentOption = DateTime(now.year, now.month, 1);
     final previousOption = DateTime(now.year, now.month - 1, 1);
 
-    // 2. Normalize the VM value
     final DateTime normalizedSelectedMonth = DateTime(
       vm.selectedMonth.year, 
       vm.selectedMonth.month, 

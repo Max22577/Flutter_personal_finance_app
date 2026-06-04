@@ -1,22 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
-import 'package:personal_fin/core/repositories/transaction_repository.dart';
-import 'package:personal_fin/models/category_spending.dart';
+import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
+import 'package:rxdart/rxdart.dart';
 
 class SpendingChartViewModel extends ChangeNotifier {
-  final TransactionRepository _repository;
+  final MonthlyDataRepository _repo;
   final CurrencyProvider _currencyProvider;
 
-  SpendingChartViewModel(this._repository, this._currencyProvider);
- 
+  SpendingChartViewModel(this._repo, this._currencyProvider);
+  
   Stream<Map<String, double>> get spendingMapStream {
-    return _repository.getMonthlySpendingStream(DateTime.now(), _currencyProvider.currentCurrency)
-        .map((List<CategorySpending> spendingList) {
-      // Transform the List into a Map<String, double>
-      return {
-        for (var item in spendingList) item.category.name: item.totalAmount
-      };
+    return _currencyProvider.currencyStream.switchMap((currency) {
+
+      return _repo.streamMonthlyData(DateTime.now(), currency).map((data) {
+        return data.categoryBreakdown; 
+      });
     });
   }
 }

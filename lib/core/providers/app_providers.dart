@@ -44,11 +44,8 @@ class AppProviders {
     ProxyProvider<IFirestoreService, CategoryRepository>(
       update: (_, service, _) => CategoryRepository(service: service, auth: FirebaseAuth.instance),
     ),
-    ProxyProvider4<CurrencyProvider, CategoryRepository, ExchangeRateService, IFirestoreService, TransactionRepository>(
-      update: (_, currencyProvider, catRepo, exchangeService, service, _) => TransactionRepository(
-        currencyProvider,
-        categoryRepo: catRepo,
-        exchangeService: exchangeService,
+    ProxyProvider<IFirestoreService, TransactionRepository>(
+      update: (_,service, _) => TransactionRepository(
         service: service,
         auth: FirebaseAuth.instance
       ),
@@ -56,11 +53,10 @@ class AppProviders {
     ProxyProvider<IFirestoreService, BudgetRepository>(
       update: (_, service, _) => BudgetRepository(service: service, auth: FirebaseAuth.instance),
     ),   
-    ProxyProvider4<CategoryRepository, ExchangeRateService, CurrencyProvider, IFirestoreService, MonthlyDataRepository>(
-      update: (_, catRepo, exchangeService, currencyProvider, service, _) => MonthlyDataRepository(
+    ProxyProvider3<CategoryRepository, ExchangeRateService, IFirestoreService, MonthlyDataRepository>(
+      update: (_, catRepo, exchangeService, service, _) => MonthlyDataRepository(
         catRepo: catRepo,
         exchangeService: exchangeService,
-        currencyProvider: currencyProvider,
         service: service,
         auth: FirebaseAuth.instance,
       ),
@@ -93,9 +89,10 @@ class AppProviders {
     ChangeNotifierProvider(
       create: (context) => SignInViewModel() 
     ),
-    Provider(
+    ChangeNotifierProvider(
       create: (context) => DashboardViewModel(
-        context.read<MonthlyDataRepository>(), 
+        context.read<MonthlyDataRepository>(),
+        context.read<CurrencyProvider>() 
       ),
     ),
     ChangeNotifierProvider(
@@ -114,10 +111,10 @@ class AppProviders {
     ChangeNotifierProvider(
       create: (context) => BudgetingViewModel(
         budgetRepo: context.read<BudgetRepository>(),
-        txRepo: context.read<TransactionRepository>(),
+        monthlyDataRepo: context.read<MonthlyDataRepository>(),
         catRepo: context.read<CategoryRepository>(),
         exchangeService: context.read<ExchangeRateService>(),
-        currencyStream: context.read<CurrencyProvider>().currencyStream,
+        currencyProvider: context.read<CurrencyProvider>(),
       )
     ),
     Provider(

@@ -2,29 +2,20 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:personal_fin/core/firestore/constants/firestore_path.dart';
 import 'package:personal_fin/core/firestore/network/query_options.dart';
-import 'package:personal_fin/core/providers/currency_provider.dart';
-import 'package:personal_fin/core/repositories/category_repository.dart';
-import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/services/i_firestore_service.dart';
-import 'package:personal_fin/models/category.dart';
-import 'package:personal_fin/models/category_spending.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../models/transaction.dart';
 
 class TransactionRepository {
   final IFirestoreService _service;
   final FirebaseAuth _auth;
-  final CategoryRepository _categoryRepo;
-  final ExchangeRateService _exchangeService;
-  final CurrencyProvider _currencyProvider;
 
   final _monthController = BehaviorSubject<DateTime>.seeded(DateTime.now());
 
-  TransactionRepository(this._currencyProvider, {required IFirestoreService service, required FirebaseAuth auth, required CategoryRepository categoryRepo, required ExchangeRateService exchangeService})
+  TransactionRepository({required IFirestoreService service, required FirebaseAuth auth})
       : _service = service,
-        _auth = auth,
-        _categoryRepo = categoryRepo,
-        _exchangeService = exchangeService;
+        _auth = auth;
+
 
   // The Reactive Master Stream
   Stream<List<Transaction>> get transactionsStream {
@@ -39,68 +30,18 @@ class TransactionRepository {
     });
   }
 
-  Stream<List<Transaction>> get monthlyTransactionsStream {
-    return Rx.combineLatest2(
-      _auth.authStateChanges(),
-      _monthController.stream,
-      (user, date) => _TxParams(user?.uid, date),
-    ).switchMap((params) {
-      if (params.uid == null) return Stream.value([]);
-
-      final start = DateTime(params.date.year, params.date.month, 1);
-      final end = DateTime(params.date.year, params.date.month + 1, 0, 23, 59, 59);
-
+  Stream<List<Transaction>> getRecentTransactions(int limit) {
+    return _auth.authStateChanges().switchMap((user) {
+      if (user == null) return Stream.value([]);
+      
       return _service.streamCollection<Transaction>(
         collectionPath: transactionsCollectionPath,
         builder: (map) => Transaction.fromMap(map),
-        filters: [
-          FieldFilter('date', FilterOperator.isGreaterThanOrEqualTo, start),
-          FieldFilter('date', FilterOperator.isLessThanOrEqualTo, end),
-        ],
         orderBy: [OrderByOption('date', descending: true)],
+        limit: limit, 
       );
     });
   }
-
-  // In TransactionRepository or a new AnalyticsService
-  Stream<List<CategorySpending>> getMonthlySpendingStream(DateTime month, String currencyCode) {
-    return Rx.combineLatest3(
-     monthlyTransactionsStream,
-      _categoryRepo.allCategoriesStream,
-      _currencyProvider.currencyStream, 
-      (transactions, categories, code) {
-        final Map<String, double> totals = {};
-        final Map<String, Category> categoryMap = {};
-        double totalMonthlyExpense = 0.0;
-
-        for (var t in transactions.where((t) => t.type == 'Expense')) {
-          final category = categories.firstWhere(
-            (c) => c.id == t.categoryId, 
-            orElse: () => Category(id: 'unknown', name: 'Other'),
-          );
-          
-          final amount = _exchangeService.fromBase(t.baseAmount, code);
-          totalMonthlyExpense += amount;
-          totals.update(category.id, (v) => v + amount, ifAbsent: () => amount);
-          categoryMap[category.id] = category;
-        }
-
-        // Convert map to sorted List<CategorySpending>
-        return totals.entries.map((e) {
-          final cat = categoryMap[e.key]!;
-
-          final percentage = totalMonthlyExpense > 0 ? (e.value / totalMonthlyExpense) : 0.0;
-          return CategorySpending(
-            category: cat,
-            totalAmount: e.value,
-            percentage: percentage,
-          );
-        }).toList()..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
-      },
-    );
-  }
-
-  
 
   void setMonth(DateTime date) => _monthController.add(date);
 
@@ -121,10 +62,4 @@ class TransactionRepository {
   Future<void> deleteTransaction(String id) async {
     await _service.deleteDocument(collectionPath: transactionsCollectionPath, id: id);
   }
-}
-
-class _TxParams {
-  final String? uid;
-  final DateTime date;
-  _TxParams(this.uid, this.date);
 }

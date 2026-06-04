@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:personal_fin/core/firestore/constants/firestore_path.dart';
 import 'package:personal_fin/core/firestore/network/query_options.dart';
-import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
 import 'package:personal_fin/core/services/i_firestore_service.dart';
@@ -15,88 +14,24 @@ class MonthlyDataRepository {
   final CategoryRepository _catRepo;
   final FirebaseAuth _auth;
   final ExchangeRateService _exchangeService;
-  final CurrencyProvider _currencyProvider;
 
   MonthlyDataRepository({
     required CategoryRepository catRepo, 
     required ExchangeRateService exchangeService, 
-    required CurrencyProvider currencyProvider, 
     required IFirestoreService service, 
     required FirebaseAuth auth
   }) : _catRepo = catRepo,
-      _exchangeService = exchangeService,
-      _currencyProvider = currencyProvider, 
-      _firestoreService = service,
-      _auth = auth;
+       _exchangeService = exchangeService,
+       _firestoreService = service,
+       _auth = auth;
       
-    
   String get currentUid => _auth.currentUser?.uid ?? '';
   String get transactionsCollectionPath => FirestorePath.transactions(currentUid);
   ExchangeRateService get exchangeService => _exchangeService;
 
-  Stream<Map<String, MonthlyData>> get comparisonStream {
-    return Rx.combineLatest2(
-      _auth.authStateChanges(),
-      _currencyProvider.currencyStream,
-      (user, currencyCode) => (user, currencyCode),
-    ).switchMap((tuple) {
-      final user = tuple.$1;
-      final currencyCode = tuple.$2;
-
-      if (user == null) {
-        return Stream.value({
-          'current': MonthlyData.empty(),
-          'previous': MonthlyData.empty()
-        });
-      }
-
-      final now = DateTime.now();
-      final currentMonth = DateTime(now.year, now.month);
-      final prevMonth = DateTime(now.year, now.month - 1);
-
-      return Rx.combineLatest2(
-        streamMonthlyData(currentMonth, currencyCode),
-        streamMonthlyData(prevMonth, currencyCode),
-        (current, previous) => {'current': current, 'previous': previous},
-      );
-    });
-  }
-
-  Future<MonthlyData> getMonthlyData(DateTime month, String currencyCode) async {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) throw Exception("User not logged in");
-
-    final range = _getDateRange(month);
-    
-    // Use the Future-based fetch from the Firestore service
-    final transactions = await _firestoreService.getCollection<Transaction>(
-      collectionPath: transactionsCollectionPath,
-      builder: (map) => Transaction.fromMap(map),
-      filters: [
-        FieldFilter('date', FilterOperator.isGreaterThanOrEqualTo, range.start),
-        FieldFilter('date', FilterOperator.isLessThanOrEqualTo, range.end),
-      ],
-      orderBy: [
-        OrderByOption('date', descending: true),
-      ],
-    );
-
-    // Use the same calculation logic used by the streams!
-    return _calculateMonthlyData(transactions, month, currencyCode);
-  }
-
-  Future<List<MonthlyData>> getReviewData(DateTime currentMonth, String currencyCode) async {
-    final previousMonth = DateTime(currentMonth.year, currentMonth.month - 1, 1);
-    
-    return await Future.wait([
-      getMonthlyData(currentMonth, currencyCode),
-      getMonthlyData(previousMonth, currencyCode),
-    ]);
-  }
-
+  // Real-time stream for a single targeted month
   Stream<MonthlyData> streamMonthlyData(DateTime month, String currencyCode) {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return Stream.value(MonthlyData.empty());
+    if (currentUid.isEmpty) return Stream.value(MonthlyData.empty(month));
 
     final range = _getDateRange(month);
 
@@ -111,17 +46,26 @@ class MonthlyDataRepository {
     ).map((txs) => _calculateMonthlyData(txs, month, currencyCode));
   }
 
-  // Helper for date math
+  // Reactive historical review data stream (Combines current and previous month reactively!)
+  Stream<List<MonthlyData>> streamReviewData(DateTime currentMonth, String currencyCode) {
+    final previousMonth = DateTime(currentMonth.year, currentMonth.month - 1, 1);
+    
+    return Rx.combineLatest2(
+      streamMonthlyData(currentMonth, currencyCode),
+      streamMonthlyData(previousMonth, currencyCode),
+      (current, previous) => [current, previous],
+    );
+  }
+
   _DateRange _getDateRange(DateTime month) => _DateRange(
         start: DateTime(month.year, month.month, 1),
         end: DateTime(month.year, month.month + 1, 0, 23, 59, 59),
       );
 
-  // Calculation Logic (Calculates totals and breakdowns)
+  // One central calculator handles mapping raw transactions to domain data
   MonthlyData _calculateMonthlyData(List<Transaction> transactions, DateTime month, String currencyCode) {
     double income = 0;
     double expenses = 0;
-    
     final breakdown = <String, double>{};
 
     for (var tx in transactions) {
@@ -131,8 +75,9 @@ class MonthlyDataRepository {
       } else {
         expenses += amountInTarget;
         final catName = _catRepo.getNameByIdSync(tx.categoryId);
-        if (catName.isEmpty) continue;
-        breakdown.update(catName, (v) => v + amountInTarget, ifAbsent: () => amountInTarget);
+        if (catName.isNotEmpty) {
+          breakdown.update(catName, (v) => v + amountInTarget, ifAbsent: () => amountInTarget);
+        }
       }
     }
 
@@ -142,18 +87,7 @@ class MonthlyDataRepository {
       expenses: expenses,
       transactionCount: transactions.length,
       categoryBreakdown: breakdown,
-    );
-  }
-
-  Future<List<Transaction>> getMonthlyDataTransactions(DateTime month, String currencyCode) async {
-    final range = _getDateRange(month);
-    return await _firestoreService.getCollection<Transaction>(
-      collectionPath: transactionsCollectionPath,
-      builder: (map) => Transaction.fromMap(map),
-      filters: [
-        FieldFilter('date', FilterOperator.isGreaterThanOrEqualTo, range.start),
-        FieldFilter('date', FilterOperator.isLessThanOrEqualTo, range.end),
-      ],
+      rawTransactions: transactions, 
     );
   }
 }

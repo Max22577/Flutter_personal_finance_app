@@ -1,9 +1,8 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
-import 'package:personal_fin/core/repositories/transaction_repository.dart';
-import 'package:personal_fin/models/category_spending.dart';
+import 'package:personal_fin/models/category.dart';
+import 'package:personal_fin/models/state_models/category_spending.dart';
 import 'package:personal_fin/models/monthly_data.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -17,13 +16,11 @@ class DailyChartPoint {
 
 class MonthlyReviewViewModel extends ChangeNotifier {
   final MonthlyDataRepository _repo;
-  final TransactionRepository _transRepo;
   final CurrencyProvider _currencyProvider;
 
   final _monthController = BehaviorSubject<DateTime>();
   
-  
-  MonthlyReviewViewModel(this._repo, this._transRepo, this._currencyProvider, DateTime initialMonth) {
+  MonthlyReviewViewModel(this._repo, this._currencyProvider, DateTime initialMonth) {
     _selectedMonth = initialMonth;
     _monthController.add(initialMonth);
   }
@@ -31,85 +28,24 @@ class MonthlyReviewViewModel extends ChangeNotifier {
   late DateTime _selectedMonth;
   DateTime get selectedMonth => _selectedMonth;
 
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-
-  MonthlyData? _currentMonthData;
-  MonthlyData? get currentMonthData => _currentMonthData;
-
-  MonthlyData? _previousMonthData;
-  MonthlyData? get previousMonthData => _previousMonthData;
-
-  void changeMonth(DateTime newMonth) {
-    _selectedMonth = newMonth;
-    _monthController.add(newMonth);
-    notifyListeners();
-  }
-
-  Stream<List<CategorySpending>> get categorySpendingStream => _transRepo.getMonthlySpendingStream(
-    _selectedMonth, _currencyProvider.currentCurrency);
-
-  // Stream combining current currency and selected month to fetch historical daily trend series
-  Stream<List<DailyChartPoint>> get dailyTrendStream {
+  Stream<MonthlyData> get currentMonthlyDataStream {
     return Rx.combineLatest2(
-      _currencyProvider.currencyStream,
       _monthController.stream,
-      (String code, DateTime month) => _fetchAndAggregateDailyPoints(month, code),
-    ).switchMap((future) => Stream.fromFuture(future));
+      _currencyProvider.currencyStream,
+      (month, currency) => _repo.streamMonthlyData(month, currency),
+    ).switchMap((stream) => stream);
   }
 
-  Stream<List<MonthlyData>> getReviewDataStream(DateTime month) {
-    return _monthController.stream.switchMap((month) {
-      return _currencyProvider.currencyStream.switchMap((currencyCode) {
-        return Stream.fromFuture(_repo.getReviewData(month, currencyCode));
-      });
-    });
-  }
-
-  // Business Logic: Calculations moved out of UI
-  double get savingsRate {
-    if (_currentMonthData == null || _currentMonthData!.income <= 0) return 0.0;
-    return (_currentMonthData!.net / _currentMonthData!.income).clamp(0.0, 1.0);
-  }
-
-  List<MapEntry<String, double>> get topSpendingCategories {
-    if (_currentMonthData == null) return [];
-    final allEntries = _currentMonthData!.categoryBreakdown.entries
-        .toList()
-        .sorted((a, b) => b.value.compareTo(a.value));
-
-    if (allEntries.length <= 4) return allEntries;
-
-    // Keep the top 3
-    final topThree = allEntries.take(3).toList();
-
-    // Sum up the value of all the remaining categories
-    final otherSum = allEntries.skip(3).map((e) => e.value).reduce((a, b) => a + b);
-
-    // Add the "Other" category to the end
-    topThree.add(MapEntry('other_label', otherSum));
-
-    return topThree;
-  }
-
-  Future<List<DailyChartPoint>> _fetchAndAggregateDailyPoints(DateTime month, String currencyCode) async {
-    final range = DateTime(month.year, month.month + 1, 0); // Determine exact total days in targeted month
-    final totalDays = range.day;
-
-    try {
-      final uid = _repo.currentUid;
-      if (uid.isEmpty) return [];
-
-      // Query raw items matching timeframe constraints directly from firestore abstractions
-      final transactions = await _repo.getMonthlyDataTransactions(month, currencyCode);
-
-      // Create indexed intermediate maps for O(1) lookups
+  Stream<List<DailyChartPoint>> get dailyTrendStream {
+    return currentMonthlyDataStream.map((monthlyData) {
+      final totalDays = DateTime(monthlyData.month.year, monthlyData.month.month + 1, 0).day;
+      
       final Map<int, double> dailyIncome = {};
       final Map<int, double> dailyExpenses = {};
 
-      for (var tx in transactions) {
+      for (var tx in monthlyData.rawTransactions) {
         final day = tx.date.day;
-        final amount = _repo.exchangeService.fromBase(tx.baseAmount, currencyCode);
+        final amount = _repo.exchangeService.fromBase(tx.baseAmount, _currencyProvider.currentCurrency);
 
         if (tx.type == 'Income') {
           dailyIncome.update(day, (v) => v + amount, ifAbsent: () => amount);
@@ -118,7 +54,6 @@ class MonthlyReviewViewModel extends ChangeNotifier {
         }
       }
 
-      // Generate a contiguous array mapping every calendar day of the month sequentially
       return List.generate(totalDays, (index) {
         final day = index + 1;
         return DailyChartPoint(
@@ -127,10 +62,36 @@ class MonthlyReviewViewModel extends ChangeNotifier {
           expenses: dailyExpenses[day] ?? 0.0,
         );
       });
-    } catch (e) {
-      debugPrint("Error creating trend points matrix: $e");
-      return [];
-    }
+    });
+  }
+
+  Stream<List<MonthlyData>> get reviewDataStream {
+    return Rx.combineLatest2(
+      _monthController.stream,
+      _currencyProvider.currencyStream,
+      (month, currency) => _repo.streamReviewData(month, currency),
+    ).switchMap((stream) => stream);
+  }
+
+  Stream<List<CategorySpending>> get categorySpendingStream {
+    return currentMonthlyDataStream.map((data) {
+      final totalExpenses = data.expenses;
+      
+      // Map your cached breakdown into the CategorySpending format
+      return data.categoryBreakdown.entries.map((entry) {
+        return CategorySpending(
+          category: Category(id: entry.key, name: entry.key), // Or resolve from Repo
+          totalAmount: entry.value,
+          percentage: totalExpenses > 0 ? (entry.value / totalExpenses) : 0,
+        );
+      }).toList()..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
+    });
+  }
+
+  void changeMonth(DateTime newMonth) {
+    _selectedMonth = newMonth;
+    _monthController.add(newMonth);
+    notifyListeners();
   }
 
   @override
@@ -138,5 +99,4 @@ class MonthlyReviewViewModel extends ChangeNotifier {
     _monthController.close();
     super.dispose();
   }
-
 }
