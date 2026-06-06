@@ -338,7 +338,6 @@ class _ChartCardWrapper extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey[200]!),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -24,7 +24,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
   void _updateAppBar() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<NavigationProvider>().setActions([
+        context.read<NavigationProvider>().setActions(1, [
           _AppBarAddButton(onPressed: () => _showTransactionForm(context)),
         ]);
       }
@@ -43,11 +43,6 @@ class _TransactionsPageState extends State<TransactionsPage> {
 
   @override
   void dispose() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<NavigationProvider>().setActions([]);
-      }
-    });
     super.dispose();
   }
 

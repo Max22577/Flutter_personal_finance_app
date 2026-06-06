@@ -21,7 +21,7 @@ class EmptyChartState extends StatelessWidget {
           imagePath: 'assets/images/empty_wallet_light.svg',
           darkImagePath: 'assets/images/empty_wallet_dark1.svg',
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         Text(
           textMessage,
           style: TextStyle(color: colors.onSurfaceVariant),

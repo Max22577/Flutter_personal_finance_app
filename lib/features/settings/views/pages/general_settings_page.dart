@@ -5,7 +5,7 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/utils/app_feedback.dart';
 import 'package:personal_fin/core/shared_widgets/custom_appbar.dart';
 import 'package:personal_fin/features/settings/view_models/general_settings_view_model.dart';
-import 'package:personal_fin/features/settings/views/widgets/general_settings/currency_picker.dart';
+import 'package:personal_fin/core/shared_widgets/currency_picker.dart';
 import 'package:personal_fin/features/settings/views/widgets/general_settings/hero_header.dart';
 import 'package:personal_fin/models/currency.dart';
 import 'package:personal_fin/models/setting_item.dart';

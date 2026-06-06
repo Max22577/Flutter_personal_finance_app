@@ -43,7 +43,7 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
   void _updateAppBar() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<NavigationProvider>().setActions([
+        context.read<NavigationProvider>().setActions(2, [
           _CategoryActionButton(onPressed: () => Navigator.pushNamed(context, '/categories')),
         ]);
       }
@@ -54,11 +54,6 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
   void dispose() {
     _scrollController.dispose(); 
     
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<NavigationProvider>().setActions([]);
-      }
-    });
     super.dispose();
   }
 

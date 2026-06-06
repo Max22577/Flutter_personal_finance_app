@@ -134,7 +134,7 @@ class _BottomNavBar extends StatelessWidget {
               items: [
                 BottomNavigationBarItem(icon: const Icon(Icons.dashboard_rounded), label: lang.translate('dashboard')),
                 BottomNavigationBarItem(icon: const Icon(Icons.swap_horiz_rounded), label: lang.translate('transactions')),
-                BottomNavigationBarItem(icon: const Icon(Icons.auto_graph_rounded), label: lang.translate('budgeting')),
+                BottomNavigationBarItem(icon: const Icon(Icons.analytics_rounded), label: lang.translate('budgeting')),
                 BottomNavigationBarItem(icon: const Icon(Icons.account_circle), label: lang.translate('profile')),
               ],
             ),

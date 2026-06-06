@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 
 class NavigationProvider extends ChangeNotifier {
   int _selectedIndex = 0;
-  List<Widget> _currentActions = [];
+  final Map<int, List<Widget>> _pageActions = {};
   
   final List<String> _pageTitlesKeys = ["dashboard", "transactions", "budgeting", "profile"];
 
   int get selectedIndex => _selectedIndex;
-  List<Widget> get currentActions => _currentActions;
+
+  List<Widget> get currentActions => _pageActions[_selectedIndex] ?? [];
   String get currentTitle => _pageTitlesKeys[_selectedIndex];
   
   bool get isCurrentPageOverGradient => _selectedIndex == 0;
@@ -15,13 +16,12 @@ class NavigationProvider extends ChangeNotifier {
   void setPage(int index) {
     if (_selectedIndex == index) return;
     _selectedIndex = index;
-    _currentActions = []; 
     notifyListeners();
   }
 
-  void setActions(List<Widget> actions) {
+  void setActions(int pageIndex, List<Widget> actions) {
+    _pageActions[pageIndex] = actions;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _currentActions = actions;
       notifyListeners();
     });
   }
