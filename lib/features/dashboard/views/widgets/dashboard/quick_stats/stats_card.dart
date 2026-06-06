@@ -40,7 +40,7 @@ class StatCard extends StatelessWidget {
             colors.surfaceContainer.withValues(alpha: 0.6),
           ],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.25)),
       ),
       child: Stack(

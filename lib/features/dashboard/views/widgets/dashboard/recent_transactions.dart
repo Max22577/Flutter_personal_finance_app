@@ -34,11 +34,9 @@ class RecentTransactions extends StatelessWidget {
       ),
       child: Builder(
         builder: (context) {
-          final vm = context.read<RecentTransactionsViewModel>();
-
           return Card(
             elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.0)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -47,8 +45,8 @@ class RecentTransactions extends StatelessWidget {
                 children: [
                   _buildHeader(theme, lang, textScaler),
                   const SizedBox(height: 12),
-                  // 2. The StreamBuilder now handles all loading/error/data states
-                  _buildContent(vm, theme, lang, textScaler),
+  
+                  _Content(),
                   const SizedBox(height: 8),
                 ],
               ),
@@ -60,11 +58,9 @@ class RecentTransactions extends StatelessWidget {
   }
 
   Widget _buildHeader(ThemeData theme, LanguageProvider lang, TextScaler textScaler) {
-    return Wrap(
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 12,
-      runSpacing: 4,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween, 
+      crossAxisAlignment: CrossAxisAlignment.center,      
       children: [
         Text(
           lang.translate('recent_transactions'),
@@ -76,16 +72,25 @@ class RecentTransactions extends StatelessWidget {
             style: TextButton.styleFrom(
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap, // Reduces extra touch padding
             ),
             child: Text(
               lang.translate('view_all'),
-              style: TextStyle(fontSize: textScaler.scale(14))),
+              style: TextStyle(fontSize: textScaler.scale(14)),
+            ),
           ),
       ],
     );
   }
+}
 
-  Widget _buildContent(RecentTransactionsViewModel vm, ThemeData theme, LanguageProvider lang, TextScaler textScaler) {
+class _Content extends StatelessWidget {
+
+  const _Content();
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.read<RecentTransactionsViewModel>();
     return StreamBuilder<List<TransactionDisplay>>(
       stream: vm.recentTransactionsStream,
       builder: (context, snapshot) {
@@ -94,7 +99,7 @@ class RecentTransactions extends StatelessWidget {
         final displayList = snapshot.data!;
 
         if (displayList.isEmpty) {
-          return _buildEmptyState(theme, lang, textScaler);
+          return const _EmptyState();
         }
         
         return Column(
@@ -108,9 +113,17 @@ class RecentTransactions extends StatelessWidget {
       },
     );
   }
+}
 
-  Widget _buildEmptyState(ThemeData theme, LanguageProvider lang, TextScaler textScaler) {
-    
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final lang = context.watch<LanguageProvider>();
+    final textScaler = MediaQuery.textScalerOf(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 24),
@@ -128,3 +141,5 @@ class RecentTransactions extends StatelessWidget {
     );
   }
 }
+
+  

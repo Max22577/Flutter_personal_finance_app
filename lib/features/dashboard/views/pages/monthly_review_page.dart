@@ -71,7 +71,9 @@ class _MonthlyReviewBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.read<MonthlyReviewViewModel>();
     final lang = context.watch<LanguageProvider>();
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final textScaler = MediaQuery.textScalerOf(context);
 
     // Safely look up system status bar heights manually
@@ -135,7 +137,15 @@ class _MonthlyReviewBody extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [colors.primary, Color.lerp(colors.primary, colors.secondary, 0.5)!],
+                      colors: isDark 
+                        ? [
+                            colors.primary.withValues(alpha: 0.4), 
+                            colors.secondary.withValues(alpha: 0.5), 
+                          ]
+                        : [
+                            colors.primary, 
+                            Color.lerp(colors.primary, colors.secondary, 0.5)!,
+                          ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                     ),

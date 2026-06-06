@@ -20,9 +20,9 @@ class AppColors {
   static const Color lightShadow = Color(0xFF1A1C1E);
   
   // Dark theme colors (Refined)
-  static const Color darkPrimary = Color(0xFFD0BCFF); // Softer purple for better readability
+  static const Color darkPrimary = Color(0xFFD0BCFF); 
   static const Color darkSecondary = Color(0xFF03DAC6);
-  static const Color darkOnPrimary = Color(0xFF381E72);
+  static const Color darkOnPrimary =  Color(0xFFF2E7FE);
 
   static const Color darkBackground = Color(0xFF0F1115);
   static const Color darkSurfaceContainerLow = Color(0xFF17191F);
@@ -39,32 +39,7 @@ class AppColors {
   static const Color expenseRed = Color(0xFFF44336);
 }
 
-class IllustrationTheme extends ThemeExtension<IllustrationTheme> {
-  final Color? tintColor;
-  final BlendMode? blendMode;
 
-  const IllustrationTheme({
-    required this.tintColor,
-    required this.blendMode,
-  });
-
-  @override
-  IllustrationTheme copyWith({Color? tintColor, BlendMode? blendMode}) {
-    return IllustrationTheme(
-      tintColor: tintColor ?? this.tintColor,
-      blendMode: blendMode ?? this.blendMode,
-    );
-  }
-
-  @override
-  IllustrationTheme lerp(ThemeExtension<IllustrationTheme>? other, double t) {
-    if (other is! IllustrationTheme) return this;
-    return IllustrationTheme(
-      tintColor: Color.lerp(tintColor, other.tintColor, t),
-      blendMode: t < 0.5 ? blendMode : other.blendMode,
-    );
-  }
-}
 
 class FinancialColors extends ThemeExtension<FinancialColors> {
   final Color income;
@@ -158,10 +133,6 @@ class AppThemes {
     ),
 
     extensions: [
-      const IllustrationTheme(
-        tintColor: Color(0xFFF8F9FF), 
-        blendMode: BlendMode.modulate,
-      ),
       const FinancialColors(
         income: Color(0xFF4CAF50),
         expense: Color(0xFFF44336),
@@ -188,7 +159,7 @@ class AppThemes {
     brightness: Brightness.dark,
     colorScheme: const ColorScheme.dark(
       primary: AppColors.darkPrimary,
-      onPrimary: AppColors.darkOnPrimary,
+      onPrimary: Color.fromARGB(255, 226, 204, 250),
       primaryContainer: Color(0xFF4F378B),
       onPrimaryContainer: Color(0xFFEADDFF),
       secondary: AppColors.darkSecondary,
@@ -206,10 +177,6 @@ class AppThemes {
       onErrorContainer: Color(0xFFFFDAD6),
     ),
     extensions: [
-      const IllustrationTheme( 
-        tintColor: Color(0xFF121212), 
-        blendMode: BlendMode.screen, 
-      ),
       const FinancialColors(
         income: Color(0xFF81C784), // Lighter, desaturated green
         expense: Color(0xFFE57373), // Lighter, desaturated red

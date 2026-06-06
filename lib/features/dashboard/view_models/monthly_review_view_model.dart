@@ -38,8 +38,6 @@ class MonthlyReviewViewModel extends ChangeNotifier {
 
   Stream<List<DailyChartPoint>> get dailyTrendStream {
     return currentMonthlyDataStream.map((monthlyData) {
-      final totalDays = DateTime(monthlyData.month.year, monthlyData.month.month + 1, 0).day;
-      
       final Map<int, double> dailyIncome = {};
       final Map<int, double> dailyExpenses = {};
 
@@ -54,14 +52,19 @@ class MonthlyReviewViewModel extends ChangeNotifier {
         }
       }
 
-      return List.generate(totalDays, (index) {
-        final day = index + 1;
+      final Set<int> activeDays = {...dailyIncome.keys, ...dailyExpenses.keys};
+      
+      // Sort the days chronologically
+      final sortedDays = activeDays.toList()..sort();
+
+      // Generate the list ONLY for active days
+      return sortedDays.map((day) {
         return DailyChartPoint(
           day: day,
           income: dailyIncome[day] ?? 0.0,
           expenses: dailyExpenses[day] ?? 0.0,
         );
-      });
+      }).toList();
     });
   }
 

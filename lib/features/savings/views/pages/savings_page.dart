@@ -126,7 +126,7 @@ class _SavingsList extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           lang.translate('your_goals'),
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
         ),

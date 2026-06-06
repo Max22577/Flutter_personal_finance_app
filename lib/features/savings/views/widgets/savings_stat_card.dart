@@ -23,7 +23,7 @@ class SavingsStatCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           child: Text(
             lang.translate('savings_overview'),
-            style: textTheme.labelLarge?.copyWith(
+            style: textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w900,
               letterSpacing: 1.2,
               color: colors.onSurfaceVariant,
@@ -85,14 +85,12 @@ class SavingsStatCard extends StatelessWidget {
     );
   }
 
-  TextStyle _valueStyle(TextTheme textTheme, Color color) => textTheme.labelMedium!.copyWith(
+  TextStyle _valueStyle(TextTheme textTheme, Color color) => textTheme.bodyMedium!.copyWith(
         fontWeight: FontWeight.w900,
-        letterSpacing: -0.5,
         color: color,
       );
 }
 
-// Private sub-component card unit
 class _StatCardItem extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -141,23 +139,19 @@ class _StatCardItem extends StatelessWidget {
             ),
             child: Icon(icon, color: iconColor, size: 16),
           ),
-          
+          const SizedBox(height: 4),
           // Bottom Column: Metrics and Title stacked cleanly
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               valueWidget,
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 label.toUpperCase(),
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.6,
-                  fontSize: 10,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w800, 
                   color: colors.outline,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

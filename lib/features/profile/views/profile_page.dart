@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
-import 'package:personal_fin/core/utils/app_feedback.dart';
 import 'package:personal_fin/features/profile/view_models/profile_view_model.dart';
 import 'package:provider/provider.dart';
+import 'widgets/profile_header.dart';
+import 'widgets/settings_card.dart';
+import 'widgets/edit_profile_bottom_sheet.dart';
 
 class ProfilePage extends StatelessWidget {
   final ProfileViewModel? viewModel;
@@ -26,335 +27,83 @@ class ProfileViewContent extends StatefulWidget {
 }
 
 class _ProfileViewContentState extends State<ProfileViewContent> {
-  late final TextEditingController _fullNameController;
-  late final TextEditingController _bioController;
-  final _formKey = GlobalKey<FormState>();
-
   @override
   void initState() {
     super.initState();
-    final vm = context.read<ProfileViewModel>();
-    _fullNameController = TextEditingController(text: vm.fullName);
-    _bioController = TextEditingController(text: vm.bio);
-
-    // Initial setup of AppBar
-    _updateAppBarLogic();
+    _setupAppBarActions();
   }
 
-  void _updateAppBarLogic() {
-    final vm = context.read<ProfileViewModel>();
+  void _setupAppBarActions() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _ProfileActionsHandler.setProfileActions(context, context.read<NavigationProvider>(), vm); 
+        final vm = context.read<ProfileViewModel>();
+        context.read<NavigationProvider>().setActions(3, [
+          IconButton(
+            icon: const Icon(Icons.tune_rounded),
+            tooltip: 'Profile Settings',
+            onPressed: () => _openEditProfileSheet(context, vm),
+          ),
+        ]);
       }
     });
   }
 
-  @override
-  void dispose() {
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<NavigationProvider>().setActions([]);
-      }
-    });
-    _fullNameController.dispose();
-    _bioController.dispose();
-    super.dispose();
+  void _openEditProfileSheet(BuildContext context, ProfileViewModel vm) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => EditProfileBottomSheet(viewModel: vm),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ProfileViewModel>();
     final colors = Theme.of(context).colorScheme;
-    final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerLow,
-      body: vm.isLoading 
+      body: vm.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView( // Changed to ListView for better scroll physics
+          : ListView(
+              physics: const BouncingScrollPhysics(),
               children: [
-                _ProfileHeader(
-                  fullName: _fullNameController.text,
+                ProfileHeader(
+                  fullName: vm.fullName ?? '',
                   email: vm.authEmail,
                   photoUrl: vm.photoUrl,
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        _SectionHeader(title: lang.translate('account_security')),
-                        _InfoSection(email: vm.authEmail),
-                        const SizedBox(height: 24),
-                        _PublicDetailsSection(
-                          nameController: _fullNameController,
-                          bioController: _bioController,
-                        ),
-                        const SizedBox(height: 32),
-                        _SaveProfileButton(
-                          vm: vm,
-                          name: _fullNameController,
-                          bio: _bioController,
-                        ),
-                        const SizedBox(height: 100),
-                      ],
-                    ),
+                const Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _SectionHeader(title: 'Settings'),
+                      SizedBox(height: 12),
+                      SettingsCard(),
+                    ],
                   ),
                 ),
               ],
             ),
-    );
-  }
-}
-
-class _ProfileActionsHandler {
-  static void setProfileActions(BuildContext context, NavigationProvider nav, ProfileViewModel vm) {
-    nav.setActions([
-      IconButton(
-        icon: const Icon(Icons.logout_rounded),
-        onPressed: () => vm.signOut(),
-      ),
-    ]);
-  }
-}
-
-class _ProfileHeader extends StatelessWidget {
-  final String fullName;
-  final String email;
-  final String? photoUrl;
-
-  const _ProfileHeader({required this.fullName, required this.email, this.photoUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      decoration: BoxDecoration(
-        color: colors.surface, 
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            colors.primary.withValues(alpha: 0.05), 
-            colors.surface,
-          ],
-        ),
-      ),
-      child: Column(
-        children: [
-          _AvatarStack(photoUrl),
-          const SizedBox(height: 16),
-          Text(
-            fullName.isEmpty ? 'Your Profile' : fullName,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-            ),
-          ),
-          Text(
-            email,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colors.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AvatarStack extends StatelessWidget {
-  final String? photoUrl;
-
-  const _AvatarStack(this.photoUrl);
-
-  @override
-  Widget build(BuildContext context) {
-    final messenger = ScaffoldMessenger.of(context);
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-      child: Stack(
-        children: [
-          CircleAvatar(
-            radius: 65,
-            backgroundColor: colors.surfaceContainerHigh,
-            backgroundImage: photoUrl != null 
-                ? NetworkImage(photoUrl!) 
-                : null,
-            child: photoUrl == null 
-                ? Icon(Icons.person_rounded, size: 70, color: colors.outline) 
-                : null,
-          ),
-          Positioned(
-            bottom: 0,
-            right: 4,
-            child: CircleAvatar(
-              backgroundColor: colors.primary,
-              radius: 18,
-              child: IconButton(
-                icon: const Icon(Icons.edit, size: 16, color: Colors.white),
-                onPressed: () => AppFeedback.show(messenger, 'Image upload coming soon!', colors: colors, textTheme: textTheme, isError: false),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
 
 class _SectionHeader extends StatelessWidget {
   final String title;
-
   const _SectionHeader({required this.title});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final textTheme = theme.textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12, left: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: textTheme.labelLarge?.copyWith(
-          color: colors.onSurface,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoSection extends StatelessWidget {
-  final String email;
-
-  const _InfoSection({required this.email});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final lang = context.watch<LanguageProvider>();
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+    return Text(
+      title.toUpperCase(),
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: Theme.of(context).colorScheme.outline,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.4,
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.email, color: colors.primary.withValues(alpha: 0.7)),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  lang.translate('email'),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colors.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  email,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          Icon(Icons.lock_outline, size: 18, color: colors.outline),
-        ],
-      ),
-    );
-  }
-}
-
-class _PublicDetailsSection extends StatelessWidget {
-  final TextEditingController nameController;
-  final TextEditingController? bioController;
-
-  const _PublicDetailsSection({required this.nameController, this.bioController});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final lang = context.watch<LanguageProvider>();
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: TextFormField(
-        controller: nameController,
-        maxLines: bioController != null ? 4 : 1,
-        decoration: InputDecoration(
-          labelText: lang.translate('display_name'),
-          prefixIcon: Icon(Icons.badge, color: theme.colorScheme.primary),
-          filled: true,
-          fillColor: theme.colorScheme.surface,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SaveProfileButton extends StatelessWidget {
-  final ProfileViewModel vm;
-  final TextEditingController name;
-  final TextEditingController bio;
-
-  const _SaveProfileButton({required this.vm, required this.name, required this.bio});
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: vm.isLoading ? null : () => vm.updateProfile(name: name.text, newBio: bio.text),
-      child: vm.isLoading ? CircularProgressIndicator() : Text('Save'),
     );
   }
 }

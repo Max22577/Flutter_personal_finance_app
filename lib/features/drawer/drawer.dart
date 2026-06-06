@@ -156,11 +156,10 @@ class _DrawerItem extends StatelessWidget {
             child: Icon(icon, color: isSelected ? activeColor : inactiveColor, size: 20),
           ),
           title: Text(
-            title, 
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-              color: isSelected ? activeColor : colors.onSurface,
-            ),
+            title,
+            style: isSelected 
+                ? theme.textTheme.titleMedium?.copyWith(color: activeColor, fontWeight: FontWeight.bold)
+                : theme.textTheme.bodyLarge?.copyWith(color: colors.onSurface),
           ),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           onTap: onTap,
@@ -204,7 +203,7 @@ class _DrawerGroup extends StatelessWidget {
           ),
           title: Text(
             title, 
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: hasActiveChild ? colors.primary : colors.onSurface,
             ),
@@ -349,7 +348,7 @@ class _SavingsGroup extends StatelessWidget {
     final routes = ['/savings', '/savings/goal'];
     return _DrawerGroup(
       icon: Icons.savings_rounded,
-      title: lang.translate('savings'),
+      title: lang.translate('Savings'),
       hasActiveChild: routes.contains(currentRoute),
       children: [
         _DrawerItem(
@@ -421,9 +420,7 @@ class _DrawerFooter extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 20, top: 10),
       child: Text(
         "App Version 1.0.2",
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant
-        ),
+        style: Theme.of(context).textTheme.labelSmall
       ),
     );
   }

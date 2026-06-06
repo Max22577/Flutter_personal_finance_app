@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/shared_widgets/currency_display.dart';
+import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/core/utils/category_icon_helper.dart';
 import 'package:personal_fin/features/dashboard/view_models/monthly_review_view_model.dart';
 import 'package:personal_fin/models/state_models/category_spending.dart';
@@ -35,18 +36,27 @@ class CategorySpendingCarousel extends StatelessWidget {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const SizedBox(
                 height: 140,
-                child: Center(child: CircularProgressIndicator()),
+                child: LoadingState(),
               );
             }
 
             final items = snapshot.data ?? [];
             if (items.isEmpty) {
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  "No spending recorded for this month.",
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+              return SizedBox(
+                height: 140,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.pie_chart_outline, size: 32, color: theme.colorScheme.outline),
+                      const SizedBox(height: 8),
+                      Text(
+                        "No categories to show",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );

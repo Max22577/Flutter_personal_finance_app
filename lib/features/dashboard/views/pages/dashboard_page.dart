@@ -47,7 +47,9 @@ class _DashboardScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final textScaler = MediaQuery.textScalerOf(context);
 
     // Safely look up system status bar heights manually
@@ -71,7 +73,15 @@ class _DashboardScaffold extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [colors.primary, Color.lerp(colors.primary, colors.secondary, 0.5)!],
+                        colors: isDark 
+                          ? [
+                              colors.primary.withValues(alpha: 0.4), 
+                              colors.secondary.withValues(alpha: 0.5), 
+                            ]
+                          : [
+                              colors.primary, 
+                              Color.lerp(colors.primary, colors.secondary, 0.5)!,
+                            ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
@@ -125,7 +135,6 @@ class _DashboardScaffold extends StatelessWidget {
 }
 
 // REVIEW SECTION & CARDS
-
 class _DashboardMonthlyReviewSection extends StatelessWidget {
   const _DashboardMonthlyReviewSection();
 
