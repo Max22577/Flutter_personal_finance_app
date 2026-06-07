@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/shared_widgets/currency_display.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/core/utils/category_icon_helper.dart';
-import 'package:personal_fin/features/dashboard/view_models/monthly_review_view_model.dart';
+import 'package:personal_fin/features/monthly_review/view_model/monthly_review_view_model.dart';
 import 'package:personal_fin/models/state_models/category_spending.dart';
 import 'package:provider/provider.dart';
 

@@ -4,9 +4,9 @@ import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/shared_widgets/currency_display.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
-import 'package:personal_fin/features/dashboard/views/widgets/empty_chart_state.dart';
+import 'package:personal_fin/core/shared_widgets/empty_chart_state.dart';
 import 'package:provider/provider.dart';
-import '../../../view_models/spending_chart_view_model.dart';
+import '../../view_models/spending_chart_view_model.dart';
 
 class CategoryPieChart extends StatelessWidget {
   const CategoryPieChart({super.key});

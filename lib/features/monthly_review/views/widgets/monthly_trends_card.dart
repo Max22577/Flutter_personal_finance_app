@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
-import 'package:personal_fin/features/dashboard/view_models/monthly_review_view_model.dart';
-import 'package:personal_fin/features/dashboard/views/widgets/empty_chart_state.dart';
-import 'package:personal_fin/features/dashboard/views/widgets/monthly_review/daily_trends_line_chart.dart';
+import 'package:personal_fin/features/monthly_review/view_model/monthly_review_view_model.dart';
+import 'package:personal_fin/core/shared_widgets/empty_chart_state.dart';
+import 'package:personal_fin/features/monthly_review/views/widgets/daily_trends_line_chart.dart';
 import 'package:provider/provider.dart';
 
 class MonthlyTrendsCard extends StatelessWidget {

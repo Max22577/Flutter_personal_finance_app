@@ -48,7 +48,7 @@ class AppDrawer extends StatelessWidget {
                   onLogout: onLogout,
                   currentRoute: currentRoute,
                 ),
-                _FinancialToolsGroup(onNavigate: onNavigate, currentRoute: currentRoute),
+                _MonthlyReport(onNavigate: onNavigate, currentRoute: currentRoute),
                 _TransactionGroup(onNavigate: onNavigate, currentRoute: currentRoute),
                 _BudgetingGroup(onNavigate: onNavigate, currentRoute: currentRoute),
                 _SavingsGroup(onNavigate: onNavigate, currentRoute: currentRoute),
@@ -196,7 +196,7 @@ class _DrawerGroup extends StatelessWidget {
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: hasActiveChild ? colors.primary.withValues(alpha: 0.1) : colors.surfaceContainerHighest.withValues(alpha: 0.4),
+              color: hasActiveChild ? colors.primary.withValues(alpha: 0.1) : colors.surfaceContainerHigh.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: hasActiveChild ? colors.primary : colors.onSurfaceVariant, size: 20),
@@ -216,23 +216,23 @@ class _DrawerGroup extends StatelessWidget {
   }
 }
 
-class _FinancialToolsGroup extends StatelessWidget {
+class _MonthlyReport extends StatelessWidget {
   final Function(String) onNavigate;
   final String currentRoute;
-  const _FinancialToolsGroup({required this.onNavigate, required this.currentRoute});
+  const _MonthlyReport({required this.onNavigate, required this.currentRoute});
 
   @override
   Widget build(BuildContext context) {
     return _DrawerGroup(
       icon: Icons.calculate_rounded,
-      title: 'Financial Tools',
-      hasActiveChild: currentRoute == '/tools/savings',
+      title: 'Monthly Report',
+      hasActiveChild: currentRoute == '/monthly_review',
       children: [
         _DrawerItem(
           icon: Icons.trending_up_rounded, 
-          title: 'Savings Calculator', 
-          isSelected: currentRoute == '/tools/savings',
-          onTap: () => onNavigate('/tools/savings'),
+          title: 'Monthly Review', 
+          isSelected: currentRoute == '/monthly_review',
+          onTap: () => onNavigate('/monthly_review'),
         ),
       ],
     );
@@ -249,6 +249,7 @@ class _AccountGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
+    final nav = context.watch<NavigationProvider>();
     final routes = ['/profile'];
     return _DrawerGroup(
       icon: Icons.person_rounded, 
@@ -258,8 +259,11 @@ class _AccountGroup extends StatelessWidget {
         _DrawerItem(
           icon: Icons.account_circle_rounded, 
           title: lang.translate('user_profile'), 
-          isSelected: currentRoute == '/profile',
-          onTap: () => onNavigate('/profile'),
+          isSelected: (currentRoute == '/home' || currentRoute == '/') && nav.selectedIndex == 3,
+          onTap: () {
+            Navigator.pop(context);
+            nav.setPage(3);
+          },
         ),
         _DrawerItem(
           icon: Icons.logout_rounded, 

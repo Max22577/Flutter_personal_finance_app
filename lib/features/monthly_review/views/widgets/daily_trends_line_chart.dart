@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/utils/currency_formatter.dart';
-import 'package:personal_fin/features/dashboard/view_models/monthly_review_view_model.dart';
+import 'package:personal_fin/features/monthly_review/view_model/monthly_review_view_model.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
