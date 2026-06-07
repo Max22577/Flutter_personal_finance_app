@@ -4,10 +4,10 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
-import 'package:personal_fin/features/dashboard/views/widgets/dashboard/recent_transactions/transaction_display.dart';
-import 'package:personal_fin/features/dashboard/views/widgets/dashboard/recent_transactions/transaction_item.dart';
+import 'package:personal_fin/features/dashboard/views/widgets/recent_transactions/transaction_display.dart';
+import 'package:personal_fin/features/dashboard/views/widgets/recent_transactions/transaction_item.dart';
 import 'package:provider/provider.dart';
-import '../../../view_models/recent_transactions_view_model.dart';
+import '../../view_models/recent_transactions_view_model.dart';
 class RecentTransactions extends StatelessWidget {
   final int maxItems;
   final VoidCallback? onViewAll;

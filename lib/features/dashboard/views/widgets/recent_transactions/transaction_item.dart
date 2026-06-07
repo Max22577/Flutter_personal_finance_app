@@ -5,7 +5,7 @@ import 'package:personal_fin/core/shared_widgets/circular_icon_badge.dart';
 import 'package:personal_fin/models/transaction.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:provider/provider.dart';
-import '../../../../../../core/shared_widgets/currency_display.dart';
+import '../../../../../core/shared_widgets/currency_display.dart';
 
 class TransactionItem extends StatelessWidget {
   final Transaction transaction;

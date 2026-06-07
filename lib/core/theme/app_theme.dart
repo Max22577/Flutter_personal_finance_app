@@ -67,22 +67,22 @@ class FinancialColors extends ThemeExtension<FinancialColors> {
 
 class AppThemes {
   static const TextTheme _baseTextTheme = TextTheme(
-    displayMedium: TextStyle(fontSize: 45, fontWeight: FontWeight.bold),
-    headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-    headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-    headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-    titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
-    titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.15),
-    titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.1),
-    bodyLarge: TextStyle(fontSize: 16, letterSpacing: 0.5),
-    bodyMedium: TextStyle(fontSize: 14, letterSpacing: 0.25),
-    bodySmall: TextStyle(fontSize: 12, letterSpacing: 0.4),
-    labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.1),
-    labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 0.5),
-    labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 0.5),
+    displayMedium: TextStyle(fontFamily: 'Inter', fontSize: 45, fontWeight: FontWeight.bold),
+    headlineLarge: TextStyle(fontFamily: 'Inter', fontSize: 32, fontWeight: FontWeight.bold),
+    headlineMedium: TextStyle(fontFamily: 'Inter', fontSize: 28, fontWeight: FontWeight.bold),
+    headlineSmall: TextStyle(fontFamily: 'Inter', fontSize: 24, fontWeight: FontWeight.bold),
+    titleLarge: TextStyle(fontFamily: 'JetBrainsMono', fontSize: 22, fontWeight: FontWeight.w600),
+    titleMedium: TextStyle(fontFamily: 'JetBrainsMono', fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.15),
+    titleSmall: TextStyle(fontFamily: 'JetBrainsMono', fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.1),
+    bodyLarge: TextStyle(fontFamily: 'Inter', fontSize: 16, letterSpacing: 0.5),
+    bodyMedium: TextStyle(fontFamily: 'Inter', fontSize: 14, letterSpacing: 0.25),
+    bodySmall: TextStyle(fontFamily: 'Inter', fontSize: 12, letterSpacing: 0.4),
+    labelLarge: TextStyle(fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.1),
+    labelMedium: TextStyle(fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 0.5),
+    labelSmall: TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 0.5),
   );
 
-
+  
   static CardThemeData _cardTheme(bool isDark) => CardThemeData(
     elevation: 2,
     shape: RoundedRectangleBorder(
@@ -159,7 +159,7 @@ class AppThemes {
     brightness: Brightness.dark,
     colorScheme: const ColorScheme.dark(
       primary: AppColors.darkPrimary,
-      onPrimary: Color.fromARGB(255, 226, 204, 250),
+      onPrimary: Color.fromARGB(255, 0, 0, 0),
       primaryContainer: Color(0xFF4F378B),
       onPrimaryContainer: Color(0xFFEADDFF),
       secondary: AppColors.darkSecondary,

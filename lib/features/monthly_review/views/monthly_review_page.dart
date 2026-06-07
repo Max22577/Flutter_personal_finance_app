@@ -10,10 +10,11 @@ import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:personal_fin/core/shared_widgets/currency_display.dart';
 import 'package:personal_fin/core/shared_widgets/custom_appbar.dart';
-import 'package:personal_fin/features/dashboard/view_models/monthly_review_view_model.dart';
-import 'package:personal_fin/features/dashboard/views/widgets/monthly_review/category_spending_card.dart';
-import 'package:personal_fin/features/dashboard/views/widgets/monthly_review/monthly_trends_card.dart';
-import 'package:personal_fin/features/dashboard/views/widgets/monthly_review_summary.dart';
+import 'package:personal_fin/features/monthly_review/view_model/monthly_review_view_model.dart';
+import 'package:personal_fin/features/monthly_review/views/widgets/category_spending_card.dart';
+import 'package:personal_fin/features/monthly_review/views/widgets/monthly_trends_card.dart';
+import 'package:personal_fin/core/shared_widgets/monthly_review_summary.dart';
+import 'package:personal_fin/features/monthly_review/views/widgets/savings_goal_tracker.dart';
 import 'package:personal_fin/models/monthly_data.dart';
 import 'package:provider/provider.dart';
 
@@ -193,6 +194,13 @@ class _MonthlyReviewBody extends StatelessWidget {
                         curve: baseCurve,
                         delay: const Duration(milliseconds: 300),
                         child: const CategorySpendingCarousel(),
+                      ),
+                      SizedBox(height: textScaler.scale(16)),
+                      FadeInUp(
+                        duration: baseDuration,
+                        curve: baseCurve,
+                        delay: const Duration(milliseconds: 450), 
+                        child: const SavingsGoalsTracker(),
                       ),
                       SizedBox(height: textScaler.scale(120))
                       

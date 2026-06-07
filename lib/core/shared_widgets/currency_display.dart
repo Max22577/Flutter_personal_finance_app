@@ -55,21 +55,14 @@ class CurrencyDisplay extends StatelessWidget {
       dynamicColor = negativeColor ?? financialColors?.expense ?? Colors.red;
     }
 
-    // Last resort: If you want the financial color to ALWAYS win
     final TextStyle baseStyle = style?.copyWith(color: dynamicColor) ?? TextStyle(color: dynamicColor);
 
     return Text(
       formattedAmount,
       style: baseStyle.copyWith(
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
+        fontFeatures: [FontFeature.tabularFigures()],
       ),
     );
   }
 }
-
-//TextSpan(
-  //text: "$symbol ",
-  //style: baseStyle.copyWith(
-    //fontWeight: FontWeight.w500,
-  //),
-//),
