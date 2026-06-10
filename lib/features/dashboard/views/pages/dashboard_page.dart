@@ -4,7 +4,9 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/rate_sync_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/shared_widgets/empty_state.dart';
+import 'package:personal_fin/core/shared_widgets/error_state.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
+import 'package:personal_fin/core/utils/app_exception.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/category_pie_chart.dart';
 import 'package:personal_fin/features/dashboard/view_models/dashboard_view_model.dart';
 import 'package:personal_fin/core/shared_widgets/monthly_review_summary.dart';
@@ -90,38 +92,46 @@ class _DashboardScaffold extends StatelessWidget {
                 ),
                 
                 Positioned.fill(
-                  child: SingleChildScrollView(
-                    key: const Key('dashboard_main_scroll'),
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    // Adjust top padding manually to prevent layout overlaps under the appbar
-                    padding: EdgeInsets.fromLTRB(
-                      textScaler.scale(16), 
-                      statusBarHeight + kToolbarHeight + textScaler.scale(8), 
-                      textScaler.scale(16), 
-                      textScaler.scale(16),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: textScaler.scale(120), 
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      await context.read<DashboardViewModel>().refresh();
+                    },
+                    color: colors.onPrimary,
+                    backgroundColor: colors.primary,
+                    
+                    child: SingleChildScrollView(
+                      key: const Key('dashboard_main_scroll'),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      // Adjust top padding manually to prevent layout overlaps under the appbar
+                      padding: EdgeInsets.fromLTRB(
+                        textScaler.scale(16), 
+                        statusBarHeight + kToolbarHeight + textScaler.scale(8), 
+                        textScaler.scale(16), 
+                        textScaler.scale(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: textScaler.scale(120), 
+                            ),
+                            child: const _DashboardMonthlyReviewSection(),
                           ),
-                          child: const _DashboardMonthlyReviewSection(),
-                        ),
-                        SizedBox(height: textScaler.scale(24)),
-                        const CategoryPieChart(),
-                        SizedBox(height: textScaler.scale(16)),
-                        const QuickStats(),
-                        SizedBox(height: textScaler.scale(24)),
-                        RecentTransactions(
-                          maxItems: 5,
-                          onViewAll: () => Navigator.pushNamed(context, '/transactions'),
-                        ),
-                        SizedBox(height: textScaler.scale(16)),
-                        const _QuickActionsCard(),
-                        SizedBox(height: textScaler.scale(120)), // Space for FAB/BottomBar
-                      ],
+                          SizedBox(height: textScaler.scale(24)),
+                          const CategoryPieChart(),
+                          SizedBox(height: textScaler.scale(16)),
+                          const QuickStats(),
+                          SizedBox(height: textScaler.scale(24)),
+                          RecentTransactions(
+                            maxItems: 3,
+                            onViewAll: () => Navigator.pushNamed(context, '/transactions'),
+                          ),
+                          SizedBox(height: textScaler.scale(16)),
+                          const _QuickActionsCard(),
+                          SizedBox(height: textScaler.scale(120)), // Space for FAB/BottomBar
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -155,15 +165,15 @@ class _DashboardMonthlyReviewSection extends StatelessWidget {
         }
 
         if (snapshot.hasError) {
+          final error = snapshot.error is AppException 
+            ? (snapshot.error as AppException)
+            : AppException(message: snapshot.error.toString(), code: 'unknown');
+
           return SizedBox(
             height: textScaler.scale(160),
             child: Center(
-              child: EmptyState(
-                icon: Icons.error_outline,
-                title: lang.translate('error_loading_monthly_data'),
-                message: snapshot.error.toString(),
-                actionText: lang.translate('retry'),
-                onAction: () {},
+              child: ErrorState(
+                message: error.toUserMessage(context),
               ),
             ),
           );

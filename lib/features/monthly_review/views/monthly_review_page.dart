@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/shared_widgets/empty_state.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/core/theme/app_theme.dart';
 import 'package:personal_fin/core/shared_widgets/currency_display.dart';
 import 'package:personal_fin/core/shared_widgets/custom_appbar.dart';
+import 'package:personal_fin/core/utils/app_exception.dart';
 import 'package:personal_fin/features/monthly_review/view_model/monthly_review_view_model.dart';
 import 'package:personal_fin/features/monthly_review/views/widgets/category_spending_card.dart';
 import 'package:personal_fin/features/monthly_review/views/widgets/monthly_trends_card.dart';
@@ -32,6 +34,7 @@ class MonthlyReviewPage extends StatelessWidget {
     return ChangeNotifierProvider<MonthlyReviewViewModel>(
       create: (context) => MonthlyReviewViewModel(
         context.read<MonthlyDataRepository>(),
+        context.read<CategoryRepository>(),
         context.read<CurrencyProvider>(),
         targetMonth,
       ),
@@ -91,13 +94,17 @@ class _MonthlyReviewBody extends StatelessWidget {
       }
       
       if (snapshot.hasError) {
+        final error = snapshot.error is AppException 
+            ? (snapshot.error as AppException)
+            : AppException(message: snapshot.error.toString(), code: 'unknown');
+
         return SizedBox(
           height: textScaler.scale(160),
           child: Center(
             child: EmptyState(
               icon: Icons.error_outline,
               title: lang.translate('error_loading_monthly_data'),
-              message: snapshot.error.toString(),
+              message: error.toUserMessage(context),
               actionText: lang.translate('retry'),
               onAction: () {},
             ),
@@ -155,56 +162,64 @@ class _MonthlyReviewBody extends StatelessWidget {
               ),
               
               Positioned.fill(
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(
-                    textScaler.scale(16), 
-                    statusBarHeight + kToolbarHeight + textScaler.scale(8), 
-                    textScaler.scale(16), 
-                    textScaler.scale(16),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: textScaler.scale(120), 
-                        ),
-                        child: FadeInUp(
-                          duration: baseDuration,
-                          curve: baseCurve,
-                          delay: const Duration(milliseconds: 0),
-                          child: MonthlyReviewSummary(
-                            monthlyData: data[0],
-                            previousMonthData: data[1],
-                            onTap: () => _showMonthlyDetails(context, data[0]),
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    await vm.refresh();
+                  },
+                  color: colors.onPrimary,
+                  backgroundColor: colors.primary,
+                  
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.fromLTRB(
+                      textScaler.scale(16), 
+                      statusBarHeight + kToolbarHeight + textScaler.scale(8), 
+                      textScaler.scale(16), 
+                      textScaler.scale(16),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: textScaler.scale(120), 
+                          ),
+                          child: FadeInUp(
+                            duration: baseDuration,
+                            curve: baseCurve,
+                            delay: const Duration(milliseconds: 0),
+                            child: MonthlyReviewSummary(
+                              monthlyData: data[0],
+                              previousMonthData: data[1],
+                              onTap: () => _showMonthlyDetails(context, data[0]),
+                            ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: textScaler.scale(32)),
-                      FadeInUp(
-                        duration: baseDuration,
-                        curve: baseCurve,
-                        delay: const Duration(milliseconds: 150),
-                        child: const MonthlyTrendsCard(),
-                      ),
-                      SizedBox(height: textScaler.scale(16)),
-                      FadeInUp(
-                        duration: baseDuration,
-                        curve: baseCurve,
-                        delay: const Duration(milliseconds: 300),
-                        child: const CategorySpendingCarousel(),
-                      ),
-                      SizedBox(height: textScaler.scale(16)),
-                      FadeInUp(
-                        duration: baseDuration,
-                        curve: baseCurve,
-                        delay: const Duration(milliseconds: 450), 
-                        child: const SavingsGoalsTracker(),
-                      ),
-                      SizedBox(height: textScaler.scale(120))
-                      
-                    ],
+                        SizedBox(height: textScaler.scale(32)),
+                        FadeInUp(
+                          duration: baseDuration,
+                          curve: baseCurve,
+                          delay: const Duration(milliseconds: 150),
+                          child: const MonthlyTrendsCard(),
+                        ),
+                        SizedBox(height: textScaler.scale(16)),
+                        FadeInUp(
+                          duration: baseDuration,
+                          curve: baseCurve,
+                          delay: const Duration(milliseconds: 300),
+                          child: const CategorySpendingCarousel(),
+                        ),
+                        SizedBox(height: textScaler.scale(16)),
+                        FadeInUp(
+                          duration: baseDuration,
+                          curve: baseCurve,
+                          delay: const Duration(milliseconds: 450), 
+                          child: const SavingsGoalsTracker(),
+                        ),
+                        SizedBox(height: textScaler.scale(120))
+                        
+                      ],
+                    ),
                   ),
                 ),
               ),

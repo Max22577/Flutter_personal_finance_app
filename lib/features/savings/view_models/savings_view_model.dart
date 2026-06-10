@@ -1,22 +1,16 @@
 import 'dart:async';
 import 'package:personal_fin/core/repositories/savings_repository.dart';
-import 'package:rxdart/rxdart.dart';
 import '../../../models/savings.dart';
 
 class SavingsViewModel {
   final SavingsRepository _repository;
 
-  final _refreshTrigger = BehaviorSubject.seeded(null);
 
   SavingsViewModel(this._repository);
 
   // THE MASTER STREAM: Maps the raw goals list into a UI-ready State
   Stream<SavingsState> get stateStream {
-    return Rx.combineLatest2(
-      _repository.goalsStream,
-      _refreshTrigger, // The stream pipeline now depends on the trigger
-      (goals, _) => goals, 
-    ).map((goals) {
+    return _repository.goalsStream.map((goals) {
       final totalTarget = goals.fold(0.0, (sum, g) => sum + g.targetAmount);
       final totalSaved = goals.fold(0.0, (sum, g) => sum + g.currentAmount);
 
@@ -34,13 +28,6 @@ class SavingsViewModel {
     await _repository.deleteGoal(id);
   }
 
-  void retry() {
-    _refreshTrigger.add(null);
-  }
-
-  void dispose() {
-    _refreshTrigger.close();
-  }
 }
 
 // Data holder for the Savings Screen

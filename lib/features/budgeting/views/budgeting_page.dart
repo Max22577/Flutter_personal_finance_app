@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/providers/navigation_provider.dart';
+import 'package:personal_fin/core/utils/app_exception.dart';
 import 'package:personal_fin/features/budgeting/views/widgets/budget_category_card.dart';
 import 'package:personal_fin/features/budgeting/views/widgets/budget_edit_dialog.dart';
 import 'package:personal_fin/features/budgeting/views/widgets/month_picker.dart';
@@ -72,42 +73,52 @@ class _BudgetingViewContentState extends State<BudgetingViewContent> {
   }
 
   Widget _buildStatefulBody(BudgetingViewModel vm) {
-  final lang = context.read<LanguageProvider>();
+    final lang = context.read<LanguageProvider>();
 
-  return StreamBuilder<BudgetingState>(
-    stream: vm.stateStream, 
-    builder: (context, snapshot) {
-      if (snapshot.hasError) {
-        return _FullPageError(
-          message: snapshot.error.toString(),
-          onRetry: () => vm.setDate(vm.selectedDate), 
-          lang: lang,
-        );
-      }
+    return StreamBuilder<BudgetingState>(
+      stream: vm.stateStream, 
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          final error = snapshot.error is AppException 
+            ? (snapshot.error as AppException)
+            : AppException(message: snapshot.error.toString(), code: 'unknown');
+            
+          return _FullPageError(
+            message: error.toUserMessage(context),
+            onRetry: () => vm.setDate(vm.selectedDate), 
+            lang: lang,
+          );
+        }
 
-      if (!snapshot.hasData) {
-        return const Center(child: LoadingState());
-      }
+        if (!snapshot.hasData) {
+          return const Center(child: LoadingState());
+        }
 
-      final state = snapshot.data!;
+        final state = snapshot.data!;
 
-      return CustomScrollView(
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: BouncingScrollPhysics(),
-        ),
-        slivers: [
-          _BudgetingHeader(vm: vm, state: state),
-
-          _BudgetListSection(state: state, vm: vm),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 120)),
-        ],
-      );      
-    },
-  );
+        return RefreshIndicator(
+          onRefresh: () => vm.refresh(),
+          // This ensures the refresh indicator triggers on the CustomScrollView
+          notificationPredicate: (ScrollNotification notification) {
+            return notification.depth == 0;
+          },
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            slivers: [
+              _BudgetingHeader(vm: vm, state: state),
+              _BudgetListSection(vm: vm, state: state),
+              const SliverToBoxAdapter(child: SizedBox(height: 120)),
+            ],
+          ),
+        );      
+      },
+    );
+  }
 }
-}
+
 class _BudgetingHeader extends StatelessWidget {
   final BudgetingViewModel vm;
   final BudgetingState state;

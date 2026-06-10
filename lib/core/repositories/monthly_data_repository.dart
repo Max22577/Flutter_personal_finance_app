@@ -11,7 +11,6 @@ import '../../models/monthly_data.dart';
 
 class MonthlyDataRepository {
   final IFirestoreService _firestoreService;
-  final CategoryRepository _catRepo;
   final FirebaseAuth _auth;
   final ExchangeRateService _exchangeService;
 
@@ -20,7 +19,7 @@ class MonthlyDataRepository {
     required ExchangeRateService exchangeService, 
     required IFirestoreService service, 
     required FirebaseAuth auth
-  }) : _catRepo = catRepo,
+  }) :
        _exchangeService = exchangeService,
        _firestoreService = service,
        _auth = auth;
@@ -28,6 +27,7 @@ class MonthlyDataRepository {
   String get currentUid => _auth.currentUser?.uid ?? '';
   String get transactionsCollectionPath => FirestorePath.transactions(currentUid);
   ExchangeRateService get exchangeService => _exchangeService;
+  
 
   // Real-time stream for a single targeted month
   Stream<MonthlyData> streamMonthlyData(DateTime month, String currencyCode) {
@@ -74,9 +74,12 @@ class MonthlyDataRepository {
         income += amountInTarget;
       } else {
         expenses += amountInTarget;
-        final catName = _catRepo.getNameByIdSync(tx.categoryId);
-        if (catName.isNotEmpty) {
-          breakdown.update(catName, (v) => v + amountInTarget, ifAbsent: () => amountInTarget);
+        if (tx.categoryId.isNotEmpty) {
+          breakdown.update(
+            tx.categoryId, 
+            (v) => v + amountInTarget, 
+            ifAbsent: () => amountInTarget,
+          );
         }
       }
     }

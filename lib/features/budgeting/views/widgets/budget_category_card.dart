@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/utils/category_icon_helper.dart';
 import 'package:provider/provider.dart';
@@ -191,15 +192,46 @@ class _BudgetProgressIndicator extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: (percentage / 100).clamp(0.0, 1.0),
-            backgroundColor: colors.surfaceContainerHigh,
-            color: progressColor,
-            minHeight: 8,
-          ),
-        ),
+        Stack(
+          children: [
+            LinearPercentIndicator(
+              lineHeight: 8.0,
+              animation: true,
+              animationDuration: 1000, // 1 second fill animation
+              percent: (percentage / 100).clamp(0.0, 1.0),
+              barRadius: const Radius.circular(8),
+              padding: EdgeInsets.zero,
+              linearGradient: LinearGradient(
+                colors: [
+                  progressColor.withValues(alpha: 0.6),
+                  progressColor,
+                ],
+              ),
+              backgroundColor: colors.surfaceContainerHigh,
+            ),
+            
+            //Segment Overlay (Creates the 'steps' look)
+            Positioned.fill(
+              child: Row(
+                children: List.generate(10, (index) {
+                  return Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          left: BorderSide(
+                            color: colors.surfaceContainerLow, 
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ],
+        )
       ],
     );
   }
@@ -232,7 +264,7 @@ class _NoBudgetPlaceholder extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.auto_graph_rounded,
+            Icons.analytics_rounded,
             color: colors.primary.withValues(alpha: 0.6),
             size: 18,
           ),

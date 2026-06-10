@@ -1,10 +1,13 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/core/shared_widgets/currency_display.dart';
+import 'package:personal_fin/core/shared_widgets/error_state.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/core/shared_widgets/empty_chart_state.dart';
+import 'package:personal_fin/core/utils/app_exception.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/spending_chart_view_model.dart';
 
@@ -26,6 +29,7 @@ class CategoryPieChart extends StatelessWidget {
     return ChangeNotifierProvider<SpendingChartViewModel>(
       create: (_) => SpendingChartViewModel(
         context.read<MonthlyDataRepository>(),
+        context.read<CategoryRepository>(),
         context.read<CurrencyProvider>(),
       ),
       child: const _CategoryPieChartConsumer(colorsList: _vibrantColors),
@@ -47,6 +51,20 @@ class _CategoryPieChartConsumer extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: LoadingState());
+        }
+
+        if (snapshot.hasError) {
+          final error = snapshot.error is AppException 
+              ? (snapshot.error as AppException)
+              : AppException(message: snapshot.error.toString(), code: 'unknown');
+              
+          return  _ChartCardWrapper(
+            child: Center(
+              child:  ErrorState(
+                message: error.toUserMessage(context),
+              ),
+            ),
+          );
         }
         
         if (!snapshot.hasData || snapshot.data!.isEmpty) {

@@ -190,7 +190,7 @@ class _DrawerGroup extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Theme(
-        data: theme.copyWith(dividerColor: Colors.transparent), // Removes default ExpansionTile hard divider lines
+        data: theme.copyWith(dividerColor: Colors.transparent), 
         child: ExpansionTile(
           initiallyExpanded: hasActiveChild,
           leading: Container(

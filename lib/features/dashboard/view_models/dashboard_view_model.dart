@@ -28,4 +28,10 @@ class DashboardViewModel extends ChangeNotifier  {
     _selectedMonth = month;
     notifyListeners(); 
   }
+
+  Future<void> refresh() async {
+    notifyListeners(); 
+
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
 }

@@ -16,7 +16,6 @@ class TransactionViewModel extends ChangeNotifier {
 
   bool _isSaving = false;
   bool get isSaving => _isSaving;
-  final _refreshTrigger = BehaviorSubject.seeded(null);
 
   TransactionViewModel({
     required TransactionRepository txRepo, 
@@ -35,11 +34,10 @@ class TransactionViewModel extends ChangeNotifier {
 
 
   Stream<List<Transaction>> get localizedTransactionsStream {
-    return Rx.combineLatest3(
+    return Rx.combineLatest2(
       _txRepo.transactionsStream,
       _currencyProvider.currencyStream,
-      _refreshTrigger, // The stream now listens to the trigger
-      (transactions, currencyCode, _) {
+      (transactions, currencyCode) {
         return transactions.map((tx) {
           return tx.copyWith(
             amount: _exchangeService.fromBase(tx.baseAmount, currencyCode),
@@ -108,13 +106,4 @@ class TransactionViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void retry() {
-    _refreshTrigger.add(null);
-  }
-
-  @override
-  void dispose() {
-    _refreshTrigger.close();
-    super.dispose();
-  }
 }
