@@ -9,75 +9,74 @@ import '../../models/category.dart';
 class CategoryRepository {
   final IFirestoreService _service;
   final FirebaseAuth _auth;
-  StreamSubscription<List<Category>>? _cacheSubscription;
+  StreamSubscription? _authAndDataSubscription;
 
-  List<Category> _cache = [
+  // Single Source of Truth for the cache. Starts with predefined categories.
+  final BehaviorSubject<List<Category>> _categoriesSubject;
+
+  static final List<Category> _predefinedCategories = [
     Category(id: 'cat_food', name: 'Food'),
     Category(id: 'cat_trans', name: 'Transportation'),
     Category(id: 'cat_salary', name: 'Salary'),
     Category(id: 'cat_rent', name: 'Rent'),
     Category(id: 'cat_savings', name: 'Savings'),
   ];
-
-  final List<Category> predefinedCategories = [
-    Category(id: 'cat_food', name: 'Food'),
-    Category(id: 'cat_trans', name: 'Transportation'),
-    Category(id: 'cat_salary', name: 'Salary'),
-    Category(id: 'cat_rent', name: 'Rent'),
-    Category(id: 'cat_savings', name: 'Savings'),
-  ];
-
 
   CategoryRepository({required IFirestoreService service, required FirebaseAuth auth}) 
-    : _service = service, _auth = auth{
-      _cacheSubscription = allCategoriesStream.listen((_) {});
-    }
+    : _service = service, 
+      _auth = auth,
+      _categoriesSubject = BehaviorSubject<List<Category>>.seeded(_predefinedCategories) {
+      _initSyncPipeline();
+  }
 
-  void dispose() {
-    _cacheSubscription?.cancel();
-  } 
-  
+  /// Sets up a single pipeline that manages user changes and data updates cleanly
+  void _initSyncPipeline() {
+    _authAndDataSubscription = _auth.authStateChanges().switchMap((user) {
+      if (user == null) {
+        // If logged out, immediately reset cache back to predefined defaults
+        return Stream.value(_predefinedCategories);
+      }
 
-  Stream<List<Category>> get allCategoriesStream {
-    return _auth.authStateChanges().switchMap((user) {
-      if (user == null) return Stream.value(predefinedCategories);
-
+      // Single active query listener to Firestore
       return _service.streamCollection<Category>(
-        collectionPath: categoriesCollectionPath,
+        collectionPath: FirestorePath.categories(user.uid),
         builder: (map) => Category.fromMap(map),
         orderBy: [OrderByOption('name', descending: false)]
       ).map((customs) {
-        final fullList = [...predefinedCategories, ...customs];
-        
-        _cache = fullList; 
-        
-        return fullList;
+        return [..._predefinedCategories, ...customs];
       });
+    }).listen((fullList) {
+      _categoriesSubject.add(fullList);
     });
   }
+
+  void dispose() {
+    _authAndDataSubscription?.cancel();
+    _categoriesSubject.close();
+  } 
+
+
+  /// Exposes the combined list of predefined and custom items
+  Stream<List<Category>> get allCategoriesStream => _categoriesSubject.stream;
+  List<Category> get predefinedCategories => _predefinedCategories;
+
 
   Stream<List<Category>> get customCategoriesOnlyStream {
-    return _auth.authStateChanges().switchMap((user) {
-      if (user == null) return Stream.value([]); 
-  
-      return _service.streamCollection<Category>(
-        collectionPath: categoriesCollectionPath,
-        builder: (map) => Category.fromMap(map),
-        orderBy: [OrderByOption('name', descending: false)]
-      );
+    return _categoriesSubject.stream.map((list) {
+      return list.where((c) => !c.id.startsWith('cat_')).toList();
     });
   }
 
-  String getNameByIdSync(String id) {
+  Category? getCategoryByIdSync(String id) {
     try {
-      return _cache.firstWhere((cat) => cat.id == id).name;
+      return _categoriesSubject.value.firstWhere((c) => c.id == id);
     } catch (_) {
-      return 'Unknown Category';
+      return null;
     }
   }
 
-  List<Category> get categories => _cache;
- 
+  List<Category> get categories => _categoriesSubject.value;
+  
   String get categoriesCollectionPath => FirestorePath.categories(_auth.currentUser?.uid ?? '');
 
   Future<void> addCategory(Category category) async {

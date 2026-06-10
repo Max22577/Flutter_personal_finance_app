@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/shared_widgets/error_state.dart';
+import 'package:personal_fin/core/utils/app_exception.dart';
 import 'package:personal_fin/core/utils/app_feedback.dart';
 import 'package:personal_fin/core/shared_widgets/animated_empty_state.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
@@ -22,10 +23,15 @@ class TransactionHistory extends StatelessWidget {
       stream: vm.localizedTransactionsStream, 
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return ErrorState(
-            message: snapshot.error.toString(),
-            actionText: lang.translate('retry'),
-            onRetry: vm.retry 
+          final error = snapshot.error is AppException 
+            ? (snapshot.error as AppException)
+            : AppException(message: snapshot.error.toString(), code: 'unknown');
+            
+          return Center(
+            child: ErrorState(
+              message: error.toUserMessage(context),
+              actionText: lang.translate('retry'),
+            ),
           );
         }
 

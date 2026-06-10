@@ -46,15 +46,20 @@ class BudgetingViewModel extends ChangeNotifier {
         
         final spendingMap = monthlyData.categoryBreakdown;
 
+        final currentCurrencyCode = _currencyProvider.currentCurrency; 
+
         final filteredCats = categories.where((c) => 
           !['income', 'salary', 'revenue'].any((term) => c.name.toLowerCase().contains(term))
         ).toList();
 
         final convertedBudgetMap = {
-          for (var b in budgets) b.categoryId: b.baseAmount 
+          for (var b in budgets) 
+            b.categoryId: _exchangeService.fromBase(b.baseAmount, currentCurrencyCode) 
         };
 
-        final totalBudget = budgets.fold(0.0, (sum, b) => sum + b.baseAmount);
+        final totalBudget = budgets.fold(0.0, (sum, b) => 
+          sum + _exchangeService.fromBase(b.baseAmount, currentCurrencyCode)
+        );
 
         return BudgetingState(
           categories: filteredCats,
@@ -74,6 +79,10 @@ class BudgetingViewModel extends ChangeNotifier {
   void setDate(DateTime date) {
     _selectedDate = date;
     notifyListeners();
+  }
+
+  Future<void> refresh() async {
+    setDate(_selectedDate); 
   }
 
 

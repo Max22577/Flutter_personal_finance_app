@@ -4,6 +4,7 @@ import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/transaction_repository.dart';
 import 'package:personal_fin/core/services/exchange_rate_service.dart';
+import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/recent_transactions/transaction_display.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/recent_transactions/transaction_item.dart';
 import 'package:provider/provider.dart';
@@ -94,7 +95,7 @@ class _Content extends StatelessWidget {
     return StreamBuilder<List<TransactionDisplay>>(
       stream: vm.recentTransactionsStream,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const CircularProgressIndicator();
+        if (!snapshot.hasData) return const LoadingState();
         
         final displayList = snapshot.data!;
 

@@ -95,6 +95,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
                   );
                 },
               ),
+              const SizedBox(height: 32),
             ],
           ),
         ),

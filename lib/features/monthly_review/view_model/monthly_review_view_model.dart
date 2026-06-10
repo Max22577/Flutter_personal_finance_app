@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
+import 'package:personal_fin/core/repositories/category_repository.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:personal_fin/models/state_models/category_spending.dart';
@@ -16,11 +17,12 @@ class DailyChartPoint {
 
 class MonthlyReviewViewModel extends ChangeNotifier {
   final MonthlyDataRepository _repo;
+  final CategoryRepository _catRepo;
   final CurrencyProvider _currencyProvider;
 
   final _monthController = BehaviorSubject<DateTime>();
-  
-  MonthlyReviewViewModel(this._repo, this._currencyProvider, DateTime initialMonth) {
+
+  MonthlyReviewViewModel(this._repo, this._catRepo, this._currencyProvider, DateTime initialMonth) {
     _selectedMonth = initialMonth;
     _monthController.add(initialMonth);
   }
@@ -38,13 +40,15 @@ class MonthlyReviewViewModel extends ChangeNotifier {
 
   Stream<List<DailyChartPoint>> get dailyTrendStream {
     return currentMonthlyDataStream.map((monthlyData) {
+      if (monthlyData.rawTransactions.isEmpty) return [];
+
+      final lastDay = DateTime(monthlyData.month.year, monthlyData.month.month + 1, 0).day;
       final Map<int, double> dailyIncome = {};
       final Map<int, double> dailyExpenses = {};
 
       for (var tx in monthlyData.rawTransactions) {
         final day = tx.date.day;
         final amount = _repo.exchangeService.fromBase(tx.baseAmount, _currencyProvider.currentCurrency);
-
         if (tx.type == 'Income') {
           dailyIncome.update(day, (v) => v + amount, ifAbsent: () => amount);
         } else {
@@ -52,19 +56,14 @@ class MonthlyReviewViewModel extends ChangeNotifier {
         }
       }
 
-      final Set<int> activeDays = {...dailyIncome.keys, ...dailyExpenses.keys};
-      
-      // Sort the days chronologically
-      final sortedDays = activeDays.toList()..sort();
-
-      // Generate the list ONLY for active days
-      return sortedDays.map((day) {
+      return List.generate(lastDay, (index) {
+        final day = index + 1;
         return DailyChartPoint(
           day: day,
           income: dailyIncome[day] ?? 0.0,
           expenses: dailyExpenses[day] ?? 0.0,
         );
-      }).toList();
+      });
     });
   }
 
@@ -78,12 +77,17 @@ class MonthlyReviewViewModel extends ChangeNotifier {
 
   Stream<List<CategorySpending>> get categorySpendingStream {
     return currentMonthlyDataStream.map((data) {
-      final totalExpenses = data.expenses;
+      final totalExpenses = data.expenses; 
       
       // Map your cached breakdown into the CategorySpending format
       return data.categoryBreakdown.entries.map((entry) {
+        final categoryId = entry.key;
+      
+        final fullCategory = _catRepo.getCategoryByIdSync(categoryId) ?? 
+                           Category(id: categoryId, name: 'Unknown');
+
         return CategorySpending(
-          category: Category(id: entry.key, name: entry.key), // Or resolve from Repo
+          category: fullCategory,
           totalAmount: entry.value,
           percentage: totalExpenses > 0 ? (entry.value / totalExpenses) : 0,
         );
@@ -96,6 +100,13 @@ class MonthlyReviewViewModel extends ChangeNotifier {
     _monthController.add(newMonth);
     notifyListeners();
   }
+
+   Future<void> refresh() async {
+    notifyListeners(); 
+
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+
 
   @override
   void dispose() {

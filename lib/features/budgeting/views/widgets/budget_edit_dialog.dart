@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
+import 'package:personal_fin/core/utils/app_feedback.dart';
 import 'package:personal_fin/core/utils/category_icon_helper.dart';
 import 'package:personal_fin/models/category.dart';
 import 'package:provider/provider.dart';
@@ -43,32 +44,14 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
     super.dispose();
   }
 
-  void _showSuccessToast(BuildContext context, String categoryName, String message) {
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: theme.colorScheme.onPrimaryContainer, size: 20),
-            const SizedBox(width: 12),
-            Text(
-              '$categoryName $message',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
-              ),
-            ),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(20),
-        backgroundColor: theme.colorScheme.primaryContainer,
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
+    final messenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    
     return ChangeNotifierProvider(
       create: (_) => BudgetEditViewModel(
         onSave: widget.onSave,
@@ -122,10 +105,11 @@ class _BudgetEditDialogState extends State<BudgetEditDialog> {
                               HapticFeedback.lightImpact();
                               final success = await vm.updateBudget(_amountController.text);
                               if (success && context.mounted) {
-                                _showSuccessToast(
-                                  context,
-                                  lang.translate(widget.category.name),
+                                AppFeedback.show(
+                                  messenger,
                                   lang.translate('budget_updated'),
+                                  colors: colors,
+                                  textTheme: textTheme,
                                 );
                                 Navigator.pop(context);
                               }

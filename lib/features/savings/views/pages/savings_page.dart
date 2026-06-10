@@ -20,7 +20,6 @@ class SavingsPage extends StatelessWidget {
       create: (context) => SavingsViewModel(
         context.read<SavingsRepository>(),
       ),
-      dispose: (_, vm) => vm.dispose(),
       child: const SavingsViewContent(),
     );
   }
@@ -46,7 +45,7 @@ class SavingsViewContent extends StatelessWidget {
                 title: lang.translate('failed_to_load_goals'),
                 message: snapshot.error.toString(),
                 actionText: lang.translate('retry'),
-                onAction: vm.retry, // Re-triggers the stream
+                onAction: () {}, // Re-triggers the stream
               ),
             ),
           );

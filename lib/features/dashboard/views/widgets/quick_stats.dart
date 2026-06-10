@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:personal_fin/core/providers/currency_provider.dart';
 import 'package:personal_fin/core/providers/language_provider.dart';
 import 'package:personal_fin/core/repositories/monthly_data_repository.dart';
+import 'package:personal_fin/core/shared_widgets/error_state.dart';
+import 'package:personal_fin/core/utils/app_exception.dart';
 import 'package:personal_fin/features/dashboard/views/widgets/quick_stats/stats_card.dart';
 import 'package:personal_fin/core/shared_widgets/loading_state.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +33,21 @@ class QuickStats extends StatelessWidget {
           stream: vm.statsStream,
           builder: (context, snapshot) {
             if (!snapshot.hasData) return const LoadingState();
+
+            if (snapshot.hasError) {
+              final error = snapshot.error is AppException 
+                ? (snapshot.error as AppException)
+                : AppException(message: snapshot.error.toString(), code: 'unknown');
+
+              return SizedBox(
+                height: adaptiveHeight,
+                child: Center(
+                  child: ErrorState(
+                    message: error.toUserMessage(context),
+                  ),
+                ),
+              );
+            }
             
             final stats = snapshot.data!;
 
